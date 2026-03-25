@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>棚卸しプロ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+–bg: #0c1520;
+–surface: #131f2e;
+–border: #1e3a5f;
+–accent: #38bdf8;
+–accent-dim: #1e3a5f;
+–text: #e2e8f0;
+–muted: #64748b;
+–danger: #ef4444;
+–success: #22c55e;
+–font: ‘Courier New’, Courier, monospace;
+}
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: var(–font);
+min-height: 100vh;
+max-width: 480px;
+margin: 0 auto;
+}
+
+/* HEADER */
+header {
+background: var(–bg);
+border-bottom: 1px solid var(–border);
+padding: 14px 18px 12px;
+display: flex;
+align-items: center;
+gap: 10px;
+position: sticky;
+top: 0;
+z-index: 20;
+}
+header h1 {
+font-size: 14px;
+font-weight: bold;
+color: var(–accent);
+letter-spacing: 0.12em;
+text-transform: uppercase;
+}
+.badge {
+margin-left: auto;
+background: var(–accent-dim);
+color: var(–accent);
+font-size: 11px;
+padding: 3px 12px;
+border-radius: 20px;
+letter-spacing: 0.05em;
+}
+
+/* TABS */
+.tabs {
+display: flex;
+background: var(–bg);
+border-bottom: 1px solid var(–border);
+}
+.tab {
+flex: 1;
+padding: 13px 0;
+border: none;
+background: none;
+color: var(–muted);
+font-family: var(–font);
+font-size: 11px;
+font-weight: bold;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+border-bottom: 2px solid transparent;
+cursor: pointer;
+transition: color 0.2s, border-color 0.2s;
+}
+.tab.active {
+color: var(–accent);
+border-bottom-color: var(–accent);
+}
+
+/* BODY */
+.body { padding: 16px; }
+
+/* SCAN BUTTON */
+.scan-btn {
+width: 100%;
+padding: 15px;
+border-radius: 10px;
+border: 1px solid var(–accent);
+background: var(–accent-dim);
+color: var(–accent);
+font-family: var(–font);
+font-size: 13px;
+font-weight: bold;
+letter-spacing: 0.1em;
+cursor: pointer;
+margin-bottom: 14px;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+transition: all 0.2s;
+}
+.scan-btn.stop {
+background: var(–danger);
+border-color: var(–danger);
+color: #fff;
+}
+
+/* VIDEO SCAN AREA */
+.video-wrap {
+position: relative;
+width: 100%;
+border-radius: 10px;
+overflow: hidden;
+background: #000;
+margin-bottom: 14px;
+border: 1px solid var(–border);
+}
+#video { width: 100%; display: block; }
+.scan-line {
+position: absolute;
+left: 0; width: 100%; height: 2px;
+background: var(–accent);
+box-shadow: 0 0 10px var(–accent);
+animation: scanMove 2s linear infinite;
+}
+@keyframes scanMove {
+0%   { top: 10%; }
+50%  { top: 85%; }
+100% { top: 10%; }
+}
+.scan-overlay {
+position: absolute;
+top: 0; left: 0; right: 0; bottom: 0;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.scan-frame {
+width: 60%;
+aspect-ratio: 1;
+border: 2px solid var(–accent);
+border-radius: 8px;
+box-shadow: 0 0 0 2000px rgba(0,0,0,0.35);
+}
+#canvas { display: none; }
+
+/* CARD */
+.card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 16px;
+margin-bottom: 14px;
+}
+label {
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 0.1em;
+text-transform: uppercase;
+display: block;
+margin-bottom: 6px;
+}
+input, select {
+width: 100%;
+padding: 11px 12px;
+border-radius: 6px;
+background: var(–bg);
+border: 1px solid var(–border);
+color: var(–text);
+font-family: var(–font);
+font-size: 15px;
+margin-bottom: 14px;
+outline: none;
+transition: border-color 0.2s;
+-webkit-appearance: none;
+}
+input:focus, select:focus { border-color: var(–accent); }
+input[type=number] { text-align: center; }
+.row { display: flex; gap: 10px; }
+.row > div { flex: 1; }
+.row > div:first-child { flex: 2; }
+
+/* REGISTER BTN */
+.register-btn {
+width: 100%;
+padding: 15px;
+border-radius: 10px;
+background: var(–accent);
+color: var(–bg);
+border: none;
+font-family: var(–font);
+font-size: 14px;
+font-weight: bold;
+letter-spacing: 0.1em;
+cursor: pointer;
+margin-top: 6px;
+transition: opacity 0.2s;
+}
+.register-btn:active { opacity: 0.8; }
+
+/* LIST */
+.export-btn {
+width: 100%;
+padding: 12px;
+border-radius: 8px;
+background: none;
+color: var(–accent);
+border: 1px solid var(–border);
+font-family: var(–font);
+font-size: 12px;
+letter-spacing: 0.1em;
+cursor: pointer;
+margin-bottom: 14px;
+}
+.list-item {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 12px 14px;
+margin-bottom: 8px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.item-name { font-weight: bold; font-size: 14px; }
+.item-date { font-size: 10px; color: var(–muted); margin-top: 3px; }
+.item-right { display: flex; align-items: center; gap: 8px; }
+.item-qty { color: var(–accent); font-weight: bold; font-size: 15px; }
+.del-btn {
+background: none;
+border: none;
+color: var(–danger);
+font-size: 16px;
+cursor: pointer;
+padding: 4px 6px;
+}
+.empty {
+text-align: center;
+color: var(–muted);
+font-size: 13px;
+padding: 50px 0;
+letter-spacing: 0.08em;
+}
+
+/* TOAST */
+#toast {
+position: fixed;
+bottom: 30px;
+left: 50%;
+transform: translateX(-50%) translateY(80px);
+background: var(–accent);
+color: var(–bg);
+padding: 11px 24px;
+border-radius: 24px;
+font-family: var(–font);
+font-weight: bold;
+font-size: 13px;
+letter-spacing: 0.08em;
+z-index: 100;
+white-space: nowrap;
+box-shadow: 0 4px 24px rgba(56,189,248,0.45);
+transition: transform 0.3s ease, opacity 0.3s ease;
+opacity: 0;
+pointer-events: none;
+}
+#toast.show {
+transform: translateX(-50%) translateY(0);
+opacity: 1;
+}
+#toast.error {
+background: var(–danger);
+box-shadow: 0 4px 24px rgba(239,68,68,0.45);
+}
+
+/* VIEWS */
+.view { display: none; }
+.view.active { display: block; }
+</style>
+
+</head>
+<body>
+
+<header>
+  <span style="font-size:18px">📦</span>
+  <h1>棚卸しプロ</h1>
+  <span class="badge" id="badge">0 件</span>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchView('register')">＋ 登録</button>
+  <button class="tab" onclick="switchView('list')">≡ 一覧</button>
+</div>
+
+<div class="body">
+
+  <!-- 登録ビュー -->
+
+  <div class="view active" id="view-register">
+
+```
+<div id="scan-section">
+  <button class="scan-btn" id="scan-btn" onclick="toggleScan()">
+    📷 QRスキャン開始
+  </button>
+  <div class="video-wrap" id="video-wrap" style="display:none">
+    <video id="video" playsinline autoplay muted></video>
+    <div class="scan-line"></div>
+    <div class="scan-overlay"><div class="scan-frame"></div></div>
+    <canvas id="canvas"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <label>品番 / 品名</label>
+  <input type="text" id="reg-name" placeholder="QRスキャン または手入力">
+
+  <div class="row">
+    <div>
+      <label>数量</label>
+      <input type="number" id="reg-qty" value="0" min="0">
+    </div>
+    <div>
+      <label>単位</label>
+      <select id="reg-unit">
+        <option>個</option><option>本</option><option>枚</option>
+        <option>袋</option><option>箱</option><option>セット</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="register-btn" onclick="registerItem()">✅ 登録する</button>
+</div>
+```
+
+  </div>
+
+  <!-- 一覧ビュー -->
+
+  <div class="view" id="view-list">
+    <button class="export-btn" id="export-btn" onclick="exportCSV()">⬇ CSV エクスポート</button>
+    <div id="list-container"></div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ---- State ----
+  const STORAGE_KEY = 'inventory_html';
+  let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  let isScanning = false;
+  let stream = null;
+  let rafId = null;
+
+  // ---- Init ----
+  renderList();
+  updateBadge();
+
+  // ---- Tab ----
+  function switchView(v) {
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('view-' + v).classList.add('active');
+    document.querySelectorAll('.tab')[v === 'register' ? 0 : 1].classList.add('active');
+    if (v !== 'register') stopScan();
+  }
+
+  // ---- QR Scan ----
+  function toggleScan() {
+    isScanning ? stopScan() : startScan();
+  }
+
+  function startScan() {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(s => {
+        stream = s;
+        const video = document.getElementById('video');
+        video.srcObject = s;
+        video.play();
+        document.getElementById('video-wrap').style.display = 'block';
+        const btn = document.getElementById('scan-btn');
+        btn.textContent = '⏹ スキャン停止';
+        btn.classList.add('stop');
+        isScanning = true;
+        rafId = requestAnimationFrame(scanTick);
+      })
+      .catch(() => {
+        showToast('❌ カメラ許可が必要です', true);
+      });
+  }
+
+  function stopScan() {
+    isScanning = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    document.getElementById('video-wrap').style.display = 'none';
+    const btn = document.getElementById('scan-btn');
+    btn.textContent = '📷 QRスキャン開始';
+    btn.classList.remove('stop');
+  }
+
+  function scanTick() {
+    if (!isScanning) return;
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imgData.data, imgData.width, imgData.height, {
+        inversionAttempts: 'dontInvert'
+      });
+      if (code) {
+        document.getElementById('reg-name').value = code.data;
+        stopScan();
+        showToast('✅ 読取成功: ' + code.data);
+        return;
+      }
+    }
+    rafId = requestAnimationFrame(scanTick);
+  }
+
+  // ---- Register ----
+  function registerItem() {
+    const name = document.getElementById('reg-name').value.trim();
+    const qty = parseInt(document.getElementById('reg-qty').value) || 0;
+    const unit = document.getElementById('reg-unit').value;
+    if (!name) { showToast('⚠ 品番を入力してください', true); return; }
+    const item = {
+      id: Date.now(),
+      name, qty, unit,
+      date: new Date().toLocaleString('ja-JP')
+    };
+    items.unshift(item);
+    save();
+    document.getElementById('reg-name').value = '';
+    document.getElementById('reg-qty').value = 0;
+    showToast('✅ 登録しました');
+    renderList();
+    updateBadge();
+  }
+
+  // ---- List ----
+  function renderList() {
+    const container = document.getElementById('list-container');
+    const exportBtn = document.getElementById('export-btn');
+    exportBtn.textContent = `⬇ CSV エクスポート (${items.length}件)`;
+    if (items.length === 0) {
+      container.innerHTML = '<p class="empty">── データなし ──</p>';
+      return;
+    }
+    container.innerHTML = items.map(item => `
+      <div class="list-item">
+        <div>
+          <div class="item-name">${escHtml(item.name)}</div>
+          <div class="item-date">${item.date}</div>
+        </div>
+        <div class="item-right">
+          <span class="item-qty">${item.qty} ${item.unit}</span>
+          <button class="del-btn" onclick="deleteItem(${item.id})">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function deleteItem(id) {
+    items = items.filter(i => i.id !== id);
+    save();
+    renderList();
+    updateBadge();
+    showToast('🗑 削除しました');
+  }
+
+  // ---- CSV ----
+  function exportCSV() {
+    if (items.length === 0) { showToast('⚠ データがありません', true); return; }
+    const header = '品番,数量,単位,登録日時\n';
+    const rows = items.map(i => `${i.name},${i.qty},${i.unit},${i.date}`).join('\n');
+    const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `棚卸し_${new Date().toLocaleDateString('ja-JP').replace(/\//g,'-')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ---- Helpers ----
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+  function updateBadge() { document.getElementById('badge').textContent = items.length + ' 件'; }
+  function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  let toastTimer;
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show' + (isError ? ' error' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = ''; }, 2800);
+  }
+</script>
+
+</body>
+</html>
