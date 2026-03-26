@@ -11,11 +11,17 @@
 body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 20px; }
 header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); }
 header h1 { font-size: 17px; font-weight: 700; color: var(--accent); }
-.tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; }
-.tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 12px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; min-width: 80px; }
+
+/* タブデザイン */
+.tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+.tab { flex: 1; padding: 14px 4px; text-align: center; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; background: var(--accent-light); }
-.panel { display: none; padding: 14px; }
-.panel.active { display: block; }
+
+/* コンテナとビューの切り替え */
+.main-container { display: none; padding: 14px; }
+.main-container.active { display: block; }
+.sub-view { display: none; }
+.sub-view.active { display: block; }
 
 /* 手順書スタイル */
 .howto { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
@@ -36,6 +42,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .btn-green { background: var(--green); color: white; }
 .btn-red { background: var(--red); color: white; }
 .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text2); }
+.btn-dark { background: #334155; color: white; }
 .btn-small { padding: 8px 12px; font-size: 12px; width: auto; }
 
 /* リストアイテム */
@@ -45,92 +52,116 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .edit-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); gap: 8px; align-items: center; }
 .edit-row.active { display: flex; }
 
-.io-controls { display: flex; gap: 8px; margin-top: 12px; }
-.io-input { margin-bottom: 0; flex: 1; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
-.io-btn { width: 70px; padding: 10px; font-size: 13px; }
+/* 入出庫コントロール部（幅を調整） */
+.io-controls { display: flex; gap: 8px; margin-top: 12px; align-items: stretch; }
+.io-input { width: 60px; margin-bottom: 0; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px; padding: 0; }
+.io-btn { flex: 1; padding: 14px 0; font-size: 15px; margin-top: 0; }
 
 /* その他UI */
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
 .scan-area { background: #eff6ff; border: 2px dashed var(--accent); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
+hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>📦 在庫・入出庫管理</h1>
-  <div id="hdr-date" style="font-size:12px; font-family:'JetBrains Mono', monospace; color:var(--text2);"></div>
 </header>
 
 <div class="tab-bar">
-  <div class="tab active" onclick="switchTab('io-reg')">📥 入出庫登録</div>
-  <div class="tab" onclick="switchTab('io-list')">🗂️ 入出庫一覧</div>
-  <div class="tab" onclick="switchTab('inv-reg')">📋 棚卸登録</div>
-  <div class="tab" onclick="switchTab('inv-list')">📋 棚卸一覧</div>
+  <div class="tab active" id="tab-io" onclick="switchMainTab('io')">📥 入出庫管理</div>
+  <div class="tab" id="tab-inv" onclick="switchMainTab('inv')">📋 棚卸し</div>
 </div>
 
-<div class="panel active" id="panel-io-reg">
-  <div class="howto">
-    <div class="howto-title">💡 テキストスキャン手順</div>
-    <div class="howto-step"><span class="step-num">1</span>記入欄を一度タップして、カーソルが点滅したら</div>
-    <div class="howto-step"><span class="step-num">2</span>再度記入欄を長押し</div>
-    <div class="howto-step"><span class="step-num">3</span>「自動入力」を選択</div>
-    <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
-  </div>
-
-  <div class="scan-area">
-    <p style="font-size:12px; color:var(--accent); font-weight:700; margin-bottom:8px;">【指図書をスキャンして自動抽出】</p>
-    <input type="text" id="auto-extractor" placeholder="ここをタップしてスキャン" oninput="extractData(this.value)">
-  </div>
+<div class="main-container active" id="container-io">
   
-  <div class="card">
-    <label>商品コード（品番）</label>
-    <input type="text" id="io-code-scan" placeholder="自動抽出されます">
-    <label>商品名</label>
-    <input type="text" id="io-name-scan" placeholder="自動抽出されます">
-    <button class="btn btn-blue" onclick="saveIOMaster()">✅ 登録を実行</button>
-  </div>
-</div>
-
-<div class="panel" id="panel-io-list">
-  <input type="text" id="io-search" placeholder="品番・名称で検索..." oninput="renderIOList()">
-  <div id="io-display-list"></div>
-</div>
-
-<div class="panel" id="panel-inv-reg">
-  <div class="howto">
-    <div class="howto-title">💡 テキストスキャン手順</div>
-    <div class="howto-step"><span class="step-num">1</span>記入欄を一度タップして、カーソルが点滅したら</div>
-    <div class="howto-step"><span class="step-num">2</span>再度記入欄を長押し</div>
-    <div class="howto-step"><span class="step-num">3</span>「自動入力」を選択</div>
-    <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
-  </div>
-
-  <div class="card">
-    <label>商品名 / 品番</label>
-    <input type="text" id="inv-name" placeholder="タップしてスキャン...">
-    
-    <div style="display:flex; gap:10px;">
-      <div style="flex:2;">
-        <label>数量</label>
-        <input type="number" id="inv-qty" value="0">
-      </div>
-      <div style="flex:1;">
-        <label>単位</label>
-        <select id="inv-unit">
-          <option>個</option>
-          <option>mm</option>
-        </select>
-      </div>
+  <div class="sub-view active" id="view-io-reg">
+    <div class="howto">
+      <div class="howto-title">💡 テキストスキャン手順</div>
+      <div class="howto-step"><span class="step-num">1</span>記入欄を一度タップして、カーソルが点滅したら</div>
+      <div class="howto-step"><span class="step-num">2</span>再度記入欄を長押し</div>
+      <div class="howto-step"><span class="step-num">3</span>「自動入力」を選択</div>
+      <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
     </div>
-    <button class="btn btn-blue" onclick="saveInventory()">✅ 登録を実行</button>
+
+    <div class="scan-area">
+      <p style="font-size:12px; color:var(--accent); font-weight:700; margin-bottom:8px;">【指図書をスキャンして自動抽出】</p>
+      <input type="text" id="io-extractor" placeholder="ここをタップしてスキャン" oninput="extractData(this.value, 'io')">
+    </div>
+    
+    <div class="card">
+      <label>品番（商品コード）</label>
+      <input type="text" id="io-code-scan" placeholder="自動抽出されます">
+      <label>商品名</label>
+      <input type="text" id="io-name-scan" placeholder="自動抽出されます">
+      <button class="btn btn-blue" onclick="saveIOMaster()">✅ 登録を実行</button>
+    </div>
+
+    <hr>
+    <button class="btn btn-dark" onclick="switchSubView('io', 'list')">🗂️ 入出庫一覧ページへ ＞</button>
   </div>
+
+  <div class="sub-view" id="view-io-list">
+    <button class="btn btn-outline" style="margin-bottom:15px;" onclick="switchSubView('io', 'reg')">＜ 登録ページに戻る</button>
+    <input type="text" id="io-search" placeholder="品番・名称で検索..." oninput="renderIOList()">
+    <div id="io-display-list"></div>
+  </div>
+
 </div>
 
-<div class="panel" id="panel-inv-list">
-  <div id="inv-display-list"></div>
-  <button class="btn btn-green" style="margin-top:20px;" onclick="exportCSV()">⬇️ 棚卸エクセル(CSV)出力</button>
-  <button class="btn btn-outline" style="margin-top:10px;" onclick="clearAll('inventory')">🗑️ 棚卸データ全削除</button>
+
+<div class="main-container" id="container-inv">
+  
+  <div class="sub-view active" id="view-inv-reg">
+    <div class="howto">
+      <div class="howto-title">💡 テキストスキャン手順</div>
+      <div class="howto-step"><span class="step-num">1</span>記入欄を一度タップして、カーソルが点滅したら</div>
+      <div class="howto-step"><span class="step-num">2</span>再度記入欄を長押し</div>
+      <div class="howto-step"><span class="step-num">3</span>「自動入力」を選択</div>
+      <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
+    </div>
+
+    <div class="scan-area">
+      <p style="font-size:12px; color:var(--accent); font-weight:700; margin-bottom:8px;">【現品票をスキャンして自動抽出】</p>
+      <input type="text" id="inv-extractor" placeholder="ここをタップしてスキャン" oninput="extractData(this.value, 'inv')">
+    </div>
+
+    <div class="card">
+      <label>品番</label>
+      <input type="text" id="inv-code" placeholder="自動抽出されます">
+      <label>商品名</label>
+      <input type="text" id="inv-name" placeholder="自動抽出されます">
+      
+      <div style="display:flex; gap:10px;">
+        <div style="flex:2;">
+          <label>数量</label>
+          <input type="number" id="inv-qty" placeholder="0">
+        </div>
+        <div style="flex:1;">
+          <label>単位</label>
+          <select id="inv-unit">
+            <option>個</option>
+            <option>mm</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-blue" onclick="saveInventory()">✅ 登録を実行</button>
+    </div>
+
+    <hr>
+    <button class="btn btn-dark" onclick="switchSubView('inv', 'list')">📋 棚卸し一覧ページへ ＞</button>
+  </div>
+
+  <div class="sub-view" id="view-inv-list">
+    <button class="btn btn-outline" style="margin-bottom:15px;" onclick="switchSubView('inv', 'reg')">＜ 登録ページに戻る</button>
+    <div id="inv-display-list"></div>
+    <hr>
+    <button class="btn btn-green" onclick="exportCSV()">⬇️ 棚卸エクセル(CSV)出力</button>
+    <button class="btn btn-outline" style="margin-top:10px;" onclick="clearAll('inventory')">🗑️ 棚卸データ全削除</button>
+  </div>
+
 </div>
 
 <div id="toast"></div>
@@ -140,25 +171,34 @@ let ioItems = JSON.parse(localStorage.getItem('io_data') || '[]');
 let inventoryItems = JSON.parse(localStorage.getItem('inv_data') || '[]');
 
 function init() {
-  const n = new Date();
-  document.getElementById('hdr-date').textContent = `${n.getFullYear()}/${n.getMonth()+1}/${n.getDate()}`;
   renderIOList();
   renderInvList();
 }
 
-function switchTab(tabId) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+// ---------------- 画面切り替え ----------------
+function switchMainTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('panel-' + tabId).classList.add('active');
-  const tabs = document.querySelectorAll('.tab');
-  if(tabId === 'io-reg') tabs[0].classList.add('active');
-  if(tabId === 'io-list') { tabs[1].classList.add('active'); renderIOList(); }
-  if(tabId === 'inv-reg') tabs[2].classList.add('active');
-  if(tabId === 'inv-list') { tabs[3].classList.add('active'); renderInvList(); }
+  document.querySelectorAll('.main-container').forEach(c => c.classList.remove('active'));
+  
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('container-' + tab).classList.add('active');
+  
+  // タブを切り替えた時は必ず登録画面に戻す
+  switchSubView(tab, 'reg');
 }
 
-// ---------------- 入出庫の処理 ----------------
-function extractData(val) {
+function switchSubView(tab, view) {
+  const container = document.getElementById('container-' + tab);
+  container.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${tab}-${view}`).classList.add('active');
+  
+  if(tab === 'io' && view === 'list') renderIOList();
+  if(tab === 'inv' && view === 'list') renderInvList();
+}
+
+
+// ---------------- 共通抽出ロジック ----------------
+function extractData(val, target) {
   if (!val) return;
   const lines = val.split(/[\s\n]+/);
   let code = "", name = "";
@@ -166,11 +206,19 @@ function extractData(val) {
     if (lines[i].includes("商品コード") || lines[i].includes("品目コード")) code = lines[i+1] || "";
     if (lines[i].includes("商品名")) name = lines[i+1] || "";
   }
-  if (code) document.getElementById('io-code-scan').value = code;
-  if (name) document.getElementById('io-name-scan').value = name;
-  setTimeout(() => document.getElementById('auto-extractor').value = '', 500);
+  
+  if (target === 'io') {
+    if (code) document.getElementById('io-code-scan').value = code;
+    if (name) document.getElementById('io-name-scan').value = name;
+    setTimeout(() => document.getElementById('io-extractor').value = '', 500);
+  } else {
+    if (code) document.getElementById('inv-code').value = code;
+    if (name) document.getElementById('inv-name').value = name;
+    setTimeout(() => document.getElementById('inv-extractor').value = '', 500);
+  }
 }
 
+// ---------------- 入出庫の処理 ----------------
 function saveIOMaster() {
   const code = document.getElementById('io-code-scan').value.trim();
   const name = document.getElementById('io-name-scan').value.trim();
@@ -185,7 +233,6 @@ function saveIOMaster() {
   
   document.getElementById('io-code-scan').value = '';
   document.getElementById('io-name-scan').value = '';
-  renderIOList();
 }
 
 function renderIOList() {
@@ -204,7 +251,7 @@ function renderIOList() {
       </div>
       <div style="margin-top:8px; font-size:14px; color:var(--text2);">現在の在庫: <strong style="color:var(--accent); font-size:18px;">${item.stock}</strong></div>
       <div class="io-controls">
-        <input type="number" class="io-input" id="amt-${item.code}" value="1">
+        <input type="number" class="io-input" id="amt-${item.code}" placeholder="数">
         <button class="btn btn-green io-btn" onclick="updateStock('${item.code}', 1)">入庫</button>
         <button class="btn btn-red io-btn" onclick="updateStock('${item.code}', -1)">出庫</button>
       </div>
@@ -213,11 +260,15 @@ function renderIOList() {
 }
 
 function updateStock(code, multiplier) {
-  const amount = parseFloat(document.getElementById(`amt-${code}`).value) || 0;
+  const inputEl = document.getElementById(`amt-${code}`);
+  const amount = parseFloat(inputEl.value);
+  if(isNaN(amount) || amount <= 0) return showToast('数量を入力してください');
+
   const item = ioItems.find(i => i.code === code);
   if(item) {
     item.stock += (amount * multiplier);
     localStorage.setItem('io_data', JSON.stringify(ioItems));
+    inputEl.value = ''; // 入力後に空に戻す
     renderIOList();
     showToast(multiplier > 0 ? '入庫しました' : '出庫しました');
   }
@@ -233,17 +284,19 @@ function deleteIOItem(code) {
 
 // ---------------- 棚卸の処理 ----------------
 function saveInventory() {
+  const code = document.getElementById('inv-code').value.trim();
   const name = document.getElementById('inv-name').value.trim();
   const qty = parseFloat(document.getElementById('inv-qty').value) || 0;
   const unit = document.getElementById('inv-unit').value;
-  if(!name) return showToast('名称を入力してください');
+  if(!name) return showToast('商品名を入力してください');
 
   const id = Date.now();
-  inventoryItems.push({ id, name, qty, unit, date: new Date().toLocaleString() });
+  inventoryItems.push({ id, code, name, qty, unit });
   localStorage.setItem('inv_data', JSON.stringify(inventoryItems));
   
+  document.getElementById('inv-code').value = '';
   document.getElementById('inv-name').value = '';
-  document.getElementById('inv-qty').value = '0';
+  document.getElementById('inv-qty').value = '';
   showToast('登録を実行しました ✅');
 }
 
@@ -257,8 +310,8 @@ function renderInvList() {
     <div class="item-card">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
-          <div style="font-size:10px; color:#94a3b8; font-family:'JetBrains Mono', monospace;">${item.date}</div>
-          <div class="item-name" style="margin-top:2px;">${item.name}</div>
+          <div class="item-code">${item.code || '-'}</div>
+          <div class="item-name">${item.name}</div>
         </div>
         <button class="btn-outline btn-small" style="color:var(--red); border-color:#fca5a5;" onclick="deleteInvItem(${item.id})">🗑️ 削除</button>
       </div>
@@ -298,10 +351,13 @@ function deleteInvItem(id) {
   showToast('削除しました');
 }
 
+// ---------------- CSV出力 ----------------
 function exportCSV() {
   if(!inventoryItems.length) return showToast('データがありません');
-  let csv = "\uFEFF商品名,数量,単位,日時\n";
-  inventoryItems.forEach(i => csv += `"${i.name}",${i.qty},"${i.unit}","${i.date}"\n`);
+  // 日時を削除し、品番と商品名を分ける
+  let csv = "\uFEFF品番,商品名,数量,単位\n";
+  inventoryItems.forEach(i => csv += `"${i.code || ''}","${i.name}",${i.qty},"${i.unit}"\n`);
+  
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
