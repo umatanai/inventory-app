@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>製造管理PRO (S/5補正版)</title>
+<title>製造管理PRO (3項目抽出)</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 <style>
 :root { --accent: #2563eb; --bg: #f8fafc; --border: #cbd5e1; }
@@ -11,8 +11,8 @@ body { font-family: -apple-system, sans-serif; background: var(--bg); padding: 1
 .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border); }
 h2 { color: var(--accent); text-align: center; margin-bottom: 20px; font-size: 20px; }
 .input-group { margin-bottom: 12px; }
-label { font-size: 12px; color: #64748b; font-weight: 700; display: block; margin-bottom: 4px; }
-input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; box-sizing: border-box; background: #fff; color: #1e293b; }
+label { font-size: 13px; color: #64748b; font-weight: 700; display: block; margin-bottom: 4px; }
+input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 17px; box-sizing: border-box; background: #fff; color: #1e293b; font-weight: 500; }
 .btn { width: 100%; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 10px; font-size: 17px; font-weight: bold; margin-top: 10px; cursor: pointer; }
 #status { text-align: center; color: var(--accent); font-size: 14px; margin-top: 12px; font-weight: 500; }
 </style>
@@ -20,11 +20,22 @@ input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radi
 <body>
 <div class="card">
     <h2>📦 製造管理PRO</h2>
-    <div class="input-group"><label>製造指示番号</label><input type="text" id="id"></div>
-    <div class="input-group"><label>商品コード</label><input type="text" id="code"></div>
-    <div class="input-group"><label>商品名</label><input type="text" id="name"></div>
-    <div class="input-group"><label>数量</label><input type="text" id="qty"></div>
-    <div class="input-group"><label>製造納期</label><input type="text" id="date"></div>
+    
+    <div class="input-group">
+        <label>品番</label>
+        <input type="text" id="part-no" placeholder="品番がここに入ります">
+    </div>
+    
+    <div class="input-group">
+        <label>商品名</label>
+        <input type="text" id="name" placeholder="商品名がここに入ります">
+    </div>
+    
+    <div class="input-group">
+        <label>製造納期</label>
+        <input type="text" id="date" placeholder="納期がここに入ります">
+    </div>
+
     <button class="btn" onclick="document.getElementById('fileInput').click()">📷 指示書をスキャン</button>
     <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="processImage(this)">
     <div id="status"></div>
@@ -34,14 +45,16 @@ input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radi
 async function processImage(input) {
     const status = document.getElementById('status');
     if (!input.files || !input.files[0]) return;
-    status.innerText = "🔍 高精度スキャン中...";
+    status.innerText = "🔍 3項目を抽出中...";
 
     try {
         const worker = await Tesseract.createWorker();
         await worker.loadLanguage('jpn+eng');
         await worker.initialize('jpn+eng');
+        
+        // 5とSの読み間違いを防ぐため、品番に使われる文字を重点的に設定
         await worker.setParameters({
-            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz/-：:製造指示番号指図数量数商品コード品目名納期年月日規格',
+            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz/-：:商品コード品番名納期年月日規格',
         });
 
         const { data: { text } } = await worker.recognize(input.files[0]);
@@ -53,46 +66,35 @@ async function processImage(input) {
         const extract = (keys, pattern) => {
             for (let k of keys) {
                 if (cleanText.includes(k)) {
-                    const match = cleanText.split(k)[1].match(pattern);
-                    return match ? match[0] : "";
+                    const parts = cleanText.split(k);
+                    if (parts.length > 1) {
+                        const match = parts[1].match(pattern);
+                        return match ? match[0] : "";
+                    }
                 }
             }
             return "";
         };
 
-        // --- 抽出ルールの調整 ---
+        // --- 反映処理 ---
         
-        // 【重要】製造指示番号: アルファベット、数字（補正前）
-        let rawId = extract(["製造指示番号", "製造指図番号"], /[A-Z0-9]{5,}/);
-        
-        // ★S⇔5 補正ロジックの追加
-        // 森本さんの指示書（例：S301, AA05601）に合わせて、英数字が混在する項目で
-        // 数字の「5」をアルファベットの「S」に置き換える補正を行います。
-        let correctedId = rawId.replace(/5/g, 'S'); 
-        // ※もしAA05601のように数字が続く場合は、
-        //   英字の直後の5だけをSにするなど、より高度な補正も可能です。
-        //   まずはシンプルな全置換で試してみましょう。
+        // 1. 品番（指示書上の「商品コード」または「品番」を探す）
+        let rawPartNo = extract(["商品コード", "品番", "品目コード"], /[A-Z0-9-]{5,}/);
+        // 先ほどの「S」補正が必要な場合はここで行います
+        document.getElementById('part-no').value = rawPartNo;
 
-        document.getElementById('id').value = correctedId;
-        
-        // 商品コード: アルファベット、数字、ハイフンの混在
-        document.getElementById('code').value = extract(["商品コード", "品目コード"], /[A-Z0-9-]{5,}/);
-        
-        // 数量: 数字のみ
-        document.getElementById('qty').value = extract(["数量", "数"], /\d+/);
-        
-        // 納期: 日付形式 (YYYY/MM/DD)
+        // 2. 製造納期
         document.getElementById('date').value = extract(["製造納期", "納期"], /\d{4}\/\d{2}\/\d{2}/);
-        
-        // 商品名は「商品名」から「規格」の間を抜き出す
+
+        // 3. 商品名（商品名から規格の間を抽出）
         if (cleanText.includes("商品名")) {
             const namePart = cleanText.split("商品名")[1].split("規格")[0];
             document.getElementById('name').value = namePart;
         }
 
-        status.innerText = "✅ 完了";
+        status.innerText = "✅ 完了しました";
     } catch (e) {
-        status.innerText = "❌ エラー：明るい場所で撮り直してください";
+        status.innerText = "❌ エラー：撮り直してください";
     }
 }
 </script>
