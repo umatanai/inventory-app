@@ -12,30 +12,25 @@ body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: va
 header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); }
 header h1 { font-size: 17px; font-weight: 700; color: var(--accent); }
 
-/* タブデザイン */
 .tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
 .tab { flex: 1; padding: 14px 4px; text-align: center; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; background: var(--accent-light); }
 
-/* コンテナとビューの切り替え */
 .main-container { display: none; padding: 14px; }
 .main-container.active { display: block; }
 .sub-view { display: none; }
 .sub-view.active { display: block; }
 
-/* 手順書スタイル */
 .howto { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
 .howto-title { font-size: 13px; font-weight: 700; color: #b45309; margin-bottom: 10px; }
 .howto-step { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 6px; }
 .step-num { width: 18px; height: 18px; border-radius: 50%; background: #b45309; color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-/* 入力欄・カードスタイル */
 .card { background: var(--surface); border-radius: 14px; padding: 16px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: var(--shadow); }
 label { display: block; font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 5px; }
 input, select { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
 input:focus, select:focus { outline: none; border-color: var(--accent); }
 
-/* ボタン類 */
 .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.1s; margin-top: 5px; }
 .btn:active { opacity: 0.8; transform: scale(0.98); }
 .btn-blue { background: var(--accent); color: white; }
@@ -45,25 +40,21 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .btn-dark { background: #334155; color: white; }
 .btn-small { padding: 8px 12px; font-size: 12px; width: auto; }
 
-/* リストアイテム */
 .item-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 8px; position: relative; }
 .item-name { font-weight: 700; font-size: 15px; }
 .item-code { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
 .edit-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); gap: 8px; align-items: center; }
 .edit-row.active { display: flex; }
 
-/* 入出庫コントロール部（幅を調整） */
 .io-controls { display: flex; gap: 8px; margin-top: 12px; align-items: stretch; }
 .io-input { width: 60px; margin-bottom: 0; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px; padding: 0; }
 .io-btn { flex: 1; padding: 14px 0; font-size: 15px; margin-top: 0; }
 
-/* その他UI */
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
 .scan-area { background: #eff6ff; border: 2px dashed var(--accent); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
 .scan-area input { margin-bottom: 0; } 
 hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
-/* カード内用の少し薄い線 */
 .card hr { border-top: 1px solid #f1f5f9; margin: 16px 0; }
 </style>
 </head>
@@ -79,12 +70,11 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 </div>
 
 <div class="main-container active" id="container-io">
-  
   <div class="sub-view active" id="view-io-reg">
     <div class="howto">
       <div class="howto-title">💡 テキストスキャン手順</div>
       <div class="howto-step"><span class="step-num">1</span>記入欄を一度タップして、カーソルが点滅したら</div>
-      <div class="howto-step"><span class="step-num">2</span>再度記入欄を長押し</div>
+      <div class="howto-step"><span class="step-num">2</span>再度記入欄をタップ</div>
       <div class="howto-step"><span class="step-num">3</span>「自動入力」を選択</div>
       <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
     </div>
@@ -99,30 +89,24 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
       <label>商品名</label>
       <input type="text" id="io-name-scan" placeholder="自動抽出されます">
       <button class="btn btn-blue" onclick="saveIOMaster()">✅ 登録を実行</button>
-      
       <hr>
-      
       <button class="btn btn-dark" style="margin-top: 0;" onclick="switchSubView('io', 'list')">🗂️ 入出庫一覧ページへ ＞</button>
     </div>
-
-    </div>
+  </div>
 
   <div class="sub-view" id="view-io-list">
     <button class="btn btn-outline" style="margin-bottom:15px;" onclick="switchSubView('io', 'reg')">＜ 登録ページに戻る</button>
     <input type="text" id="io-search" placeholder="品番・名称で検索..." oninput="renderIOList()">
     <div id="io-display-list"></div>
   </div>
-
 </div>
 
-
 <div class="main-container" id="container-inv">
-  
   <div class="sub-view active" id="view-inv-reg">
     <div class="howto">
       <div class="howto-title">💡 テキストスキャン手順</div>
       <div class="howto-step"><span class="step-num">1</span>記入欄を一度タップして、カーソルが点滅したら</div>
-      <div class="howto-step"><span class="step-num">2</span>再度記入欄を長押し</div>
+      <div class="howto-step"><span class="step-num">2</span>再度記入欄をタップ</div>
       <div class="howto-step"><span class="step-num">3</span>「自動入力」を選択</div>
       <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
     </div>
@@ -134,7 +118,6 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
     <div class="card">
       <label>棚番</label>
       <input type="text" id="inv-location" placeholder="例: A-01">
-      
       <label>品番</label>
       <input type="text" id="inv-code" placeholder="自動抽出されます">
       <label>商品名</label>
@@ -154,12 +137,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
         </div>
       </div>
       <button class="btn btn-blue" onclick="saveInventory()">✅ 登録を実行</button>
-
       <hr>
-      
       <button class="btn btn-dark" style="margin-top: 0;" onclick="switchSubView('inv', 'list')">📋 棚卸し一覧ページへ ＞</button>
     </div>
-
   </div>
 
   <div class="sub-view" id="view-inv-list">
@@ -169,7 +149,6 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
     <button class="btn btn-green" onclick="exportCSV()">⬇️ 棚卸エクセル(CSV)出力</button>
     <button class="btn btn-outline" style="margin-top:10px;" onclick="clearAll('inventory')">🗑️ 棚卸データ全削除</button>
   </div>
-
 </div>
 
 <div id="toast"></div>
@@ -183,14 +162,11 @@ function init() {
   renderInvList();
 }
 
-// ---------------- 画面切り替え ----------------
 function switchMainTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.main-container').forEach(c => c.classList.remove('active'));
-  
   document.getElementById('tab-' + tab).classList.add('active');
   document.getElementById('container-' + tab).classList.add('active');
-  
   switchSubView(tab, 'reg');
 }
 
@@ -198,45 +174,63 @@ function switchSubView(tab, view) {
   const container = document.getElementById('container-' + tab);
   container.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
   document.getElementById(`view-${tab}-${view}`).classList.add('active');
-  
   if(tab === 'io' && view === 'list') renderIOList();
   if(tab === 'inv' && view === 'list') renderInvList();
 }
 
-// ---------------- 共通抽出ロジック ----------------
+// ---------------- 強化された抽出ロジック ----------------
 function extractData(val, target) {
   if (!val) return;
-  const lines = val.split(/[\s\n]+/);
-  let code = "", name = "";
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes("商品コード") || lines[i].includes("品目コード")) code = lines[i+1] || "";
-    if (lines[i].includes("商品名")) name = lines[i+1] || "";
+  
+  // 文字認識の揺れをカバーするため、単語で区切る
+  const words = val.split(/[\s\n\t,、]+/);
+  let code = "";
+  let name = "";
+
+  // 1. まずキーワード検索（商品名：AAA のような形式）
+  for (let i = 0; i < words.length; i++) {
+    if (words[i].includes("商品コード") || words[i].includes("品番") || words[i].includes("品目")) {
+      if (words[i+1]) code = words[i+1];
+    }
+    if (words[i].includes("商品名") || words[i].includes("品名")) {
+      if (words[i+1]) name = words[i+1];
+    }
+  }
+
+  // 2. キーワードで見つからない場合、中身の特徴から探す
+  if (!code) {
+    // 品番：英数字が3文字以上続くものを探す
+    const codePattern = /^[A-Za-z0-9\-]{3,}$/;
+    code = words.find(w => codePattern.test(w)) || "";
   }
   
+  if (!name) {
+    // 商品名：漢字・カタカナ・ひらがなのいずれかを含むものを探す
+    const namePattern = /[一-龠ぁ-んァ-ヶー]{2,}/;
+    name = words.find(w => namePattern.test(w)) || "";
+  }
+
+  // 反映
   if (target === 'io') {
     if (code) document.getElementById('io-code-scan').value = code;
     if (name) document.getElementById('io-name-scan').value = name;
-    setTimeout(() => document.getElementById('io-extractor').value = '', 500);
+    setTimeout(() => document.getElementById('io-extractor').value = '', 800);
   } else {
     if (code) document.getElementById('inv-code').value = code;
     if (name) document.getElementById('inv-name').value = name;
-    setTimeout(() => document.getElementById('inv-extractor').value = '', 500);
+    setTimeout(() => document.getElementById('inv-extractor').value = '', 800);
   }
 }
 
-// ---------------- 入出庫の処理 ----------------
 function saveIOMaster() {
   const code = document.getElementById('io-code-scan').value.trim();
   const name = document.getElementById('io-name-scan').value.trim();
   if(!code || !name) return showToast('データが不足しています');
-  
   const exIndex = ioItems.findIndex(i => i.code === code);
   if(exIndex > -1) { ioItems[exIndex].name = name; } 
   else { ioItems.push({ code, name, stock: 0 }); }
-  
   localStorage.setItem('io_data', JSON.stringify(ioItems));
   showToast('登録を実行しました ✅');
-  
   document.getElementById('io-code-scan').value = '';
   document.getElementById('io-name-scan').value = '';
 }
@@ -245,7 +239,6 @@ function renderIOList() {
   const query = document.getElementById('io-search').value.toLowerCase();
   const target = document.getElementById('io-display-list');
   const filtered = ioItems.filter(i => i.code.toLowerCase().includes(query) || i.name.toLowerCase().includes(query));
-  
   target.innerHTML = filtered.map(item => `
     <div class="item-card">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -269,7 +262,6 @@ function updateStock(code, multiplier) {
   const inputEl = document.getElementById(`amt-${code}`);
   const amount = parseFloat(inputEl.value);
   if(isNaN(amount) || amount <= 0) return showToast('数量を入力してください');
-
   const item = ioItems.find(i => i.code === code);
   if(item) {
     item.stock += (amount * multiplier);
@@ -288,20 +280,17 @@ function deleteIOItem(code) {
   showToast('削除しました');
 }
 
-// ---------------- 棚卸の処理 ----------------
 function saveInventory() {
-  const loc = document.getElementById('inv-location').value.trim(); // 棚番取得
+  const loc = document.getElementById('inv-location').value.trim();
   const code = document.getElementById('inv-code').value.trim();
   const name = document.getElementById('inv-name').value.trim();
   const qty = parseFloat(document.getElementById('inv-qty').value) || 0;
   const unit = document.getElementById('inv-unit').value;
   if(!name) return showToast('商品名を入力してください');
-
   const id = Date.now();
   inventoryItems.push({ id, loc, code, name, qty, unit });
   localStorage.setItem('inv_data', JSON.stringify(inventoryItems));
-  
-  document.getElementById('inv-location').value = ''; // 棚番リセット
+  document.getElementById('inv-location').value = '';
   document.getElementById('inv-code').value = '';
   document.getElementById('inv-name').value = '';
   document.getElementById('inv-qty').value = '';
@@ -323,11 +312,8 @@ function renderInvList() {
         </div>
         <button class="btn-outline btn-small" style="color:var(--red); border-color:#fca5a5;" onclick="deleteInvItem(${item.id})">🗑️ 削除</button>
       </div>
-      
       <div style="margin-top:8px; font-size:14px;">数量: <strong style="color:var(--green); font-size:18px;">${item.qty}</strong> <span style="font-size:12px; color:var(--text2);">${item.unit}</span></div>
-      
       <button class="btn btn-outline btn-small" style="margin-top:8px; width:100%;" onclick="toggleEdit(${item.id})">✏️ 数量を修正する</button>
-      
       <div class="edit-row" id="edit-${item.id}">
         <input type="number" id="newqty-${item.id}" value="${item.qty}" style="margin-bottom:0; flex:1; font-family:'JetBrains Mono', monospace; font-weight:700;">
         <button class="btn btn-green" style="width:70px; margin-top:0;" onclick="saveEdit(${item.id})">保存</button>
@@ -359,22 +345,14 @@ function deleteInvItem(id) {
   showToast('削除しました');
 }
 
-// ---------------- CSV出力 ----------------
 function exportCSV() {
   if(!inventoryItems.length) return showToast('データがありません');
-  
-  // 名前の入力プロンプト
   const userName = prompt('出力者の名前を入力してください', '');
-  if (userName === null) return; // キャンセルした場合は処理中断
-
-  // ヘッダー（A1:棚番, B1:品番, C1:商品名, D1:数量, E1:名前）
+  if (userName === null) return;
   let csv = `\uFEFF"棚番","品番","商品名","数量","${userName}"\n`;
-  
-  // データ行
   inventoryItems.forEach(i => {
     csv += `"${i.loc || ''}","${i.code || ''}","${i.name}",${i.qty}\n`;
   });
-  
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
