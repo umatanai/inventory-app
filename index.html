@@ -61,7 +61,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
 .scan-area { background: #eff6ff; border: 2px dashed var(--accent); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
-.scan-area input { margin-bottom: 0; } /* 縦幅を細くするため、内部のinputのmarginを削除 */
+.scan-area input { margin-bottom: 0; } 
 hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 </style>
 </head>
@@ -128,6 +128,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
     </div>
 
     <div class="card">
+      <label>棚番</label>
+      <input type="text" id="inv-location" placeholder="例: A-01">
+      
       <label>品番</label>
       <input type="text" id="inv-code" placeholder="自動抽出されます">
       <label>商品名</label>
@@ -182,7 +185,6 @@ function switchMainTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
   document.getElementById('container-' + tab).classList.add('active');
   
-  // タブを切り替えた時は必ず登録画面に戻す
   switchSubView(tab, 'reg');
 }
 
@@ -194,7 +196,6 @@ function switchSubView(tab, view) {
   if(tab === 'io' && view === 'list') renderIOList();
   if(tab === 'inv' && view === 'list') renderInvList();
 }
-
 
 // ---------------- 共通抽出ロジック ----------------
 function extractData(val, target) {
@@ -267,7 +268,7 @@ function updateStock(code, multiplier) {
   if(item) {
     item.stock += (amount * multiplier);
     localStorage.setItem('io_data', JSON.stringify(ioItems));
-    inputEl.value = ''; // 入力後に空に戻す
+    inputEl.value = '';
     renderIOList();
     showToast(multiplier > 0 ? '入庫しました' : '出庫しました');
   }
@@ -283,6 +284,7 @@ function deleteIOItem(code) {
 
 // ---------------- 棚卸の処理 ----------------
 function saveInventory() {
+  const loc = document.getElementById('inv-location').value.trim(); // 棚番取得
   const code = document.getElementById('inv-code').value.trim();
   const name = document.getElementById('inv-name').value.trim();
   const qty = parseFloat(document.getElementById('inv-qty').value) || 0;
@@ -290,9 +292,10 @@ function saveInventory() {
   if(!name) return showToast('商品名を入力してください');
 
   const id = Date.now();
-  inventoryItems.push({ id, code, name, qty, unit });
+  inventoryItems.push({ id, loc, code, name, qty, unit });
   localStorage.setItem('inv_data', JSON.stringify(inventoryItems));
   
+  document.getElementById('inv-location').value = ''; // 棚番リセット
   document.getElementById('inv-code').value = '';
   document.getElementById('inv-name').value = '';
   document.getElementById('inv-qty').value = '';
@@ -309,7 +312,7 @@ function renderInvList() {
     <div class="item-card">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
-          <div class="item-code">${item.code || '-'}</div>
+          <div class="item-code">棚番: ${item.loc || '-'} | 品番: ${item.code || '-'}</div>
           <div class="item-name">${item.name}</div>
         </div>
         <button class="btn-outline btn-small" style="color:var(--red); border-color:#fca5a5;" onclick="deleteInvItem(${item.id})">🗑️ 削除</button>
@@ -353,9 +356,18 @@ function deleteInvItem(id) {
 // ---------------- CSV出力 ----------------
 function exportCSV() {
   if(!inventoryItems.length) return showToast('データがありません');
-  // 日時と単位を削除し、品番と商品名、数量のみを出力
-  let csv = "\uFEFF品番,商品名,数量\n";
-  inventoryItems.forEach(i => csv += `"${i.code || ''}","${i.name}",${i.qty}\n`);
+  
+  // 名前の入力プロンプト
+  const userName = prompt('出力者の名前を入力してください', '');
+  if (userName === null) return; // キャンセルした場合は処理中断
+
+  // ヘッダー（A1:棚番, B1:品番, C1:商品名, D1:数量, E1:名前）
+  let csv = `\uFEFF"棚番","品番","商品名","数量","${userName}"\n`;
+  
+  // データ行
+  inventoryItems.forEach(i => {
+    csv += `"${i.loc || ''}","${i.code || ''}","${i.name}",${i.qty}\n`;
+  });
   
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
