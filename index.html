@@ -178,36 +178,29 @@ function switchSubView(tab, view) {
   if(tab === 'inv' && view === 'list') renderInvList();
 }
 
-// ---------------- 強化された抽出ロジック ----------------
+// ---------------- 修正：特定の文字数ルールに基づいた抽出 ----------------
 function extractData(val, target) {
   if (!val) return;
   
-  // 文字認識の揺れをカバーするため、単語で区切る
+  // OCR結果を単語に分ける
   const words = val.split(/[\s\n\t,、]+/);
   let code = "";
   let name = "";
 
-  // 1. まずキーワード検索（商品名：AAA のような形式）
-  for (let i = 0; i < words.length; i++) {
-    if (words[i].includes("商品コード") || words[i].includes("品番") || words[i].includes("品目")) {
-      if (words[i+1]) code = words[i+1];
+  // 全単語をチェック
+  for (let w of words) {
+    // 1. 商品名の判定：数字のみ かつ 5文字以上
+    if (/^\d{5,}$/.test(w)) {
+      name = w;
+      continue;
     }
-    if (words[i].includes("商品名") || words[i].includes("品名")) {
-      if (words[i+1]) name = words[i+1];
-    }
-  }
 
-  // 2. キーワードで見つからない場合、中身の特徴から探す
-  if (!code) {
-    // 品番：英数字が3文字以上続くものを探す
-    const codePattern = /^[A-Za-z0-9\-]{3,}$/;
-    code = words.find(w => codePattern.test(w)) || "";
-  }
-  
-  if (!name) {
-    // 商品名：漢字・カタカナ・ひらがなのいずれかを含むものを探す
-    const namePattern = /[一-龠ぁ-んァ-ヶー]{2,}/;
-    name = words.find(w => namePattern.test(w)) || "";
+    // 2. 品番の判定：英数字を含む かつ 3文字以上
+    // (既に商品名として確定したものはスキップ)
+    if (!code && /^[A-Za-z0-9\-]{3,}$/.test(w)) {
+      // 5文字未満の数字や、英字混じりのものは品番候補
+      code = w;
+    }
   }
 
   // 反映
