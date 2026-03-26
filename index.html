@@ -16,32 +16,50 @@ header h1 { font-size: 17px; font-weight: 700; color: var(--accent); }
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; background: var(--accent-light); }
 .panel { display: none; padding: 14px; }
 .panel.active { display: block; }
+
+/* 手順書スタイル */
+.howto { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.howto-title { font-size: 13px; font-weight: 700; color: #b45309; margin-bottom: 10px; }
+.howto-step { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 6px; }
+.step-num { width: 18px; height: 18px; border-radius: 50%; background: #b45309; color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* 入力欄・カードスタイル */
 .card { background: var(--surface); border-radius: 14px; padding: 16px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: var(--shadow); }
-input, select { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 10px; }
-.btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.1s; }
+label { display: block; font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 5px; }
+input, select { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
+input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+/* ボタン類 */
+.btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.1s; margin-top: 5px; }
+.btn:active { opacity: 0.8; transform: scale(0.98); }
 .btn-blue { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: white; }
 .btn-red { background: var(--red); color: white; }
 .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text2); }
-.item-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 12px; margin-bottom: 8px; position: relative; }
+.btn-small { padding: 8px 12px; font-size: 12px; width: auto; }
+
+/* リストアイテム */
+.item-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 8px; position: relative; }
 .item-name { font-weight: 700; font-size: 15px; }
-.item-code { font-size: 11px; color: var(--text2); font-family: monospace; }
+.item-code { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
 .edit-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); gap: 8px; align-items: center; }
 .edit-row.active { display: flex; }
-.io-controls { display: flex; gap: 8px; margin-top: 10px; }
-.io-input { margin-bottom: 0; flex: 1; text-align: center; font-family: 'JetBrains Mono', monospace; }
-.io-btn { width: 70px; padding: 8px; font-size: 12px; }
-#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #334155; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: 0.3s; z-index: 1000; }
+
+.io-controls { display: flex; gap: 8px; margin-top: 12px; }
+.io-input { margin-bottom: 0; flex: 1; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.io-btn { width: 70px; padding: 10px; font-size: 13px; }
+
+/* その他UI */
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
-.scan-area { background: #eef2ff; border: 2px dashed var(--accent); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
-.badge { background: var(--accent); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+.scan-area { background: #eff6ff; border: 2px dashed var(--accent); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>📦 在庫・入出庫管理</h1>
-  <div id="hdr-date" style="font-size:12px;"></div>
+  <div id="hdr-date" style="font-size:12px; font-family:'JetBrains Mono', monospace; color:var(--text2);"></div>
 </header>
 
 <div class="tab-bar">
@@ -52,16 +70,25 @@ input, select { background: #f8fafc; border: 1.5px solid var(--border); border-r
 </div>
 
 <div class="panel active" id="panel-io-reg">
+  <div class="howto">
+    <div class="howto-title">💡 テキストスキャン手順</div>
+    <div class="howto-step"><span class="step-num">1</span>記入欄を一度タップして、カーソルが点滅したら</div>
+    <div class="howto-step"><span class="step-num">2</span>再度記入欄を長押し</div>
+    <div class="howto-step"><span class="step-num">3</span>「自動入力」を選択</div>
+    <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
+  </div>
+
   <div class="scan-area">
-    <p style="font-size:12px; color:var(--accent); font-weight:700; margin-bottom:8px;">【長押し→スキャンで自動抽出】</p>
+    <p style="font-size:12px; color:var(--accent); font-weight:700; margin-bottom:8px;">【指図書をスキャンして自動抽出】</p>
     <input type="text" id="auto-extractor" placeholder="ここをタップしてスキャン" oninput="extractData(this.value)">
   </div>
+  
   <div class="card">
-    <label style="font-size:11px; font-weight:700;">商品コード（品番）</label>
+    <label>商品コード（品番）</label>
     <input type="text" id="io-code-scan" placeholder="自動抽出されます">
-    <label style="font-size:11px; font-weight:700;">商品名</label>
+    <label>商品名</label>
     <input type="text" id="io-name-scan" placeholder="自動抽出されます">
-    <button class="btn btn-blue" onclick="saveIOMaster()">📌 マスター登録・更新</button>
+    <button class="btn btn-blue" onclick="saveIOMaster()">✅ 登録を実行</button>
   </div>
 </div>
 
@@ -71,14 +98,32 @@ input, select { background: #f8fafc; border: 1.5px solid var(--border); border-r
 </div>
 
 <div class="panel" id="panel-inv-reg">
+  <div class="howto">
+    <div class="howto-title">💡 テキストスキャン手順</div>
+    <div class="howto-step"><span class="step-num">1</span>記入欄を一度タップして、カーソルが点滅したら</div>
+    <div class="howto-step"><span class="step-num">2</span>再度記入欄を長押し</div>
+    <div class="howto-step"><span class="step-num">3</span>「自動入力」を選択</div>
+    <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
+  </div>
+
   <div class="card">
-    <label style="font-size:11px; font-weight:700;">商品名 / 品番</label>
+    <label>商品名 / 品番</label>
     <input type="text" id="inv-name" placeholder="タップしてスキャン...">
+    
     <div style="display:flex; gap:10px;">
-      <div style="flex:2;"><label style="font-size:11px; font-weight:700;">数量</label><input type="number" id="inv-qty" value="0"></div>
-      <div style="flex:1;"><label style="font-size:11px; font-weight:700;">単位</label><select id="inv-unit"><option>個</option><option>本</option><option>枚</option></select></div>
+      <div style="flex:2;">
+        <label>数量</label>
+        <input type="number" id="inv-qty" value="0">
+      </div>
+      <div style="flex:1;">
+        <label>単位</label>
+        <select id="inv-unit">
+          <option>個</option>
+          <option>mm</option>
+        </select>
+      </div>
     </div>
-    <button class="btn btn-blue" onclick="saveInventory()">✅ 棚卸登録を実行</button>
+    <button class="btn btn-blue" onclick="saveInventory()">✅ 登録を実行</button>
   </div>
 </div>
 
@@ -112,7 +157,7 @@ function switchTab(tabId) {
   if(tabId === 'inv-list') { tabs[3].classList.add('active'); renderInvList(); }
 }
 
-[span_0](start_span)// 抽出ロジック[span_0](end_span)
+// ---------------- 入出庫の処理 ----------------
 function extractData(val) {
   if (!val) return;
   const lines = val.split(/[\s\n]+/);
@@ -126,33 +171,42 @@ function extractData(val) {
   setTimeout(() => document.getElementById('auto-extractor').value = '', 500);
 }
 
-[span_1](start_span)// 入出庫マスター保存[span_1](end_span)
 function saveIOMaster() {
   const code = document.getElementById('io-code-scan').value.trim();
   const name = document.getElementById('io-name-scan').value.trim();
   if(!code || !name) return showToast('データが不足しています');
+  
   const exIndex = ioItems.findIndex(i => i.code === code);
   if(exIndex > -1) { ioItems[exIndex].name = name; } 
   else { ioItems.push({ code, name, stock: 0 }); }
+  
   localStorage.setItem('io_data', JSON.stringify(ioItems));
-  showToast('マスターを保存しました');
+  showToast('登録を実行しました ✅');
+  
+  document.getElementById('io-code-scan').value = '';
+  document.getElementById('io-name-scan').value = '';
   renderIOList();
 }
 
-[span_2](start_span)// 入出庫一覧表示[span_2](end_span)
 function renderIOList() {
   const query = document.getElementById('io-search').value.toLowerCase();
   const target = document.getElementById('io-display-list');
   const filtered = ioItems.filter(i => i.code.toLowerCase().includes(query) || i.name.toLowerCase().includes(query));
+  
   target.innerHTML = filtered.map(item => `
     <div class="item-card">
-      <div class="item-code">${item.code}</div>
-      <div class="item-name">${item.name}</div>
-      <div style="margin-top:8px; font-size:14px; color:var(--accent);">現在の在庫: <strong>${item.stock}</strong></div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div class="item-code">${item.code}</div>
+          <div class="item-name">${item.name}</div>
+        </div>
+        <button class="btn-outline btn-small" style="color:var(--red); border-color:#fca5a5;" onclick="deleteIOItem('${item.code}')">🗑️ 削除</button>
+      </div>
+      <div style="margin-top:8px; font-size:14px; color:var(--text2);">現在の在庫: <strong style="color:var(--accent); font-size:18px;">${item.stock}</strong></div>
       <div class="io-controls">
         <input type="number" class="io-input" id="amt-${item.code}" value="1">
-        <button class="io-btn btn-green" onclick="updateStock('${item.code}', 1)">入庫</button>
-        <button class="io-btn btn-red" onclick="updateStock('${item.code}', -1)">出庫</button>
+        <button class="btn btn-green io-btn" onclick="updateStock('${item.code}', 1)">入庫</button>
+        <button class="btn btn-red io-btn" onclick="updateStock('${item.code}', -1)">出庫</button>
       </div>
     </div>
   `).join('');
@@ -165,11 +219,19 @@ function updateStock(code, multiplier) {
     item.stock += (amount * multiplier);
     localStorage.setItem('io_data', JSON.stringify(ioItems));
     renderIOList();
-    showToast('在庫を更新しました');
+    showToast(multiplier > 0 ? '入庫しました' : '出庫しました');
   }
 }
 
-[span_3](start_span)// 棚卸登録（修正：ここで確実に保存）[span_3](end_span)
+function deleteIOItem(code) {
+  if(!confirm('この品番のデータを削除しますか？')) return;
+  ioItems = ioItems.filter(i => i.code !== code);
+  localStorage.setItem('io_data', JSON.stringify(ioItems));
+  renderIOList();
+  showToast('削除しました');
+}
+
+// ---------------- 棚卸の処理 ----------------
 function saveInventory() {
   const name = document.getElementById('inv-name').value.trim();
   const qty = parseFloat(document.getElementById('inv-qty').value) || 0;
@@ -182,10 +244,9 @@ function saveInventory() {
   
   document.getElementById('inv-name').value = '';
   document.getElementById('inv-qty').value = '0';
-  showToast('棚卸登録完了 ✅');
+  showToast('登録を実行しました ✅');
 }
 
-[span_4](start_span)// 棚卸一覧表示（追加：数を修正できる機能）[span_4](end_span)
 function renderInvList() {
   const target = document.getElementById('inv-display-list');
   if(inventoryItems.length === 0) {
@@ -194,14 +255,21 @@ function renderInvList() {
   }
   target.innerHTML = inventoryItems.slice().reverse().map(item => `
     <div class="item-card">
-      <div style="font-size:10px; color:#94a3b8;">${item.date}</div>
-      <div class="item-name">${item.name}</div>
-      <div style="margin-top:5px;">数量: <strong style="color:var(--green);">${item.qty}</strong> ${item.unit}</div>
-      <button class="btn btn-outline" style="margin-top:8px; padding:5px; font-size:12px;" onclick="toggleEdit(${item.id})">数量を修正する</button>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="font-size:10px; color:#94a3b8; font-family:'JetBrains Mono', monospace;">${item.date}</div>
+          <div class="item-name" style="margin-top:2px;">${item.name}</div>
+        </div>
+        <button class="btn-outline btn-small" style="color:var(--red); border-color:#fca5a5;" onclick="deleteInvItem(${item.id})">🗑️ 削除</button>
+      </div>
+      
+      <div style="margin-top:8px; font-size:14px;">数量: <strong style="color:var(--green); font-size:18px;">${item.qty}</strong> <span style="font-size:12px; color:var(--text2);">${item.unit}</span></div>
+      
+      <button class="btn btn-outline btn-small" style="margin-top:8px; width:100%;" onclick="toggleEdit(${item.id})">✏️ 数量を修正する</button>
       
       <div class="edit-row" id="edit-${item.id}">
-        <input type="number" id="newqty-${item.id}" value="${item.qty}" style="margin-bottom:0; flex:1;">
-        <button class="btn btn-green" style="width:60px; padding:10px;" onclick="saveEdit(${item.id})">保存</button>
+        <input type="number" id="newqty-${item.id}" value="${item.qty}" style="margin-bottom:0; flex:1; font-family:'JetBrains Mono', monospace; font-weight:700;">
+        <button class="btn btn-green" style="width:70px; margin-top:0;" onclick="saveEdit(${item.id})">保存</button>
       </div>
     </div>
   `).join('');
@@ -220,6 +288,14 @@ function saveEdit(id) {
     renderInvList();
     showToast('数量を修正しました');
   }
+}
+
+function deleteInvItem(id) {
+  if(!confirm('この棚卸データを削除しますか？')) return;
+  inventoryItems = inventoryItems.filter(i => i.id !== id);
+  localStorage.setItem('inv_data', JSON.stringify(inventoryItems));
+  renderInvList();
+  showToast('削除しました');
 }
 
 function exportCSV() {
