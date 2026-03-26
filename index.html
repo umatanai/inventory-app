@@ -1,224 +1,222 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>製造管理システム Pro</title>
-    <style>
-        :root { --primary: #1e293b; --accent: #3b82f6; --success: #10b981; --bg: #f8fafc; --text: #334155; }
-        body { font-family: -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 60px; }
-        
-        /* Header & Tabs */
-        header { background: var(--primary); color: white; padding: 16px; text-align: center; font-size: 18px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .tabs { display: flex; background: white; border-bottom: 1px solid #e2e8f0; sticky: top; z-index: 100; }
-        .tab { flex: 1; padding: 14px; text-align: center; font-size: 14px; font-weight: bold; color: #94a3b8; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; }
-        .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: #f0f7ff; }
-
-        .content { display: none; padding: 16px; max-width: 600px; margin: auto; animation: fadeIn 0.3s ease; }
-        .content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Cards */
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 16px; }
-        label { font-size: 12px; font-weight: bold; color: #64748b; display: block; margin-bottom: 8px; text-transform: uppercase; }
-        
-        /* Input Area */
-        textarea { width: 100%; height: 120px; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; background: #fafafa; margin-bottom: 16px; outline: none; transition: 0.2s; }
-        textarea:focus { border-color: var(--accent); background: white; }
-        
-        .parsed-info { background: #f1f5f9; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 4px solid var(--accent); }
-        .parsed-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
-        .parsed-val { font-weight: bold; color: var(--primary); }
-
-        /* List Table */
-        .item-list { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .item-row { border-bottom: 1px solid #e2e8f0; padding: 15px 0; display: block; }
-        .item-info { margin-bottom: 10px; }
-        .item-name { font-size: 15px; font-weight: bold; display: block; }
-        .item-code { font-size: 12px; color: #64748b; font-family: monospace; }
-        
-        /* Action Buttons */
-        .btn-group { display: flex; gap: 8px; }
-        .btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; }
-        .btn:active { transform: scale(0.95); }
-        .btn-in { background: #dcfce7; color: #166534; }
-        .btn-out { background: #fee2e2; color: #991b1b; }
-        .btn-st { background: #dbeafe; color: #1e40af; }
-        .btn-main { background: var(--accent); color: white; width: 100%; padding: 14px; font-size: 16px; margin-top: 10px; }
-        .btn-excel { background: var(--success); color: white; margin-top: 20px; }
-
-        /* Modal for Qty */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 16px; width: 85%; max-width: 350px; text-align: center; }
-        .qty-input { width: 100%; padding: 15px; font-size: 24px; text-align: center; border: 1px solid #cbd5e1; border-radius: 8px; margin: 15px 0; inputmode: numeric; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在庫・入出庫管理（自動抽出版）</title>
+<style>
+/* スタイルは前回を継承しつつ、スキャンエリアを強調 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap');
+:root { --bg: #f0f4f8; --surface: #ffffff; --border: #dde3ea; --accent: #2563eb; --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b; --text2: #64748b; --shadow: 0 1px 3px rgba(0,0,0,0.08); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 20px; }
+header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); }
+header h1 { font-size: 17px; font-weight: 700; color: var(--accent); }
+.tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+.tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; background: var(--accent-light); }
+.panel { display: none; padding: 14px; }
+.panel.active { display: block; }
+.card { background: var(--surface); border-radius: 14px; padding: 16px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: var(--shadow); }
+input, select { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 10px; }
+.btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.1s; }
+.btn-blue { background: var(--accent); color: white; }
+.btn-green { background: var(--green); color: white; }
+.btn-red { background: var(--red); color: white; }
+.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text2); }
+.item-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 12px; margin-bottom: 8px; }
+.item-name { font-weight: 700; font-size: 15px; }
+.item-code { font-size: 11px; color: var(--text2); font-family: monospace; }
+.io-controls { display: flex; gap: 8px; margin-top: 10px; }
+.io-input { margin-bottom: 0; flex: 1; text-align: center; font-family: 'JetBrains Mono', monospace; }
+.io-btn { width: 70px; padding: 8px; font-size: 12px; }
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #334155; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: 0.3s; z-index: 1000; }
+#toast.show { opacity: 1; }
+.scan-area { background: #eef2ff; border: 2px dashed var(--accent); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
+.scan-area p { font-size: 12px; color: var(--accent); font-weight: 700; }
+</style>
 </head>
 <body>
 
-<header>MANUFACTURING PRO</header>
+<header>
+  <h1>📦 在庫・入出庫管理</h1>
+  <div id="hdr-date" style="font-size:12px;"></div>
+</header>
 
-<div class="tabs">
-    <div class="tab active" onclick="showTab('scan')">SCAN</div>
-    <div class="tab" onclick="showTab('items')">LIST / IN-OUT</div>
-    <div class="tab" onclick="showTab('stocktake')">STOCKTAKE</div>
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('io-reg')">📥 入出庫登録</div>
+  <div class="tab" onclick="switchTab('io-list')">🗂️ 入出庫一覧</div>
+  <div class="tab" onclick="switchTab('inv-reg')">📋 棚卸</div>
 </div>
 
-<div id="scan" class="content active">
-    <div class="card">
-        <label>現品票スキャン（長押し ➔ スキャン）</label>
-        <textarea id="raw-input" placeholder="テキストをここに流し込んでください..." oninput="quickParse()"></textarea>
-        
-        <div class="parsed-info">
-            <div class="parsed-row"><span>品番</span><span id="p-code" class="parsed-val">---</span></div>
-            <div class="parsed-row"><span>商品名</span><span id="p-name" class="parsed-val">---</span></div>
-        </div>
-        
-        <button class="btn btn-main" onclick="addItemToList()">リストへ追加</button>
+<div class="panel active" id="panel-io-reg">
+  <div class="scan-area">
+    <p>【ここに貼り付けで自動抽出】</p>
+    <input type="text" id="auto-extractor" placeholder="長押し→自動入力→スキャン" oninput="extractData(this.value)">
+  </div>
+  
+  <div class="card">
+    <label style="font-size:11px;">商品コード（品番）</label>
+    <input type="text" id="io-code-scan" placeholder="自動抽出されます">
+    <label style="font-size:11px;">商品名</label>
+    <input type="text" id="io-name-scan" placeholder="自動抽出されます">
+    <button class="btn btn-blue" onclick="saveIOMaster()">📌 入出庫リストへ追加・更新</button>
+  </div>
+</div>
+
+<div class="panel" id="panel-io-list">
+  <input type="text" id="io-search" placeholder="品番・名称で検索..." oninput="renderIOList()">
+  <div id="io-display-list"></div>
+  <button class="btn btn-outline" style="margin-top:20px;" onclick="clearAll('io')">🗑️ 全リスト削除</button>
+</div>
+
+<div class="panel" id="panel-inv-reg">
+  <div class="card">
+    <label style="font-size:11px;">商品名 / 品番</label>
+    <input type="text" id="inv-name" placeholder="タップしてスキャン...">
+    <div style="display:flex; gap:10px;">
+      <div style="flex:2;"><label style="font-size:11px;">数量</label><input type="number" id="inv-qty" value="0"></div>
+      <div style="flex:1;"><label style="font-size:11px;">単位</label><select id="inv-unit"><option>個</option><option>mm</option></select></div>
     </div>
+    <button class="btn btn-blue" onclick="saveInventory()">✅ 棚卸登録</button>
+  </div>
+  <button class="btn btn-green" onclick="exportCSV()">⬇️ 棚卸エクセル出力</button>
+  <button class="btn btn-outline" style="margin-top:10px;" onclick="clearAll('inventory')">🗑️ 棚卸データ削除</button>
 </div>
 
-<div id="items" class="content">
-    <div id="list-container">
-        </div>
-</div>
-
-<div id="stocktake" class="content">
-    <div class="card" style="padding:0; overflow:hidden;">
-        <table style="width:100%; border-collapse: collapse; font-size: 13px;">
-            <thead style="background:#f1f5f9;">
-                <tr><th style="padding:12px; text-align:left;">品番</th><th style="padding:12px; text-align:right;">実在庫</th></tr>
-            </thead>
-            <tbody id="st-body"></tbody>
-        </table>
-    </div>
-    <button class="btn btn-main btn-excel" onclick="exportToExcel()">棚卸しデータをExcel出力</button>
-</div>
-
-<div id="qtyModal" class="modal">
-    <div class="modal-content">
-        <h3 id="modal-title" style="margin:0;">数量入力</h3>
-        <p id="modal-subtitle" style="font-size:12px; color:#64748b; margin:5px 0;"></p>
-        <input type="number" id="qty-val" class="qty-input" placeholder="0" inputmode="numeric">
-        <div style="display:flex; gap:10px;">
-            <button class="btn" style="background:#e2e8f0;" onclick="closeModal()">キャンセル</button>
-            <button class="btn btn-main" style="margin-top:0;" onclick="confirmRecord()">確定</button>
-        </div>
-    </div>
-</div>
+<div id="toast"></div>
 
 <script>
-    let masterList = [];
-    let records = [];
-    let currentTask = { type: '', code: '', name: '' };
+let inventoryItems = JSON.parse(localStorage.getItem('inv_data') || '[]');
+let ioItems = JSON.parse(localStorage.getItem('io_data') || '[]');
 
-    function showTab(id) {
-        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        event.currentTarget.classList.add('active');
-        if(id === 'items') renderList();
-        if(id === 'stocktake') renderStocktake();
+function init() {
+  const n = new Date();
+  document.getElementById('hdr-date').textContent = `${n.getFullYear()}/${n.getMonth()+1}/${n.getDate()}`;
+  renderIOList();
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + tabId).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+[span_0](start_span)[span_1](start_span)// データ抽出ロジック[span_0](end_span)[span_1](end_span)
+function extractData(val) {
+  if (!val) return;
+  
+  // 改行や空白で分割して解析
+  const lines = val.split(/[\s\n]+/);
+  let code = "";
+  let name = "";
+
+  // 画像の形式に基づいた抽出ロジック
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes("商品コード") || lines[i].includes("品目コード")) {
+      code = lines[i+1] || "";
     }
-
-    // テキスト抽出
-    function quickParse() {
-        const raw = document.getElementById('raw-input').value.replace(/\s+/g, "");
-        let code = "---", name = "---";
-        const codeMatch = raw.match(/[A-Z]{1,2}[0-9]{4,}[A-Z0-9-]*/);
-        if (codeMatch) code = codeMatch[0];
-        if (raw.includes("商品名")) name = raw.split("商品名")[1].split("規格")[0];
-        document.getElementById('p-code').innerText = code;
-        document.getElementById('p-name').innerText = name;
+    if (lines[i].includes("商品名")) {
+      name = lines[i+1] || "";
     }
+  }
 
-    function addItemToList() {
-        const code = document.getElementById('p-code').innerText;
-        const name = document.getElementById('p-name').innerText;
-        if (code === "---") return alert("品番を読み取ってください");
-        
-        if (!masterList.find(i => i.code === code)) {
-            masterList.push({ code, name });
-        }
-        document.getElementById('raw-input').value = "";
-        showTab('items');
-        // タブの見た目も更新
-        document.querySelectorAll('.tab')[1].click(); 
-    }
+  // 抽出できたら各入力欄にセット
+  if (code) document.getElementById('io-code-scan').value = code;
+  if (name) document.getElementById('io-name-scan').value = name;
+  
+  // スキャン用バッファをクリア
+  setTimeout(() => document.getElementById('auto-extractor').value = '', 500);
+  if (code || name) showToast("データを抽出しました ✨");
+}
 
-    function renderList() {
-        const container = document.getElementById('list-container');
-        container.innerHTML = masterList.length === 0 ? '<p style="text-align:center; color:#94a3b8; margin-top:40px;">アイテムがありません。<br>SCANから追加してください。</p>' : '';
-        
-        masterList.forEach(item => {
-            container.innerHTML += `
-                <div class="card" style="margin-bottom:10px;">
-                    <div class="item-info">
-                        <span class="item-name">${item.name}</span>
-                        <span class="item-code">${item.code}</span>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-in" onclick="openModal('入庫', '${item.code}', '${item.name}')">📥 入庫</button>
-                        <button class="btn btn-out" onclick="openModal('出庫', '${item.code}', '${item.name}')">📤 出庫</button>
-                        <button class="btn btn-st" onclick="openModal('棚卸', '${item.code}', '${item.name}')">📋 棚卸し</button>
-                    </div>
-                </div>`;
-        });
-    }
+function saveIOMaster() {
+  const code = document.getElementById('io-code-scan').value.trim();
+  const name = document.getElementById('io-name-scan').value.trim();
+  if(!code || !name) return showToast('データが不足しています');
 
-    function openModal(type, code, name) {
-        currentTask = { type, code, name };
-        document.getElementById('modal-title').innerText = type + "処理";
-        document.getElementById('modal-subtitle').innerText = name + " (" + code + ")";
-        document.getElementById('qtyModal').style.display = 'flex';
-        document.getElementById('qty-val').focus();
-    }
+  const exIndex = ioItems.findIndex(i => i.code === code);
+  if(exIndex > -1) {
+    ioItems[exIndex].name = name; // 名前が更新された場合用
+    showToast('既存の商品を更新しました');
+  } else {
+    ioItems.push({ code, name, stock: 0 });
+    showToast('新規登録しました');
+  }
+  localStorage.setItem('io_data', JSON.stringify(ioItems));
+  renderIOList();
+}
 
-    function closeModal() {
-        document.getElementById('qtyModal').style.display = 'none';
-        document.getElementById('qty-val').value = '';
-    }
+function renderIOList() {
+  const query = document.getElementById('io-search').value.toLowerCase();
+  const target = document.getElementById('io-display-list');
+  const filtered = ioItems.filter(i => i.code.toLowerCase().includes(query) || i.name.toLowerCase().includes(query));
 
-    function confirmRecord() {
-        const qty = document.getElementById('qty-val').value;
-        if (!qty) return alert("数量を入力してください");
-        
-        const timestamp = new Date().toLocaleString();
-        records.push({ ...currentTask, qty, timestamp });
-        
-        alert(`${currentTask.type}を記録しました`);
-        closeModal();
-        if(currentTask.type === '棚卸') renderStocktake();
-    }
+  target.innerHTML = filtered.reverse().map(item => `
+    <div class="item-card">
+      <div class="item-code">${item.code}</div>
+      <div class="item-name">${item.name}</div>
+      <div style="margin-top:8px; font-size:14px; color:var(--accent);">在庫: <strong>${item.stock}</strong></div>
+      <div class="io-controls">
+        <input type="number" class="io-input" id="amt-${item.code}" value="1">
+        <button class="io-btn btn-green" onclick="updateStock('${item.code}', 1)">入庫</button>
+        <button class="io-btn btn-red" onclick="updateStock('${item.code}', -1)">出庫</button>
+      </div>
+    </div>
+  `).join('');
+}
 
-    function renderStocktake() {
-        const body = document.getElementById('st-body');
-        const stData = records.filter(r => r.type === '棚卸');
-        body.innerHTML = stData.length === 0 ? '<tr><td colspan="2" style="padding:20px; text-align:center; color:#94a3b8;">棚卸しデータがありません</td></tr>' : '';
-        
-        // 最新の棚卸し値を表示
-        const latestST = {};
-        stData.forEach(r => { latestST[r.code] = r; });
-        
-        Object.values(latestST).forEach(r => {
-            body.innerHTML += `<tr><td style="padding:12px; border-bottom:1px solid #f1f5f9;">${r.code}<br><small style="color:#64748b">${r.name}</small></td><td style="padding:12px; text-align:right; font-weight:bold; border-bottom:1px solid #f1f5f9;">${r.qty}</td></tr>`;
-        });
-    }
+function updateStock(code, multiplier) {
+  const amtInput = document.getElementById(`amt-${code}`);
+  const amount = parseFloat(amtInput.value) || 0;
+  const item = ioItems.find(i => i.code === code);
+  if(item) {
+    item.stock += (amount * multiplier);
+    if(item.stock < 0) item.stock = 0;
+    localStorage.setItem('io_data', JSON.stringify(ioItems));
+    renderIOList();
+    showToast(multiplier > 0 ? '入庫しました' : '出庫しました');
+  }
+}
 
-    function exportToExcel() {
-        const stData = records.filter(r => r.type === '棚卸');
-        if(stData.length === 0) return alert("出力するデータがありません");
-        
-        let csv = "日時,品番,商品名,実在庫数量\n";
-        stData.forEach(r => {
-            csv += `${r.timestamp},${r.code},${r.name},${r.qty}\n`;
-        });
+[span_2](start_span)[span_3](start_span)// 棚卸・エクスポート・削除[span_2](end_span)[span_3](end_span)
+function saveInventory() {
+  const name = document.getElementById('inv-name').value.trim();
+  const qty = parseFloat(document.getElementById('inv-qty').value) || 0;
+  const unit = document.getElementById('inv-unit').value;
+  if(!name) return showToast('名称を入力してください');
+  inventoryItems.push({ name, qty, unit, date: new Date().toLocaleString() });
+  localStorage.setItem('inv_data', JSON.stringify(inventoryItems));
+  showToast('棚卸登録完了');
+}
 
-        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `棚卸報告_${new Date().toLocaleDateString()}.csv`;
-        link.click();
-    }
+function exportCSV() {
+  if(!inventoryItems.length) return showToast('データがありません');
+  let csv = "\uFEFF商品名,数量,単位,日時\n";
+  inventoryItems.forEach(i => csv += `"${i.name}",${i.qty},"${i.unit}","${i.date}"\n`);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `棚卸_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function clearAll(type) {
+  if(!confirm('本当に全データを削除しますか？')) return;
+  if(type === 'inventory') { inventoryItems = []; localStorage.removeItem('inv_data'); }
+  else { ioItems = []; localStorage.removeItem('io_data'); }
+  showToast('削除しました');
+  renderIOList();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+init();
 </script>
 </body>
 </html>
