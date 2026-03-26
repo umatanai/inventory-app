@@ -3,213 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>現場スキャン管理</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>製造管理システム Pro</title>
     <style>
-        body { background-color: #f8fafc; padding-bottom: 80px; }
-        .tab-content { display: none; }
-        .active { display: block; }
-        .mode-switch { transition: all 0.3s; }
+        :root { --primary: #1e293b; --accent: #3b82f6; --success: #10b981; --bg: #f8fafc; --text: #334155; }
+        body { font-family: -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 60px; }
+        
+        /* Header & Tabs */
+        header { background: var(--primary); color: white; padding: 16px; text-align: center; font-size: 18px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .tabs { display: flex; background: white; border-bottom: 1px solid #e2e8f0; sticky: top; z-index: 100; }
+        .tab { flex: 1; padding: 14px; text-align: center; font-size: 14px; font-weight: bold; color: #94a3b8; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: #f0f7ff; }
+
+        .content { display: none; padding: 16px; max-width: 600px; margin: auto; animation: fadeIn 0.3s ease; }
+        .content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Cards */
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 16px; }
+        label { font-size: 12px; font-weight: bold; color: #64748b; display: block; margin-bottom: 8px; text-transform: uppercase; }
+        
+        /* Input Area */
+        textarea { width: 100%; height: 120px; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; background: #fafafa; margin-bottom: 16px; outline: none; transition: 0.2s; }
+        textarea:focus { border-color: var(--accent); background: white; }
+        
+        .parsed-info { background: #f1f5f9; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 4px solid var(--accent); }
+        .parsed-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
+        .parsed-val { font-weight: bold; color: var(--primary); }
+
+        /* List Table */
+        .item-list { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .item-row { border-bottom: 1px solid #e2e8f0; padding: 15px 0; display: block; }
+        .item-info { margin-bottom: 10px; }
+        .item-name { font-size: 15px; font-weight: bold; display: block; }
+        .item-code { font-size: 12px; color: #64748b; font-family: monospace; }
+        
+        /* Action Buttons */
+        .btn-group { display: flex; gap: 8px; }
+        .btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .btn:active { transform: scale(0.95); }
+        .btn-in { background: #dcfce7; color: #166534; }
+        .btn-out { background: #fee2e2; color: #991b1b; }
+        .btn-st { background: #dbeafe; color: #1e40af; }
+        .btn-main { background: var(--accent); color: white; width: 100%; padding: 14px; font-size: 16px; margin-top: 10px; }
+        .btn-excel { background: var(--success); color: white; margin-top: 20px; }
+
+        /* Modal for Qty */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 16px; width: 85%; max-width: 350px; text-align: center; }
+        .qty-input { width: 100%; padding: 15px; font-size: 24px; text-align: center; border: 1px solid #cbd5e1; border-radius: 8px; margin: 15px 0; inputmode: numeric; }
     </style>
 </head>
 <body>
 
-<div class="max-w-md mx-auto min-h-screen">
-    
-    <div id="page_scan" class="tab-content active p-4">
-        <h1 class="text-xl font-bold text-center mb-4 text-gray-800">スキャン入力</h1>
+<header>MANUFACTURING PRO</header>
+
+<div class="tabs">
+    <div class="tab active" onclick="showTab('scan')">SCAN</div>
+    <div class="tab" onclick="showTab('items')">LIST / IN-OUT</div>
+    <div class="tab" onclick="showTab('stocktake')">STOCKTAKE</div>
+</div>
+
+<div id="scan" class="content active">
+    <div class="card">
+        <label>現品票スキャン（長押し ➔ スキャン）</label>
+        <textarea id="raw-input" placeholder="テキストをここに流し込んでください..." oninput="quickParse()"></textarea>
         
-        <div class="flex bg-gray-200 rounded-lg p-1 mb-6">
-            <button id="btn_move_mode" onclick="setMode('move')" class="flex-1 py-2 rounded-md font-bold text-sm mode-switch bg-white shadow text-blue-600">入出庫管理</button>
-            <button id="btn_inv_mode" onclick="setMode('inv')" class="flex-1 py-2 rounded-md font-bold text-sm mode-switch text-gray-500">棚卸モード</button>
+        <div class="parsed-info">
+            <div class="parsed-row"><span>品番</span><span id="p-code" class="parsed-val">---</span></div>
+            <div class="parsed-row"><span>商品名</span><span id="p-name" class="parsed-val">---</span></div>
         </div>
+        
+        <button class="btn btn-main" onclick="addItemToList()">リストへ追加</button>
+    </div>
+</div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-md border-2 border-blue-100 mb-4">
-            <label class="block text-xs font-black text-blue-500 mb-2 uppercase">① 品番テキストスキャン</label>
-            <input type="text" id="mainScan" oninput="handleScan(this.value)" placeholder="ここをタップしてスキャン" 
-                   class="w-full p-4 border-2 border-blue-300 rounded-xl text-sm focus:ring-4 focus:ring-blue-100 outline-none">
-            
-            <div class="grid grid-cols-2 gap-3 mt-4">
-                <div class="bg-gray-50 p-2 rounded-lg border">
-                    <span class="text-[10px] text-gray-400 block">品番</span>
-                    <input type="text" id="resCode" class="w-full font-mono font-bold bg-transparent outline-none" placeholder="---">
-                </div>
-                <div class="bg-gray-50 p-2 rounded-lg border">
-                    <span class="text-[10px] text-gray-400 block">商品名</span>
-                    <input type="text" id="resName" class="w-full font-bold bg-transparent outline-none text-sm" placeholder="---">
-                </div>
-            </div>
+<div id="items" class="content">
+    <div id="list-container">
         </div>
+</div>
 
-        <div id="ui_move" class="space-y-4">
-            <div class="bg-white p-5 rounded-2xl shadow-md">
-                <label class="block text-xs font-black text-gray-400 mb-2 uppercase">② 数量入力</label>
-                <input type="number" id="moveQty" placeholder="0" class="w-full p-4 border rounded-xl text-4xl text-center font-black bg-gray-50">
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="execute('入庫')" class="bg-blue-600 text-white py-6 rounded-2xl text-xl font-black shadow-lg active:scale-95">入庫 (+)</button>
-                <button onclick="execute('出庫')" class="bg-red-500 text-white py-6 rounded-2xl text-xl font-black shadow-lg active:scale-95">出庫 (-)</button>
-            </div>
-        </div>
+<div id="stocktake" class="content">
+    <div class="card" style="padding:0; overflow:hidden;">
+        <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead style="background:#f1f5f9;">
+                <tr><th style="padding:12px; text-align:left;">品番</th><th style="padding:12px; text-align:right;">実在庫</th></tr>
+            </thead>
+            <tbody id="st-body"></tbody>
+        </table>
+    </div>
+    <button class="btn btn-main btn-excel" onclick="exportToExcel()">棚卸しデータをExcel出力</button>
+</div>
 
-        <div id="ui_inv" class="hidden space-y-4">
-            <div class="bg-purple-50 p-5 rounded-2xl border-2 border-purple-200 shadow-md">
-                <label class="block text-xs font-black text-purple-600 mb-2 uppercase">実在庫数を入力</label>
-                <div class="flex gap-3">
-                    <input type="number" id="invQty" placeholder="0" class="flex-1 p-4 border-2 border-purple-300 rounded-xl text-4xl text-center font-black bg-white">
-                    <button onclick="execute('棚卸')" class="bg-purple-600 text-white px-8 rounded-2xl text-lg font-black shadow-lg active:scale-95">確定</button>
-                </div>
-            </div>
+<div id="qtyModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modal-title" style="margin:0;">数量入力</h3>
+        <p id="modal-subtitle" style="font-size:12px; color:#64748b; margin:5px 0;"></p>
+        <input type="number" id="qty-val" class="qty-input" placeholder="0" inputmode="numeric">
+        <div style="display:flex; gap:10px;">
+            <button class="btn" style="background:#e2e8f0;" onclick="closeModal()">キャンセル</button>
+            <button class="btn btn-main" style="margin-top:0;" onclick="confirmRecord()">確定</button>
         </div>
     </div>
-
-    <div id="page_list" class="tab-content p-4">
-        <h2 class="font-bold text-lg mb-4 flex justify-between items-center">
-            在庫マスター <span>(修正可)</span>
-        </h2>
-        <div id="masterList" class="space-y-3"></div>
-    </div>
-
-    <div id="page_results" class="tab-content p-4">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="font-bold text-lg">棚卸結果データ</h2>
-            <button onclick="exportCSV()" class="bg-green-600 text-white px-4 py-2 rounded-full font-bold text-xs shadow">CSV出力</button>
-        </div>
-        <div id="invList" class="space-y-2"></div>
-    </div>
-
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex text-[10px] font-bold shadow-2xl z-50 max-w-md mx-auto">
-        <button onclick="showPage('scan')" class="flex-1 py-4 text-blue-600 border-t-4 border-blue-600">スキャン入力</button>
-        <button onclick="showPage('list')" class="flex-1 py-4 text-gray-400">在庫一覧・修正</button>
-        <button onclick="showPage('results')" class="flex-1 py-4 text-gray-400">棚卸結果・出力</button>
-    </nav>
-
 </div>
 
 <script>
-    let currentMode = 'move';
-    let masterData = JSON.parse(localStorage.getItem('m_master')) || {};
-    let invResults = JSON.parse(localStorage.getItem('m_inv')) || {};
+    let masterList = [];
+    let records = [];
+    let currentTask = { type: '', code: '', name: '' };
 
-    function setMode(mode) {
-        currentMode = mode;
-        const isMove = mode === 'move';
-        // UI切り替え
-        document.getElementById('ui_move').style.display = isMove ? 'block' : 'none';
-        document.getElementById('ui_inv').style.display = isMove ? 'none' : 'block';
-        // ボタン色
-        document.getElementById('btn_move_mode').className = isMove ? 'flex-1 py-2 rounded-md font-bold text-sm bg-white shadow text-blue-600' : 'flex-1 py-2 rounded-md font-bold text-sm text-gray-500';
-        document.getElementById('btn_inv_mode').className = !isMove ? 'flex-1 py-2 rounded-md font-bold text-sm bg-white shadow text-purple-600' : 'flex-1 py-2 rounded-md font-bold text-sm text-gray-500';
+    function showTab(id) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.currentTarget.classList.add('active');
+        if(id === 'items') renderList();
+        if(id === 'stocktake') renderStocktake();
     }
 
-    function handleScan(val) {
-        if (!val) return;
-        const codeMatch = val.match(/[A-Za-z0-9-]{3,}/);
-        const nameMatch = val.match(/[ぁ-んァ-ヶー一-龠]{2,}/);
+    // テキスト抽出
+    function quickParse() {
+        const raw = document.getElementById('raw-input').value.replace(/\s+/g, "");
+        let code = "---", name = "---";
+        const codeMatch = raw.match(/[A-Z]{1,2}[0-9]{4,}[A-Z0-9-]*/);
+        if (codeMatch) code = codeMatch[0];
+        if (raw.includes("商品名")) name = raw.split("商品名")[1].split("規格")[0];
+        document.getElementById('p-code').innerText = code;
+        document.getElementById('p-name').innerText = name;
+    }
+
+    function addItemToList() {
+        const code = document.getElementById('p-code').innerText;
+        const name = document.getElementById('p-name').innerText;
+        if (code === "---") return alert("品番を読み取ってください");
         
-        if (codeMatch) {
-            const code = codeMatch[0];
-            document.getElementById('resCode').value = code;
-            // 既存データ照合
-            if (masterData[code]) {
-                document.getElementById('resName').value = masterData[code].name;
-            } else if (nameMatch) {
-                document.getElementById('resName').value = nameMatch[0];
-            }
+        if (!masterList.find(i => i.code === code)) {
+            masterList.push({ code, name });
         }
-        // スキャン欄を1秒後に自動クリア
-        setTimeout(() => document.getElementById('mainScan').value = '', 1000);
+        document.getElementById('raw-input').value = "";
+        showTab('items');
+        // タブの見た目も更新
+        document.querySelectorAll('.tab')[1].click(); 
     }
 
-    function execute(type) {
-        const code = document.getElementById('resCode').value;
-        const name = document.getElementById('resName').value || '未設定';
-        const moveQty = parseInt(document.getElementById('moveQty').value);
-        const invQty = parseInt(document.getElementById('invQty').value);
-
-        if (!code) return alert('品番をスキャンしてください');
-
-        if (type === '棚卸') {
-            if (isNaN(invQty)) return alert('数量を入力してください');
-            invResults[code] = { name: name, qty: invQty, date: new Date().toLocaleString() };
-            localStorage.setItem('m_inv', JSON.stringify(invResults));
-            alert(`棚卸記録: ${code} ${invQty}個`);
-            document.getElementById('invQty').value = '';
-        } else {
-            if (isNaN(moveQty)) return alert('数量を入力してください');
-            if (!masterData[code]) masterData[code] = { name: name, stock: 0 };
-            
-            if (type === '入庫') masterData[code].stock += moveQty;
-            else masterData[code].stock -= moveQty;
-            
-            localStorage.setItem('m_master', JSON.stringify(masterData));
-            alert(`${type}完了: 現在庫 ${masterData[code].stock}個`);
-            document.getElementById('moveQty').value = '';
-        }
+    function renderList() {
+        const container = document.getElementById('list-container');
+        container.innerHTML = masterList.length === 0 ? '<p style="text-align:center; color:#94a3b8; margin-top:40px;">アイテムがありません。<br>SCANから追加してください。</p>' : '';
         
-        // 品番・品名もクリアして次のスキャンへ
-        document.getElementById('resCode').value = '';
-        document.getElementById('resName').value = '';
-    }
-
-    function renderMasterList() {
-        const area = document.getElementById('masterList');
-        area.innerHTML = '';
-        Object.keys(masterData).sort().forEach(code => {
-            const item = masterData[code];
-            area.innerHTML += `
-                <div class="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center">
-                    <div><p class="font-mono font-bold text-blue-600">${code}</p><p class="text-xs text-gray-500">${item.name}</p></div>
-                    <div class="flex items-center gap-2">
-                        <input type="number" value="${item.stock}" onchange="updateMaster('${code}', this.value)" class="w-20 p-2 border rounded font-bold text-center bg-gray-50 text-lg">
-                        <span class="text-xs text-gray-400">個</span>
+        masterList.forEach(item => {
+            container.innerHTML += `
+                <div class="card" style="margin-bottom:10px;">
+                    <div class="item-info">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-code">${item.code}</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-in" onclick="openModal('入庫', '${item.code}', '${item.name}')">📥 入庫</button>
+                        <button class="btn btn-out" onclick="openModal('出庫', '${item.code}', '${item.name}')">📤 出庫</button>
+                        <button class="btn btn-st" onclick="openModal('棚卸', '${item.code}', '${item.name}')">📋 棚卸し</button>
                     </div>
                 </div>`;
         });
     }
 
-    function renderInvList() {
-        const area = document.getElementById('invList');
-        area.innerHTML = '';
-        Object.keys(invResults).sort().forEach(code => {
-            const item = invResults[code];
-            area.innerHTML += `
-                <div class="bg-white p-3 rounded-lg border-l-4 border-purple-500 flex justify-between items-center shadow-sm">
-                    <div><p class="font-mono font-bold">${code}</p><p class="text-[10px] text-gray-400">${item.name}</p></div>
-                    <input type="number" value="${item.qty}" onchange="updateInv('${code}', this.value)" class="w-16 p-1 border rounded text-center bg-purple-50 font-bold">
-                </div>`;
+    function openModal(type, code, name) {
+        currentTask = { type, code, name };
+        document.getElementById('modal-title').innerText = type + "処理";
+        document.getElementById('modal-subtitle').innerText = name + " (" + code + ")";
+        document.getElementById('qtyModal').style.display = 'flex';
+        document.getElementById('qty-val').focus();
+    }
+
+    function closeModal() {
+        document.getElementById('qtyModal').style.display = 'none';
+        document.getElementById('qty-val').value = '';
+    }
+
+    function confirmRecord() {
+        const qty = document.getElementById('qty-val').value;
+        if (!qty) return alert("数量を入力してください");
+        
+        const timestamp = new Date().toLocaleString();
+        records.push({ ...currentTask, qty, timestamp });
+        
+        alert(`${currentTask.type}を記録しました`);
+        closeModal();
+        if(currentTask.type === '棚卸') renderStocktake();
+    }
+
+    function renderStocktake() {
+        const body = document.getElementById('st-body');
+        const stData = records.filter(r => r.type === '棚卸');
+        body.innerHTML = stData.length === 0 ? '<tr><td colspan="2" style="padding:20px; text-align:center; color:#94a3b8;">棚卸しデータがありません</td></tr>' : '';
+        
+        // 最新の棚卸し値を表示
+        const latestST = {};
+        stData.forEach(r => { latestST[r.code] = r; });
+        
+        Object.values(latestST).forEach(r => {
+            body.innerHTML += `<tr><td style="padding:12px; border-bottom:1px solid #f1f5f9;">${r.code}<br><small style="color:#64748b">${r.name}</small></td><td style="padding:12px; text-align:right; font-weight:bold; border-bottom:1px solid #f1f5f9;">${r.qty}</td></tr>`;
         });
     }
 
-    function updateMaster(code, val) { masterData[code].stock = parseInt(val); localStorage.setItem('m_master', JSON.stringify(masterData)); }
-    function updateInv(code, val) { invResults[code].qty = parseInt(val); localStorage.setItem('m_inv', JSON.stringify(invResults)); }
-
-    function exportCSV() {
-        let csv = "\uFEFF品番,商品名,棚卸数量,日時\n";
-        Object.keys(invResults).forEach(code => {
-            const i = invResults[code];
-            csv += `"${code}","${i.name}",${i.qty},"${i.date}"\n`;
+    function exportToExcel() {
+        const stData = records.filter(r => r.type === '棚卸');
+        if(stData.length === 0) return alert("出力するデータがありません");
+        
+        let csv = "日時,品番,商品名,実在庫数量\n";
+        stData.forEach(r => {
+            csv += `${r.timestamp},${r.code},${r.name},${r.qty}\n`;
         });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `棚卸結果_${new Date().toLocaleDateString()}.csv`;
-        a.click();
-    }
 
-    function showPage(p) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.getElementById(`page_${p}`).classList.add('active');
-        document.querySelectorAll('nav button').forEach(b => {
-            b.classList.remove('text-blue-600', 'border-t-4', 'border-blue-600');
-            b.classList.add('text-gray-400');
-        });
-        const idx = ['scan', 'list', 'results'].indexOf(p);
-        document.querySelectorAll('nav button')[idx].className = 'flex-1 py-4 text-blue-600 border-t-4 border-blue-600';
-        if(p === 'list') renderMasterList();
-        if(p === 'results') renderInvList();
+        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `棚卸報告_${new Date().toLocaleDateString()}.csv`;
+        link.click();
     }
 </script>
-
 </body>
 </html>
