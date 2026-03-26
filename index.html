@@ -63,6 +63,8 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .scan-area { background: #eff6ff; border: 2px dashed var(--accent); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
 .scan-area input { margin-bottom: 0; } 
 hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+/* カード内用の少し薄い線 */
+.card hr { border-top: 1px solid #f1f5f9; margin: 16px 0; }
 </style>
 </head>
 <body>
@@ -98,11 +100,12 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
       <input type="text" id="io-name-scan" placeholder="自動抽出されます">
       <button class="btn btn-blue" onclick="saveIOMaster()">✅ 登録を実行</button>
       
-      <button class="btn btn-dark" style="margin-top: 12px;" onclick="switchSubView('io', 'list')">🗂️ 入出庫一覧ページへ ＞</button>
+      <hr>
+      
+      <button class="btn btn-dark" style="margin-top: 0;" onclick="switchSubView('io', 'list')">🗂️ 入出庫一覧ページへ ＞</button>
     </div>
 
-    <hr>
-  </div>
+    </div>
 
   <div class="sub-view" id="view-io-list">
     <button class="btn btn-outline" style="margin-bottom:15px;" onclick="switchSubView('io', 'reg')">＜ 登録ページに戻る</button>
@@ -152,10 +155,11 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
       </div>
       <button class="btn btn-blue" onclick="saveInventory()">✅ 登録を実行</button>
 
-      <button class="btn btn-dark" style="margin-top: 12px;" onclick="switchSubView('inv', 'list')">📋 棚卸し一覧ページへ ＞</button>
+      <hr>
+      
+      <button class="btn btn-dark" style="margin-top: 0;" onclick="switchSubView('inv', 'list')">📋 棚卸し一覧ページへ ＞</button>
     </div>
 
-    <hr>
   </div>
 
   <div class="sub-view" id="view-inv-list">
