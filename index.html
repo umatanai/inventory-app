@@ -178,7 +178,7 @@ function switchSubView(tab, view) {
   if(tab === 'inv' && view === 'list') renderInvList();
 }
 
-// ---------------- 最新抽出ロジック：英数字の長さと日本語で判定 ----------------
+// ---------------- 最新抽出ロジック（「倉庫」除外対応） ----------------
 function extractData(val, target) {
   if (!val) return;
   
@@ -189,9 +189,12 @@ function extractData(val, target) {
 
   for (let w of words) {
     // 1. 商品名の判定：漢字・カタカナ・ひらがなが含まれる
+    // かつ、「倉庫」という文字が含まれていない場合のみ採用
     if (/[一-龠ぁ-んァ-ヶー]/.test(w)) {
-      name = w;
-      continue;
+      if (!w.includes("倉庫")) {
+        name = w;
+        continue;
+      }
     }
 
     // 2. 英数字の判定（商品名以外）
