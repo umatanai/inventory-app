@@ -97,10 +97,11 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
       <label>商品名</label>
       <input type="text" id="io-name-scan" placeholder="自動抽出されます">
       <button class="btn btn-blue" onclick="saveIOMaster()">✅ 登録を実行</button>
+      
+      <button class="btn btn-dark" style="margin-top: 12px;" onclick="switchSubView('io', 'list')">🗂️ 入出庫一覧ページへ ＞</button>
     </div>
 
     <hr>
-    <button class="btn btn-dark" onclick="switchSubView('io', 'list')">🗂️ 入出庫一覧ページへ ＞</button>
   </div>
 
   <div class="sub-view" id="view-io-list">
@@ -150,10 +151,11 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
         </div>
       </div>
       <button class="btn btn-blue" onclick="saveInventory()">✅ 登録を実行</button>
+
+      <button class="btn btn-dark" style="margin-top: 12px;" onclick="switchSubView('inv', 'list')">📋 棚卸し一覧ページへ ＞</button>
     </div>
 
     <hr>
-    <button class="btn btn-dark" onclick="switchSubView('inv', 'list')">📋 棚卸し一覧ページへ ＞</button>
   </div>
 
   <div class="sub-view" id="view-inv-list">
