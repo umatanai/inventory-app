@@ -117,7 +117,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 
     <div class="card">
       <label>棚番</label>
-      <input type="text" id="inv-location" placeholder="例: A-01">
+      <input type="text" id="inv-location" placeholder="自動抽出されます">
       <label>品番</label>
       <input type="text" id="inv-code" placeholder="自動抽出されます">
       <label>商品名</label>
@@ -178,28 +178,31 @@ function switchSubView(tab, view) {
   if(tab === 'inv' && view === 'list') renderInvList();
 }
 
-// ---------------- 修正：特定の文字数ルールに基づいた抽出 ----------------
+// ---------------- 最新抽出ロジック：英数字の長さと日本語で判定 ----------------
 function extractData(val, target) {
   if (!val) return;
   
-  // OCR結果を単語に分ける
   const words = val.split(/[\s\n\t,、]+/);
-  let code = "";
-  let name = "";
+  let shelf = ""; // 棚番
+  let code = "";  // 品番
+  let name = "";  // 商品名
 
-  // 全単語をチェック
   for (let w of words) {
-    // 1. 商品名の判定：数字のみ かつ 5文字以上
-    if (/^\d{5,}$/.test(w)) {
+    // 1. 商品名の判定：漢字・カタカナ・ひらがなが含まれる
+    if (/[一-龠ぁ-んァ-ヶー]/.test(w)) {
       name = w;
       continue;
     }
 
-    // 2. 品番の判定：英数字を含む かつ 3文字以上
-    // (既に商品名として確定したものはスキップ)
-    if (!code && /^[A-Za-z0-9\-]{3,}$/.test(w)) {
-      // 5文字未満の数字や、英字混じりのものは品番候補
-      code = w;
+    // 2. 英数字の判定（商品名以外）
+    if (/^[A-Za-z0-9\-]+$/.test(w)) {
+      if (w.length >= 5) {
+        // 5文字以上の英数字は「品番」
+        code = w;
+      } else {
+        // 5文字未満の英数字は「棚番」
+        shelf = w;
+      }
     }
   }
 
@@ -209,6 +212,7 @@ function extractData(val, target) {
     if (name) document.getElementById('io-name-scan').value = name;
     setTimeout(() => document.getElementById('io-extractor').value = '', 800);
   } else {
+    if (shelf) document.getElementById('inv-location').value = shelf;
     if (code) document.getElementById('inv-code').value = code;
     if (name) document.getElementById('inv-name').value = name;
     setTimeout(() => document.getElementById('inv-extractor').value = '', 800);
