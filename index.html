@@ -2,162 +2,214 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>在庫・棚卸管理アプリ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>現場スキャン管理</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f3f4f6; padding-bottom: 80px; }
+        body { background-color: #f8fafc; padding-bottom: 80px; }
         .tab-content { display: none; }
         .active { display: block; }
+        .mode-switch { transition: all 0.3s; }
     </style>
 </head>
 <body>
 
-<div class="max-w-md mx-auto bg-white min-h-screen shadow-lg p-4">
-    <h1 class="text-xl font-bold text-center mb-6 text-blue-600">在庫管理システム</h1>
-
-    <div class="flex border-b mb-6">
-        <button onclick="showTab('main')" class="flex-1 py-2 text-sm font-medium border-b-2 border-blue-500">入出庫</button>
-        <button onclick="showTab('inventory')" class="flex-1 py-2 text-sm font-medium">棚卸</button>
-        <button onclick="showTab('master')" class="flex-1 py-2 text-sm font-medium">マスター/出力</button>
-    </div>
-
-    <div id="main" class="tab-content active">
-        <h2 class="font-bold mb-2">① スキャン・入力</h2>
-        <input type="text" id="scanInput" oninput="processScan(this.value)" placeholder="ここをタップしてテキストスキャン" 
-               class="w-full p-4 border-2 border-blue-300 rounded-lg mb-4 text-sm">
+<div class="max-w-md mx-auto min-h-screen">
+    
+    <div id="page_scan" class="tab-content active p-4">
+        <h1 class="text-xl font-bold text-center mb-4 text-gray-800">スキャン入力</h1>
         
-        <div class="bg-blue-50 p-3 rounded-lg mb-4">
-            <p class="text-xs text-gray-500">自動抽出結果:</p>
-            <div class="grid grid-cols-2 gap-2 mt-2">
-                <input type="text" id="resCode" placeholder="商品コード" class="p-2 border rounded bg-white">
-                <input type="text" id="resName" placeholder="商品名" class="p-2 border rounded bg-white">
+        <div class="flex bg-gray-200 rounded-lg p-1 mb-6">
+            <button id="btn_move_mode" onclick="setMode('move')" class="flex-1 py-2 rounded-md font-bold text-sm mode-switch bg-white shadow text-blue-600">入出庫管理</button>
+            <button id="btn_inv_mode" onclick="setMode('inv')" class="flex-1 py-2 rounded-md font-bold text-sm mode-switch text-gray-500">棚卸モード</button>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-md border-2 border-blue-100 mb-4">
+            <label class="block text-xs font-black text-blue-500 mb-2 uppercase">① 品番テキストスキャン</label>
+            <input type="text" id="mainScan" oninput="handleScan(this.value)" placeholder="ここをタップしてスキャン" 
+                   class="w-full p-4 border-2 border-blue-300 rounded-xl text-sm focus:ring-4 focus:ring-blue-100 outline-none">
+            
+            <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="bg-gray-50 p-2 rounded-lg border">
+                    <span class="text-[10px] text-gray-400 block">品番</span>
+                    <input type="text" id="resCode" class="w-full font-mono font-bold bg-transparent outline-none" placeholder="---">
+                </div>
+                <div class="bg-gray-50 p-2 rounded-lg border">
+                    <span class="text-[10px] text-gray-400 block">商品名</span>
+                    <input type="text" id="resName" class="w-full font-bold bg-transparent outline-none text-sm" placeholder="---">
+                </div>
             </div>
         </div>
 
-        <div class="flex gap-4 mb-4">
-            <select id="type" class="p-3 border rounded-lg bg-gray-50 font-bold">
-                <option value="入庫">入庫 (+)</option>
-                <option value="出庫">出庫 (-)</option>
-            </select>
-            <input type="number" id="quantity" placeholder="数量" class="flex-1 p-3 border-2 border-green-400 rounded-lg text-lg">
+        <div id="ui_move" class="space-y-4">
+            <div class="bg-white p-5 rounded-2xl shadow-md">
+                <label class="block text-xs font-black text-gray-400 mb-2 uppercase">② 数量入力</label>
+                <input type="number" id="moveQty" placeholder="0" class="w-full p-4 border rounded-xl text-4xl text-center font-black bg-gray-50">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="execute('入庫')" class="bg-blue-600 text-white py-6 rounded-2xl text-xl font-black shadow-lg active:scale-95">入庫 (+)</button>
+                <button onclick="execute('出庫')" class="bg-red-500 text-white py-6 rounded-2xl text-xl font-black shadow-lg active:scale-95">出庫 (-)</button>
+            </div>
         </div>
-        <button onclick="saveTransaction()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-md">記録する</button>
-    </div>
 
-    <div id="inventory" class="tab-content">
-        <h2 class="font-bold mb-2">棚卸モード</h2>
-        <p class="text-xs text-gray-500 mb-4">スキャンして現在の実在庫数を入力してください。</p>
-        <input type="text" id="invScan" oninput="processInvScan(this.value)" placeholder="品番をスキャンして検索" 
-               class="w-full p-4 border-2 border-purple-300 rounded-lg mb-4">
-        <div id="invResult" class="p-4 bg-purple-50 rounded-lg hidden">
-            <p id="invTargetName" class="font-bold"></p>
-            <div class="flex gap-2 mt-2">
-                <input type="number" id="invQty" placeholder="実在庫数" class="flex-1 p-2 border rounded">
-                <button onclick="submitInventory()" class="bg-purple-600 text-white px-4 py-2 rounded">確定</button>
+        <div id="ui_inv" class="hidden space-y-4">
+            <div class="bg-purple-50 p-5 rounded-2xl border-2 border-purple-200 shadow-md">
+                <label class="block text-xs font-black text-purple-600 mb-2 uppercase">実在庫数を入力</label>
+                <div class="flex gap-3">
+                    <input type="number" id="invQty" placeholder="0" class="flex-1 p-4 border-2 border-purple-300 rounded-xl text-4xl text-center font-black bg-white">
+                    <button onclick="execute('棚卸')" class="bg-purple-600 text-white px-8 rounded-2xl text-lg font-black shadow-lg active:scale-95">確定</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="master" class="tab-content">
-        <h2 class="font-bold mb-4">データ出力</h2>
-        <button onclick="exportCSV()" class="w-full bg-green-600 text-white py-3 rounded mb-6 font-bold">Excel用CSVを出力 (全データ)</button>
-        
-        <h2 class="font-bold mb-2">登録済みマスター</h2>
-        <div id="masterList" class="text-sm space-y-2 max-h-60 overflow-y-auto border-t pt-2">
-            </div>
+    <div id="page_list" class="tab-content p-4">
+        <h2 class="font-bold text-lg mb-4 flex justify-between items-center">
+            在庫マスター <span>(修正可)</span>
+        </h2>
+        <div id="masterList" class="space-y-3"></div>
     </div>
+
+    <div id="page_results" class="tab-content p-4">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="font-bold text-lg">棚卸結果データ</h2>
+            <button onclick="exportCSV()" class="bg-green-600 text-white px-4 py-2 rounded-full font-bold text-xs shadow">CSV出力</button>
+        </div>
+        <div id="invList" class="space-y-2"></div>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex text-[10px] font-bold shadow-2xl z-50 max-w-md mx-auto">
+        <button onclick="showPage('scan')" class="flex-1 py-4 text-blue-600 border-t-4 border-blue-600">スキャン入力</button>
+        <button onclick="showPage('list')" class="flex-1 py-4 text-gray-400">在庫一覧・修正</button>
+        <button onclick="showPage('results')" class="flex-1 py-4 text-gray-400">棚卸結果・出力</button>
+    </nav>
+
 </div>
 
 <script>
-    let masterData = JSON.parse(localStorage.getItem('stockMaster')) || {};
-    let stockLogs = JSON.parse(localStorage.getItem('stockLogs')) || [];
+    let currentMode = 'move';
+    let masterData = JSON.parse(localStorage.getItem('m_master')) || {};
+    let invResults = JSON.parse(localStorage.getItem('m_inv')) || {};
 
-    // iPhoneのテキストスキャンから「コード」と「品名」を抽出するロジック
-    function processScan(val) {
+    function setMode(mode) {
+        currentMode = mode;
+        const isMove = mode === 'move';
+        // UI切り替え
+        document.getElementById('ui_move').style.display = isMove ? 'block' : 'none';
+        document.getElementById('ui_inv').style.display = isMove ? 'none' : 'block';
+        // ボタン色
+        document.getElementById('btn_move_mode').className = isMove ? 'flex-1 py-2 rounded-md font-bold text-sm bg-white shadow text-blue-600' : 'flex-1 py-2 rounded-md font-bold text-sm text-gray-500';
+        document.getElementById('btn_inv_mode').className = !isMove ? 'flex-1 py-2 rounded-md font-bold text-sm bg-white shadow text-purple-600' : 'flex-1 py-2 rounded-md font-bold text-sm text-gray-500';
+    }
+
+    function handleScan(val) {
         if (!val) return;
-        // 英数字（コード）と日本語（品名）を簡易的に分ける
-        const codeMatch = val.match(/[A-Za-z0-9-]{3,}/); // 3文字以上の英数字
-        const nameMatch = val.match(/[ぁ-んァ-ヶー一-龠]{2,}/); // 2文字以上の日本語
-
-        if (codeMatch) document.getElementById('resCode').value = codeMatch[0];
-        if (nameMatch) document.getElementById('resName').value = nameMatch[0];
+        const codeMatch = val.match(/[A-Za-z0-9-]{3,}/);
+        const nameMatch = val.match(/[ぁ-んァ-ヶー一-龠]{2,}/);
         
-        // 入力欄をクリア（スキャンしやすくするため）
-        setTimeout(() => document.getElementById('scanInput').value = '', 1000);
-    }
-
-    function saveTransaction() {
-        const code = document.getElementById('resCode').value;
-        const name = document.getElementById('resName').value;
-        const qty = parseInt(document.getElementById('quantity').value);
-        const type = document.getElementById('type').value;
-
-        if (!code || isNaN(qty)) return alert('コードと数量を確認してください');
-
-        // マスター保存
-        masterData[code] = name;
-        localStorage.setItem('stockMaster', JSON.stringify(masterData));
-
-        // ログ保存
-        const log = { date: new Date().toLocaleString(), code, name, type, qty };
-        stockLogs.push(log);
-        localStorage.setItem('stockLogs', JSON.stringify(stockLogs));
-
-        alert(`${type}完了: ${name}`);
-        document.getElementById('quantity').value = '';
-        renderMaster();
-    }
-
-    function processInvScan(val) {
-        const code = val.match(/[A-Za-z0-9-]{3,}/);
-        if (code && masterData[code[0]]) {
-            document.getElementById('invResult').classList.remove('hidden');
-            document.getElementById('invTargetName').innerText = `${code[0]} : ${masterData[code[0]]}`;
-            document.getElementById('invTargetName').dataset.code = code[0];
+        if (codeMatch) {
+            const code = codeMatch[0];
+            document.getElementById('resCode').value = code;
+            // 既存データ照合
+            if (masterData[code]) {
+                document.getElementById('resName').value = masterData[code].name;
+            } else if (nameMatch) {
+                document.getElementById('resName').value = nameMatch[0];
+            }
         }
+        // スキャン欄を1秒後に自動クリア
+        setTimeout(() => document.getElementById('mainScan').value = '', 1000);
     }
 
-    function submitInventory() {
-        const code = document.getElementById('invTargetName').dataset.code;
-        const qty = document.getElementById('invQty').value;
-        const log = { date: new Date().toLocaleString(), code, name: masterData[code], type: '棚卸', qty };
-        stockLogs.push(log);
-        localStorage.setItem('stockLogs', JSON.stringify(stockLogs));
-        alert('棚卸記録を保存しました');
-        document.getElementById('invScan').value = '';
-        document.getElementById('invResult').classList.add('hidden');
+    function execute(type) {
+        const code = document.getElementById('resCode').value;
+        const name = document.getElementById('resName').value || '未設定';
+        const moveQty = parseInt(document.getElementById('moveQty').value);
+        const invQty = parseInt(document.getElementById('invQty').value);
+
+        if (!code) return alert('品番をスキャンしてください');
+
+        if (type === '棚卸') {
+            if (isNaN(invQty)) return alert('数量を入力してください');
+            invResults[code] = { name: name, qty: invQty, date: new Date().toLocaleString() };
+            localStorage.setItem('m_inv', JSON.stringify(invResults));
+            alert(`棚卸記録: ${code} ${invQty}個`);
+            document.getElementById('invQty').value = '';
+        } else {
+            if (isNaN(moveQty)) return alert('数量を入力してください');
+            if (!masterData[code]) masterData[code] = { name: name, stock: 0 };
+            
+            if (type === '入庫') masterData[code].stock += moveQty;
+            else masterData[code].stock -= moveQty;
+            
+            localStorage.setItem('m_master', JSON.stringify(masterData));
+            alert(`${type}完了: 現在庫 ${masterData[code].stock}個`);
+            document.getElementById('moveQty').value = '';
+        }
+        
+        // 品番・品名もクリアして次のスキャンへ
+        document.getElementById('resCode').value = '';
+        document.getElementById('resName').value = '';
     }
+
+    function renderMasterList() {
+        const area = document.getElementById('masterList');
+        area.innerHTML = '';
+        Object.keys(masterData).sort().forEach(code => {
+            const item = masterData[code];
+            area.innerHTML += `
+                <div class="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center">
+                    <div><p class="font-mono font-bold text-blue-600">${code}</p><p class="text-xs text-gray-500">${item.name}</p></div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" value="${item.stock}" onchange="updateMaster('${code}', this.value)" class="w-20 p-2 border rounded font-bold text-center bg-gray-50 text-lg">
+                        <span class="text-xs text-gray-400">個</span>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function renderInvList() {
+        const area = document.getElementById('invList');
+        area.innerHTML = '';
+        Object.keys(invResults).sort().forEach(code => {
+            const item = invResults[code];
+            area.innerHTML += `
+                <div class="bg-white p-3 rounded-lg border-l-4 border-purple-500 flex justify-between items-center shadow-sm">
+                    <div><p class="font-mono font-bold">${code}</p><p class="text-[10px] text-gray-400">${item.name}</p></div>
+                    <input type="number" value="${item.qty}" onchange="updateInv('${code}', this.value)" class="w-16 p-1 border rounded text-center bg-purple-50 font-bold">
+                </div>`;
+        });
+    }
+
+    function updateMaster(code, val) { masterData[code].stock = parseInt(val); localStorage.setItem('m_master', JSON.stringify(masterData)); }
+    function updateInv(code, val) { invResults[code].qty = parseInt(val); localStorage.setItem('m_inv', JSON.stringify(invResults)); }
 
     function exportCSV() {
-        let csvContent = "\uFEFF日付,品番,品名,種別,数量\n";
-        stockLogs.forEach(log => {
-            csvContent += `${log.date},${log.code},${log.name},${log.type},${log.qty}\n`;
+        let csv = "\uFEFF品番,商品名,棚卸数量,日時\n";
+        Object.keys(invResults).forEach(code => {
+            const i = invResults[code];
+            csv += `"${code}","${i.name}",${i.qty},"${i.date}"\n`;
         });
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", "inventory_data.csv");
-        link.click();
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `棚卸結果_${new Date().toLocaleDateString()}.csv`;
+        a.click();
     }
 
-    function showTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        document.querySelectorAll('button').forEach(b => b.classList.remove('border-blue-500', 'border-b-2'));
-        event.currentTarget.classList.add('border-blue-500', 'border-b-2');
-        if(tabId === 'master') renderMaster();
-    }
-
-    function renderMaster() {
-        const list = document.getElementById('masterList');
-        list.innerHTML = '';
-        for (let code in masterData) {
-            list.innerHTML += `<div class="p-2 bg-gray-50 border-b flex justify-between">
-                <span><b>${code}</b>: ${masterData[code]}</span>
-            </div>`;
-        }
+    function showPage(p) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(`page_${p}`).classList.add('active');
+        document.querySelectorAll('nav button').forEach(b => {
+            b.classList.remove('text-blue-600', 'border-t-4', 'border-blue-600');
+            b.classList.add('text-gray-400');
+        });
+        const idx = ['scan', 'list', 'results'].indexOf(p);
+        document.querySelectorAll('nav button')[idx].className = 'flex-1 py-4 text-blue-600 border-t-4 border-blue-600';
+        if(p === 'list') renderMasterList();
+        if(p === 'results') renderInvList();
     }
 </script>
+
 </body>
 </html>
