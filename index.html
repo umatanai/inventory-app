@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -8,14 +9,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap');
 :root { --bg: #f0f4f8; --surface: #ffffff; --border: #dde3ea; --accent: #2563eb; --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b; --text2: #64748b; --shadow: 0 1px 3px rgba(0,0,0,0.08); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 20px; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; }
 header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); }
 header h1 { font-size: 17px; font-weight: 700; color: var(--accent); }
 
 /* タブデザイン */
-.tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
-.tab { flex: 1; padding: 14px 4px; text-align: center; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; background: var(--accent-light); }
+.tab-bar { display: flex; background: var(–surface); border-bottom: 1px solid var(–border); }
+.tab { flex: 1; padding: 14px 4px; text-align: center; font-size: 14px; font-weight: 500; color: var(–text2); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
+.tab.active { color: var(–accent); border-bottom-color: var(–accent); font-weight: 700; background: var(–accent-light); }
 
 /* コンテナとビューの切り替え */
 .main-container { display: none; padding: 14px; }
@@ -24,46 +25,47 @@ header h1 { font-size: 17px; font-weight: 700; color: var(--accent); }
 .sub-view.active { display: block; }
 
 /* 手順書スタイル */
-.howto { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.howto { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
 .howto-title { font-size: 13px; font-weight: 700; color: #b45309; margin-bottom: 10px; }
-.howto-step { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 6px; }
+.howto-step { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 4px; }
 .step-num { width: 18px; height: 18px; border-radius: 50%; background: #b45309; color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 /* 入力欄・カードスタイル */
-.card { background: var(--surface); border-radius: 14px; padding: 16px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: var(--shadow); }
-label { display: block; font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 5px; }
-input, select { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
-input:focus, select:focus { outline: none; border-color: var(--accent); }
+.card { background: var(–surface); border-radius: 14px; padding: 16px; border: 1px solid var(–border); margin-bottom: 14px; box-shadow: var(–shadow); }
+label { display: block; font-size: 11px; font-weight: 700; color: var(–text2); margin-bottom: 5px; }
+input, select { background: #f8fafc; border: 1.5px solid var(–border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
+input:focus, select:focus { outline: none; border-color: var(–accent); }
 
 /* ボタン類 */
 .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.1s; margin-top: 5px; }
 .btn:active { opacity: 0.8; transform: scale(0.98); }
-.btn-blue { background: var(--accent); color: white; }
-.btn-green { background: var(--green); color: white; }
-.btn-red { background: var(--red); color: white; }
-.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text2); }
+.btn-blue { background: var(–accent); color: white; }
+.btn-green { background: var(–green); color: white; }
+.btn-red { background: var(–red); color: white; }
+.btn-outline { background: transparent; border: 1.5px solid var(–border); color: var(–text2); }
 .btn-dark { background: #334155; color: white; }
 .btn-small { padding: 8px 12px; font-size: 12px; width: auto; }
 
 /* リストアイテム */
-.item-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 8px; position: relative; }
+.item-card { background: white; border-radius: 12px; border: 1px solid var(–border); padding: 14px; margin-bottom: 8px; position: relative; }
 .item-name { font-weight: 700; font-size: 15px; }
-.item-code { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
-.edit-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); gap: 8px; align-items: center; }
+.item-code { font-size: 11px; color: var(–text2); font-family: ‘JetBrains Mono’, monospace; margin-bottom: 4px; }
+.edit-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(–border); gap: 8px; align-items: center; }
 .edit-row.active { display: flex; }
 
 /* 入出庫コントロール部（幅を調整） */
 .io-controls { display: flex; gap: 8px; margin-top: 12px; align-items: stretch; }
-.io-input { width: 60px; margin-bottom: 0; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px; padding: 0; }
+.io-input { width: 60px; margin-bottom: 0; text-align: center; font-family: ‘JetBrains Mono’, monospace; font-weight: 700; font-size: 18px; padding: 0; }
 .io-btn { flex: 1; padding: 14px 0; font-size: 15px; margin-top: 0; }
 
 /* その他UI */
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
-.scan-area { background: #eff6ff; border: 2px dashed var(--accent); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
-.scan-area input { margin-bottom: 0; } 
-hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+.scan-area { background: #eff6ff; border: 2px dashed var(–accent); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
+.scan-area input { margin-bottom: 0; }
+hr { border: none; border-top: 1px solid var(–border); margin: 24px 0; }
 </style>
+
 </head>
 <body>
 
@@ -77,7 +79,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 </div>
 
 <div class="main-container active" id="container-io">
-  
+
   <div class="sub-view active" id="view-io-reg">
     <div class="howto">
       <div class="howto-title">💡 テキストスキャン手順</div>
@@ -87,20 +89,22 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
       <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
     </div>
 
-    <div class="scan-area">
-      <input type="text" id="io-extractor" placeholder="ここをタップしてスキャン" oninput="extractData(this.value, 'io')">
-    </div>
-    
-    <div class="card">
-      <label>品番</label>
-      <input type="text" id="io-code-scan" placeholder="自動抽出されます">
-      <label>商品名</label>
-      <input type="text" id="io-name-scan" placeholder="自動抽出されます">
-      <button class="btn btn-blue" onclick="saveIOMaster()">✅ 登録を実行</button>
-    </div>
+```
+<div class="scan-area">
+  <input type="text" id="io-extractor" placeholder="ここをタップしてスキャン" oninput="extractData(this.value, 'io')">
+</div>
 
-    <hr>
-    <button class="btn btn-dark" onclick="switchSubView('io', 'list')">🗂️ 入出庫一覧ページへ ＞</button>
+<div class="card">
+  <label>品番</label>
+  <input type="text" id="io-code-scan" placeholder="自動抽出されます">
+  <label>商品名</label>
+  <input type="text" id="io-name-scan" placeholder="自動抽出されます">
+  <button class="btn btn-blue" onclick="saveIOMaster()">✅ 登録を実行</button>
+</div>
+
+<button class="btn btn-dark" style="margin-top:10px;" onclick="switchSubView('io', 'list')">🗂️ 入出庫一覧ページへ ＞</button>
+```
+
   </div>
 
   <div class="sub-view" id="view-io-list">
@@ -111,9 +115,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 
 </div>
 
-
 <div class="main-container" id="container-inv">
-  
+
   <div class="sub-view active" id="view-inv-reg">
     <div class="howto">
       <div class="howto-title">💡 テキストスキャン手順</div>
@@ -123,37 +126,39 @@ hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
       <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
     </div>
 
-    <div class="scan-area">
-      <input type="text" id="inv-extractor" placeholder="ここをタップしてスキャン" oninput="extractData(this.value, 'inv')">
-    </div>
+```
+<div class="scan-area">
+  <input type="text" id="inv-extractor" placeholder="ここをタップしてスキャン" oninput="extractData(this.value, 'inv')">
+</div>
 
-    <div class="card">
-      <label>棚番</label>
-      <input type="text" id="inv-location" placeholder="例: A-01">
-      
-      <label>品番</label>
-      <input type="text" id="inv-code" placeholder="自動抽出されます">
-      <label>商品名</label>
-      <input type="text" id="inv-name" placeholder="自動抽出されます">
-      
-      <div style="display:flex; gap:10px;">
-        <div style="flex:2;">
-          <label>数量</label>
-          <input type="number" id="inv-qty" placeholder="0">
-        </div>
-        <div style="flex:1;">
-          <label>単位</label>
-          <select id="inv-unit">
-            <option>個</option>
-            <option>mm</option>
-          </select>
-        </div>
-      </div>
-      <button class="btn btn-blue" onclick="saveInventory()">✅ 登録を実行</button>
+<div class="card">
+  <label>棚番</label>
+  <input type="text" id="inv-location" placeholder="例: A-01">
+  
+  <label>品番</label>
+  <input type="text" id="inv-code" placeholder="自動抽出されます">
+  <label>商品名</label>
+  <input type="text" id="inv-name" placeholder="自動抽出されます">
+  
+  <div style="display:flex; gap:10px;">
+    <div style="flex:2;">
+      <label>数量</label>
+      <input type="number" id="inv-qty" placeholder="0">
     </div>
+    <div style="flex:1;">
+      <label>単位</label>
+      <select id="inv-unit">
+        <option>個</option>
+        <option>mm</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn btn-blue" onclick="saveInventory()">✅ 登録を実行</button>
+</div>
 
-    <hr>
-    <button class="btn btn-dark" onclick="switchSubView('inv', 'list')">📋 棚卸し一覧ページへ ＞</button>
+<button class="btn btn-dark" style="margin-top:10px;" onclick="switchSubView('inv', 'list')">📋 棚卸し一覧ページへ ＞</button>
+```
+
   </div>
 
   <div class="sub-view" id="view-inv-list">
@@ -284,7 +289,7 @@ function deleteIOItem(code) {
 
 // ---------------- 棚卸の処理 ----------------
 function saveInventory() {
-  const loc = document.getElementById('inv-location').value.trim(); // 棚番取得
+  const loc = document.getElementById('inv-location').value.trim();
   const code = document.getElementById('inv-code').value.trim();
   const name = document.getElementById('inv-name').value.trim();
   const qty = parseFloat(document.getElementById('inv-qty').value) || 0;
@@ -295,7 +300,7 @@ function saveInventory() {
   inventoryItems.push({ id, loc, code, name, qty, unit });
   localStorage.setItem('inv_data', JSON.stringify(inventoryItems));
   
-  document.getElementById('inv-location').value = ''; // 棚番リセット
+  document.getElementById('inv-location').value = '';
   document.getElementById('inv-code').value = '';
   document.getElementById('inv-name').value = '';
   document.getElementById('inv-qty').value = '';
@@ -357,14 +362,11 @@ function deleteInvItem(id) {
 function exportCSV() {
   if(!inventoryItems.length) return showToast('データがありません');
   
-  // 名前の入力プロンプト
   const userName = prompt('出力者の名前を入力してください', '');
-  if (userName === null) return; // キャンセルした場合は処理中断
+  if (userName === null) return;
 
-  // ヘッダー（A1:棚番, B1:品番, C1:商品名, D1:数量, E1:名前）
   let csv = `\uFEFF"棚番","品番","商品名","数量","${userName}"\n`;
   
-  // データ行
   inventoryItems.forEach(i => {
     csv += `"${i.loc || ''}","${i.code || ''}","${i.name}",${i.qty}\n`;
   });
@@ -392,5 +394,6 @@ function showToast(msg) {
 
 init();
 </script>
+
 </body>
 </html>
