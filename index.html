@@ -4,35 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>製造管理PRO</title>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         :root { --primary: #3b82f6; --bg: #f1f5f9; --text: #1e293b; --text-light: #64748b; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 40px; }
-        
-        /* ヘッダー・タブ */
         header { background: white; padding: 16px; text-align: center; border-bottom: 1px solid #e2e8f0; }
         .tabs { display: flex; background: white; border-bottom: 1px solid #e2e8f0; }
         .tab { flex: 1; padding: 12px; text-align: center; font-size: 14px; font-weight: bold; color: var(--text-light); border-bottom: 3px solid transparent; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); background: #eff6ff; }
-
         .container { padding: 16px; max-width: 500px; margin: auto; }
         
         /* ガイド表示 */
-        .guide-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
-        .guide-title { color: var(--primary); font-size: 14px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-        .guide-step { font-size: 13px; line-height: 1.6; margin-bottom: 6px; color: var(--text); }
+        .guide-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        .guide-step { font-size: 13px; line-height: 1.6; color: #166534; font-weight: 500; }
 
-        /* 入力カード */
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .input-group { margin-bottom: 16px; }
+        .input-group { margin-bottom: 20px; }
         label { font-size: 12px; color: var(--text-light); font-weight: bold; display: block; margin-bottom: 6px; }
-        input { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; box-sizing: border-box; background: #fff; }
-        input:focus { outline: none; border-color: var(--primary); background: #f8fbff; }
+        
+        /* メイン入力欄 */
+        textarea { width: 100%; height: 100px; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 10px; font-size: 15px; box-sizing: border-box; resize: none; background: #fafafa; }
+        
+        /* 抽出結果の表示用 */
+        .result-box { background: #f8fafc; border-radius: 10px; padding: 12px; border: 1px solid #e2e8f0; margin-top: 10px; }
+        .result-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+        .result-item:last-child { border-bottom: none; }
+        .result-label { font-size: 12px; color: var(--text-light); }
+        .result-value { font-size: 15px; font-weight: bold; color: var(--primary); }
 
-        /* ボタン */
-        .scan-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
-        .scan-btn:active { opacity: 0.9; transform: scale(0.98); }
-        #status { text-align: center; color: var(--primary); font-size: 13px; font-weight: 500; height: 1.5em; }
+        .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -47,73 +46,62 @@
 
 <div class="container">
     <div class="guide-box">
-        <div class="guide-title">📷 スキャンで入力する手順</div>
-        <div class="guide-step">1. 下の「スキャン開始」ボタンを押す</div>
-        <div class="guide-step">2. 現品票の文字がハッキリ映るように撮影</div>
-        <div class="guide-step">3. 約5〜10秒で「品番・品名・納期」が自動入力</div>
+        <div class="guide-step">💡 使い方：<br>入力欄を長押し ➔「テキストをスキャン」を選択 ➔ 現品票をカメラで映して「入力」ボタン</div>
     </div>
 
     <div class="card">
         <div class="input-group">
-            <label>品番</label>
-            <input type="text" id="part-no" placeholder="品番">
-        </div>
-        <div class="input-group">
-            <label>商品名</label>
-            <input type="text" id="name" placeholder="商品名">
-        </div>
-        <div class="input-group">
-            <label>製造納期</label>
-            <input type="text" id="date" placeholder="2026/01/26">
+            <label>ここにテキストをスキャン / 入力</label>
+            <textarea id="raw-input" placeholder="スキャンしたテキストがここに入ります..." oninput="extractData()"></textarea>
         </div>
 
-        <button class="scan-btn" onclick="document.getElementById('fileInput').click()">
-            <span>📷 スキャン開始</span>
-        </button>
-        <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="processImage(this)">
-        
-        <div id="status"></div>
-        
-        <button class="scan-btn" style="background:#10b981; margin-top:10px;">
-            <span>✅ 登録する</span>
-        </button>
+        <div class="result-box">
+            <div class="result-item">
+                <span class="result-label">品番 (商品コード)</span>
+                <span id="display-part-no" class="result-value">---</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">商品名</span>
+                <span id="display-name" class="result-value">---</span>
+            </div>
+        </div>
+
+        <button class="btn-submit">✅ この内容で登録する</button>
     </div>
 </div>
 
 <script>
-async function processImage(input) {
-    const status = document.getElementById('status');
-    if (!input.files || !input.files[0]) return;
-    status.innerText = "🔍 解析中...";
-
-    try {
-        const result = await Tesseract.recognize(input.files[0], 'jpn+eng');
-        const text = result.data.text.replace(/\s+/g, "");
-
-        const extract = (keys, pattern) => {
-            for (let k of keys) {
-                if (text.includes(k)) {
-                    const parts = text.split(k);
-                    const match = parts[1].match(pattern);
-                    return match ? match[0] : "";
-                }
+function extractData() {
+    const rawText = document.getElementById('raw-input').value.replace(/\s+/g, "");
+    
+    // 1. 品番 (商品コード) の抽出
+    // 指示書にある「AA05601-01-」などのパターンを探す
+    let partNo = "---";
+    const partMatch = rawText.match(/[A-Z]{1,2}[0-9]{4,}[A-Z0-9-]*/);
+    if (partMatch) {
+        partNo = partMatch[0];
+    } else {
+        // キーワードベースでの抽出試行
+        const keys = ["商品コード", "品番", "品目コード"];
+        for (let k of keys) {
+            if (rawText.includes(k)) {
+                const after = rawText.split(k)[1];
+                const m = after.match(/[A-Z0-9-]{5,}/);
+                if (m) { partNo = m[0]; break; }
             }
-            return "";
-        };
-
-        // 反映処理
-        document.getElementById('part-no').value = extract(["商品コード", "品番", "品目コード"], /[A-Z0-9-]{5,}/);
-        document.getElementById('date').value = extract(["製造納期", "納期"], /\d{4}\/\d{2}\/\d{2}/);
-        
-        if (text.includes("商品名")) {
-            const namePart = text.split("商品名")[1].split("規格")[0];
-            document.getElementById('name').value = namePart;
         }
-
-        status.innerText = "✅ 読み取り完了";
-    } catch (e) {
-        status.innerText = "❌ エラー：撮り直してください";
     }
+
+    // 2. 商品名の抽出
+    let productName = "---";
+    if (rawText.includes("商品名")) {
+        // 「商品名」から「規格」の間、または一定文字数を抜き出す
+        productName = rawText.split("商品名")[1].split("規格")[0];
+    }
+
+    // 画面に反映
+    document.getElementById('display-part-no').innerText = partNo;
+    document.getElementById('display-name').innerText = productName;
 }
 </script>
 </body>
