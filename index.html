@@ -37,7 +37,6 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
 .btn-dark { background: #334155; color: white; }
 .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text2); }
 
-/* 削除ボタンの修正 */
 .btn-delete { 
   display: inline-flex; align-items: center; justify-content: center;
   padding: 6px 12px; font-size: 13px; border-radius: 8px; border: 1px solid #fca5a5; 
@@ -98,7 +97,7 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
     </div>
     <div id="io-display-list"></div>
     <div class="card" style="background: #f8fafc; margin-top:30px;">
-      <button class="btn btn-blue" onclick="exportExcel()">⬇️ エクセルで書き出す</button>
+      <button class="btn btn-blue" onclick="exportExcel()">⬇️ 表示中のデータをエクセル出力</button>
       <button class="btn btn-outline" style="margin-top:15px; color:var(--red); border-color:#fca5a5;" onclick="clearAllData()">🗑️ 全データ削除</button>
     </div>
   </div>
@@ -124,7 +123,6 @@ function saveManualItem() {
   const spec = document.getElementById('io-spec').value.trim();
   const stockStr = document.getElementById('io-qty').value.trim();
 
-  // 必須項目チェック
   if(!warehouse || !location || !code || !name || stockStr === "") {
     return alert("【入力不備】必須項目をすべて入力してください");
   }
@@ -172,17 +170,22 @@ function importExcel() {
   reader.readAsArrayBuffer(fileInput.files[0]);
 }
 
-function renderList() {
+// フィルター後のデータを取得する共通関数
+function getFilteredItems() {
   const fWh = document.getElementById('f-wh').value.toLowerCase();
   const fLoc = document.getElementById('f-loc').value.toLowerCase();
   const fCode = document.getElementById('f-code').value.toLowerCase();
   const fName = document.getElementById('f-name').value.toLowerCase();
-  const target = document.getElementById('io-display-list');
   
-  const filtered = items.filter(i => 
+  return items.filter(i => 
     i.warehouse.toLowerCase().includes(fWh) && i.location.toLowerCase().includes(fLoc) &&
     i.code.toLowerCase().includes(fCode) && i.name.toLowerCase().includes(fName)
   );
+}
+
+function renderList() {
+  const target = document.getElementById('io-display-list');
+  const filtered = getFilteredItems();
 
   target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:40px;color:#94a3b8;">該当なし</p>' : 
     filtered.map(item => `
@@ -213,8 +216,16 @@ function updateStock(code, mult) {
 }
 
 function exportExcel() {
+  // フィルターされたデータのみを取得
+  const filteredItems = getFilteredItems();
+  
+  if (filteredItems.length === 0) {
+    return alert("出力するデータがありません");
+  }
+
   const wsData = [["倉庫コード", "棚番コード", "品番", "商品名", "規格", "実勘数"]];
-  items.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
+  filteredItems.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
+  
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), "在庫");
   XLSX.writeFile(wb, `在庫_${new Date().toLocaleDateString()}.xlsx`);
