@@ -39,7 +39,6 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .btn-undo { background: #64748b; color: white; margin-bottom: 12px; padding: 12px; font-size: 15px; }
 .btn-outline-red { background: #fff1f2; border: 1px solid #fca5a5; color: var(--red); }
 
-/* 編集ボタン（右側配置） */
 .btn-edit-stock { 
   padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; 
   border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; cursor: pointer;
@@ -48,13 +47,13 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .item-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; position: relative; }
 .item-meta { font-size: 11px; font-weight: 700; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
 
-/* チェックボックスのデザイン */
 .check-container { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border: 2px solid #cbd5e1; border-radius: 6px; display: none; align-items: center; justify-content: center; cursor: pointer; background: #fff; }
 .item-card.selected .check-container { border-color: var(--green); background: var(--green); color: white; }
 .item-card.selected .check-container::after { content: '✓'; font-weight: bold; font-size: 18px; }
 
 .stock-text-area { font-size: 18px; color: var(--text2); margin-top: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 12px; }
-.stock-num-editable { font-size: 28px; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 8px; cursor: pointer; }
+/* タップ無効化 */
+.stock-num-display { font-size: 28px; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 8px; pointer-events: none; }
 
 .io-controls { display: flex; gap: 10px; margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 12px; }
 .io-input { width: 80px; margin-bottom: 0; text-align: center; font-size: 20px; font-weight: 700; border: 2px solid var(--border); background: #fff; }
@@ -63,7 +62,6 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f1f5f9; padding: 12px; border-radius: 12px; }
 .filter-grid input { margin-bottom: 0; font-size: 16px; padding: 10px; background: white; }
 
-/* 削除実行バー */
 .delete-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 16px; display: none; gap: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 100; }
 
 #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 1000; pointer-events: none; opacity: 0; transition: 0.3s; }
@@ -103,7 +101,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <div class="sub-view" id="view-list">
     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: column;">
       <div style="display: flex; gap: 8px;">
-        <button class="btn btn-green" style="flex: 2; font-size: 14px; padding: 12px;" onclick="exportExcel(false)">📤 表示中データを出力</button>
+        <button class="btn btn-green" style="flex: 2; font-size: 14px; padding: 12px;" onclick="exportExcel()">📤 表示中データを出力</button>
         <button class="btn btn-outline-red" id="btn-delete-mode" style="flex: 1; font-size: 13px;" onclick="toggleDeleteMode()">選択して削除</button>
       </div>
       <button class="btn btn-undo" onclick="undoAction()">↩️ アクションを１つ戻す</button>
@@ -242,7 +240,7 @@ function renderList() {
         ${!deleteMode ? `<button class="btn-edit-stock" onclick="event.stopPropagation(); editStockDirect('${item.code}')">現在個数の編集</button>` : ''}
       </div>
       <div class="stock-text-area">
-        現在個数: <span class="stock-num-editable" onclick="event.stopPropagation(); editStockDirect('${item.code}')">${item.stock}</span>
+        現在個数: <span class="stock-num-display">${item.stock}</span>
       </div>
       ${!deleteMode ? `
       <div class="io-controls" onclick="event.stopPropagation()">
@@ -254,10 +252,15 @@ function renderList() {
     }).join('');
 }
 
-// エクセル出力、インポート、手動登録は以前のまま維持
-async function exportExcel(isBackupAll) {
-  let targetData = isBackupAll ? items : getFilteredItems();
-  if (targetData.length === 0) return alert("データがありません");
+async function exportExcel() {
+  const targetData = getFilteredItems();
+  if (targetData.length === 0) return alert("出力するデータがありません");
+
+  // ファイル名の入力ポップアップ
+  const defaultFileName = `在庫_${new Date().toLocaleDateString().replace(/\//g, '-')}`;
+  const inputName = prompt("出力するファイル名を入力してください:", defaultFileName);
+  if (inputName === null) return; // キャンセル時
+
   const wsData = [["倉庫コード", "棚番コード", "品番", "商品名", "規格", "現在個数"]];
   targetData.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
   const wb = XLSX.utils.book_new();
@@ -266,11 +269,12 @@ async function exportExcel(isBackupAll) {
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'binary'});
   function s2ab(s) { const buf = new ArrayBuffer(s.length); const view = new Uint8Array(buf); for (let i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF; return buf; }
   const blob = new Blob([s2ab(wbout)], {type:"application/octet-stream"});
-  const fileName = `在庫出力_${new Date().toLocaleDateString()}.xlsx`;
+  const finalFileName = `${inputName || "在庫リスト"}.xlsx`;
+
   if (navigator.share) {
-    const file = new File([blob], fileName, {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-    try { await navigator.share({ files: [file], title: '在庫データ' }); } catch (err) { downloadFile(blob, fileName); }
-  } else { downloadFile(blob, fileName); }
+    const file = new File([blob], finalFileName, {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    try { await navigator.share({ files: [file], title: '在庫データ' }); } catch (err) { downloadFile(blob, finalFileName); }
+  } else { downloadFile(blob, finalFileName); }
 }
 
 function downloadFile(blob, fileName) {
@@ -294,7 +298,7 @@ function importExcel() {
         if(exIndex > -1) items[exIndex] = itemData; else items.push(itemData);
       }
       saveData(); renderList(); showToast('取込完了'); fileInput.value = '';
-    } catch(err) { alert("失敗しました。"); }
+    } catch(err) { alert("読込失敗しました。"); }
   };
   reader.readAsArrayBuffer(fileInput.files[0]);
 }
