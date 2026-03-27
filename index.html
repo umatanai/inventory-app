@@ -4,11 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>kosaku在庫管理システム</title>
-
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#2563eb">
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
@@ -39,7 +37,11 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.1s; }
 .btn-blue { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: white; }
+.btn-dark { background: #64748b; color: white; }
 .btn-outline-red { background: transparent; border: 1px solid #fca5a5; color: var(--red); padding: 10px; font-size: 13px; }
+
+/* ページのTOPへボタン（大きなサイズ＋薄いグレー背景） */
+.btn-to-top { background: #f1f5f9; color: var(--text2); border: 1px solid var(--border); }
 
 .btn-delete-item { 
   display: inline-flex; align-items: center; justify-content: center;
@@ -55,13 +57,6 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 
 .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f1f5f9; padding: 12px; border-radius: 12px; }
 .filter-grid input { margin-bottom: 0; font-size: 13px; padding: 10px; background: white; }
-
-/* 修正した「ページのTOPへ」ボタンのスタイル（自然なグレーのアウトライン） */
-.btn-to-top { 
-  width: auto; padding: 10px 20px; font-size: 13px; border-radius: 8px; 
-  border: 1px solid var(--border); color: var(--text2); background: transparent; 
-  cursor: pointer; display: block; margin: 0 auto;
-}
 
 #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
@@ -116,8 +111,8 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 
     <div id="io-display-list"></div>
 
-    <div class="card" style="margin-top: 30px; text-align: center;">
-      <button class="btn-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
+    <div class="card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+      <button class="btn btn-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
     </div>
   </div>
 </div>
@@ -156,6 +151,7 @@ function saveManualItem() {
   ['io-code','io-name','io-spec'].forEach(id => document.getElementById(id).value = '');
 }
 
+// 以前の警告アラーム仕様に戻したインポート関数
 function importExcel() {
   const fileInput = document.getElementById('excel-file');
   if (!fileInput.files[0]) return showToast('ファイルを選んでください');
@@ -165,16 +161,22 @@ function importExcel() {
       const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
       const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
       let count = 0;
+      let errors = [];
       for (let i = 1; i < jsonData.length; i++) {
         const row = jsonData[i];
-        if (!row[0] || !row[2]) continue;
-        const itemData = { warehouse:String(row[0]), location:String(row[1]||""), code:String(row[2]), name:String(row[3]), spec:row[4]?String(row[4]):"", stock:parseFloat(row[5])||0 };
+        if (!row || row.length < 4) continue;
+        if (!row[0] || !row[1] || !row[2] || !row[3]) {
+          errors.push(`${i+1}行目: 空欄あり`);
+          continue;
+        }
+        const itemData = { warehouse:String(row[0]), location:String(row[1]), code:String(row[2]), name:String(row[3]), spec:row[4]?String(row[4]):"", stock:parseFloat(row[5])||0 };
         const exIndex = items.findIndex(item => item.code === itemData.code);
         if(exIndex > -1) items[exIndex] = itemData;
         else items.push(itemData);
         count++;
       }
       saveData();
+      if(errors.length) alert("不備のある行は読み飛ばしました:\n" + errors.join("\n"));
       showToast(`${count}件 更新しました`);
       fileInput.value = '';
     } catch(err) { alert("読込エラー"); }
@@ -193,14 +195,14 @@ function getFilteredItems() {
 function renderList() {
   const target = document.getElementById('io-display-list');
   const filtered = getFilteredItems();
-  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:40px;color:#94a3b8;font-size:14px;">該当なし</p>' : 
+  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:40px;color:#94a3b8;">該当なし</p>' : 
     filtered.map(item => `
     <div class="item-card">
       <div style="display:flex; justify-content:space-between; align-items: flex-start;">
         <div style="flex:1; padding-right:10px;">
           <div class="item-meta">${item.warehouse} / ${item.location}</div>
           <div style="font-size:12px;color:var(--text2);font-family:monospace;">品番: ${item.code}</div>
-          <div style="font-weight:700;font-size:16px;">${item.name} <span style="font-weight:400;font-size:12px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
+          <div style="font-weight:700;font-size:16px;">${item.name} <span style="font-weight:400;font-size:13px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
         </div>
         <button class="btn-delete-item" onclick="deleteItem('${item.code}')">削除</button>
       </div>
