@@ -2,18 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>kosaku在庫管理システム</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#2563eb">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
 :root { --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --accent: #2563eb; --green: #059669; --red: #dc2626; --text: #1e293b; --text2: #64748b; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 40px; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 40px; touch-action: manipulation; }
 
 header { background: var(--surface); padding: 16px; text-align: center; border-bottom: 1px solid var(--border); }
 header h1 { font-size: 18px; color: var(--accent); }
@@ -26,39 +23,43 @@ header h1 { font-size: 18px; color: var(--accent); }
 .sub-view { display: none; }
 .sub-view.active { display: block; }
 
-.card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+.card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; }
 .card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
 
-label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 6px; }
-input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; }
-.row-2 { display: flex; gap: 10px; }
-.row-2 > div { flex: 1; }
+/* iPhoneのズームを防ぐため16px以上に固定 */
+label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 4px; }
+input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; outline: none; }
+input:focus { border-color: var(--accent); background: #fff; }
 
-.btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.1s; }
+.btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-blue { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: white; }
-.btn-dark { background: #64748b; color: white; }
+.btn-undo { background: #64748b; color: white; margin-bottom: 10px; padding: 12px; font-size: 15px; }
 .btn-outline-red { background: transparent; border: 1px solid #fca5a5; color: var(--red); padding: 10px; font-size: 13px; }
 
-/* ページのTOPへボタン（大きなサイズ＋薄いグレー背景） */
-.btn-to-top { background: #f1f5f9; color: var(--text2); border: 1px solid var(--border); }
+.item-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; }
+.item-meta { font-size: 11px; font-weight: 700; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
 
+/* 品番ごとの削除ボタン（元のデザイン） */
 .btn-delete-item { 
   display: inline-flex; align-items: center; justify-content: center;
   padding: 6px 12px; font-size: 13px; border-radius: 8px; border: 1px solid #fca5a5; 
   color: var(--red); background: #fff1f2; cursor: pointer; white-space: nowrap; height: 32px;
 }
 
-.item-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; }
-.item-meta { font-size: 11px; font-weight: 700; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
+.stock-display { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.stock-input-edit { width: 120px; margin-bottom: 0; font-size: 24px; font-weight: 700; text-align: center; padding: 4px; color: var(--accent); border: 2px solid var(--accent); background: #f0f7ff; }
+
 .io-controls { display: flex; gap: 10px; margin-top: 15px; }
-.io-input { width: 80px; margin-bottom: 0; text-align: center; font-size: 22px; font-weight: 700; background: #fff; border: 2px solid var(--border); }
-.io-btn { flex: 1; padding: 16px 0; margin-top: 0; font-size: 17px; }
+.io-input { width: 80px; margin-bottom: 0; text-align: center; font-size: 20px; font-weight: 700; border: 2px solid var(--border); }
+.io-btn { flex: 1; padding: 16px 0; font-size: 17px; }
 
 .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f1f5f9; padding: 12px; border-radius: 12px; }
-.filter-grid input { margin-bottom: 0; font-size: 13px; padding: 10px; background: white; }
+.filter-grid input { margin-bottom: 0; font-size: 16px; padding: 10px; background: white; }
 
-#toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
+.btn-to-top { background: #f1f5f9; color: var(--text2); border: 1px solid var(--border); margin-top: 20px; font-size: 14px; }
+
+#toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 1000; pointer-events: none; opacity: 0; transition: 0.3s; }
 #toast.show { opacity: 1; }
 </style>
 </head>
@@ -74,9 +75,15 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 <div class="main-container">
   <div class="sub-view active" id="view-reg">
     <div class="card">
-      <div class="card-title">📥 エクセルから一括反映</div>
+      <div class="card-title">📥 エクセルからデータ取込</div>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
       <button class="btn btn-green" onclick="importExcel()">ファイルを読み込む</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💾 データのバックアップ（エクセル出力）</div>
+      <p style="font-size: 12px; color: var(--text2); margin-bottom: 12px;">全データをエクセル化して保存・送信します。</p>
+      <button class="btn btn-blue" onclick="exportExcel(true)">📂 エクセル形式で保存・送信</button>
     </div>
 
     <div class="card">
@@ -85,35 +92,34 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
         <div><label>倉庫</label><input type="text" id="io-warehouse" placeholder="W-01"></div>
         <div><label>棚番</label><input type="text" id="io-location" placeholder="A-01"></div>
       </div>
-      <label>品番</label><input type="text" id="io-code" placeholder="品番を入力">
-      <label>商品名</label><input type="text" id="io-name" placeholder="商品名を入力">
-      <label>規格 (任意)</label><input type="text" id="io-spec" placeholder="サイズなど">
+      <label>品番</label><input type="text" id="io-code" placeholder="品番">
+      <label>商品名</label><input type="text" id="io-name" placeholder="商品名">
+      <label>規格</label><input type="text" id="io-spec" placeholder="サイズ等">
       <label>初期在庫数</label><input type="number" id="io-qty" value="0">
-      <button class="btn btn-blue" onclick="saveManualItem()">登録を確定する</button>
+      <button class="btn btn-blue" onclick="saveManualItem()">この内容で登録する</button>
     </div>
   </div>
 
   <div class="sub-view" id="view-list">
-    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-      <button class="btn btn-blue" style="flex: 2.5; padding: 12px; font-size: 14px;" onclick="exportExcel()">⬇️ 表示中のデータを出力</button>
+    <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+      <button class="btn btn-blue" style="flex: 2; padding: 12px; font-size: 14px;" onclick="exportExcel(false)">📤 表示中のデータを出力</button>
       <button class="btn btn-outline-red" style="flex: 1;" onclick="clearAllData()">全消去</button>
+      <button class="btn btn-undo" style="width: 100%;" onclick="undoLastAction()">↩️ ひとつ戻る</button>
     </div>
 
     <div class="card" style="padding: 14px;">
-      <div class="card-title" style="margin-bottom: 10px;">🔍 在庫を絞り込み</div>
+      <div class="card-title" style="margin-bottom: 10px;">🔍 絞り込み (自動記憶)</div>
       <div class="filter-grid">
-        <input type="text" id="f-wh" placeholder="倉庫" oninput="renderList()">
-        <input type="text" id="f-loc" placeholder="棚番" oninput="renderList()">
-        <input type="text" id="f-code" placeholder="品番" oninput="renderList()">
-        <input type="text" id="f-name" placeholder="商品名" oninput="renderList()">
+        <input type="text" id="f-wh" placeholder="倉庫" oninput="handleFilterChange()">
+        <input type="text" id="f-loc" placeholder="棚番" oninput="handleFilterChange()">
+        <input type="text" id="f-code" placeholder="品番" oninput="handleFilterChange()">
+        <input type="text" id="f-name" placeholder="商品名" oninput="handleFilterChange()">
       </div>
     </div>
 
     <div id="io-display-list"></div>
 
-    <div class="card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
-      <button class="btn btn-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
-    </div>
+    <button class="btn btn-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
   </div>
 </div>
 
@@ -121,92 +127,106 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 
 <script>
 let items = JSON.parse(localStorage.getItem('inventory_db') || '[]');
+let lastItemsState = null;
+
+// 起動時にフィルター復元
+window.onload = () => {
+  const fData = JSON.parse(localStorage.getItem('inventory_filters') || '{}');
+  if(fData.wh) document.getElementById('f-wh').value = fData.wh;
+  if(fData.loc) document.getElementById('f-loc').value = fData.loc;
+  if(fData.code) document.getElementById('f-code').value = fData.code;
+  if(fData.name) document.getElementById('f-name').value = fData.name;
+  renderList();
+};
 
 function switchSubView(view) {
   document.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`view-${view}`).classList.add('active');
   document.getElementById(`tab-${view}`).classList.add('active');
-  window.scrollTo(0,0);
   if(view === 'list') renderList();
 }
 
-function saveData() { localStorage.setItem('inventory_db', JSON.stringify(items)); }
-function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
-
-function saveManualItem() {
-  const warehouse = document.getElementById('io-warehouse').value.trim();
-  const location = document.getElementById('io-location').value.trim();
-  const code = document.getElementById('io-code').value.trim();
-  const name = document.getElementById('io-name').value.trim();
-  const spec = document.getElementById('io-spec').value.trim();
-  const stockStr = document.getElementById('io-qty').value.trim();
-  if(!warehouse || !location || !code || !name || stockStr === "") return alert("必須項目をすべて入力してください");
-  const data = { warehouse, location, code, name, spec: spec || "", stock: parseFloat(stockStr) };
-  const exIndex = items.findIndex(i => i.code === code);
-  if(exIndex > -1) items[exIndex] = data;
-  else items.push(data);
-  saveData();
-  showToast('登録完了 ✅');
-  ['io-code','io-name','io-spec'].forEach(id => document.getElementById(id).value = '');
+function saveData() {
+  localStorage.setItem('inventory_db', JSON.stringify(items));
 }
 
-// 以前の警告アラーム仕様に戻したインポート関数
-function importExcel() {
-  const fileInput = document.getElementById('excel-file');
-  if (!fileInput.files[0]) return showToast('ファイルを選んでください');
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-      const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-      let count = 0;
-      let errors = [];
-      for (let i = 1; i < jsonData.length; i++) {
-        const row = jsonData[i];
-        if (!row || row.length < 4) continue;
-        if (!row[0] || !row[1] || !row[2] || !row[3]) {
-          errors.push(`${i+1}行目: 空欄あり`);
-          continue;
-        }
-        const itemData = { warehouse:String(row[0]), location:String(row[1]), code:String(row[2]), name:String(row[3]), spec:row[4]?String(row[4]):"", stock:parseFloat(row[5])||0 };
-        const exIndex = items.findIndex(item => item.code === itemData.code);
-        if(exIndex > -1) items[exIndex] = itemData;
-        else items.push(itemData);
-        count++;
-      }
-      saveData();
-      if(errors.length) alert("不備のある行は読み飛ばしました:\n" + errors.join("\n"));
-      showToast(`${count}件 更新しました`);
-      fileInput.value = '';
-    } catch(err) { alert("読込エラー"); }
+function saveUndoState() {
+  lastItemsState = JSON.parse(JSON.stringify(items));
+}
+
+function handleFilterChange() {
+  const fData = {
+    wh: document.getElementById('f-wh').value,
+    loc: document.getElementById('f-loc').value,
+    code: document.getElementById('f-code').value,
+    name: document.getElementById('f-name').value
   };
-  reader.readAsArrayBuffer(fileInput.files[0]);
+  localStorage.setItem('inventory_filters', JSON.stringify(fData));
+  renderList();
 }
 
-function getFilteredItems() {
-  const fWh = document.getElementById('f-wh').value.toLowerCase();
-  const fLoc = document.getElementById('f-loc').value.toLowerCase();
-  const fCode = document.getElementById('f-code').value.toLowerCase();
-  const fName = document.getElementById('f-name').value.toLowerCase();
-  return items.filter(i => i.warehouse.toLowerCase().includes(fWh) && i.location.toLowerCase().includes(fLoc) && i.code.toLowerCase().includes(fCode) && i.name.toLowerCase().includes(fName));
+function undoLastAction() {
+  if(!lastItemsState) return showToast('戻せる操作がありません');
+  items = JSON.parse(JSON.stringify(lastItemsState));
+  lastItemsState = null;
+  saveData();
+  renderList();
+  showToast('ひとつ戻しました ↩️');
+}
+
+function updateStock(code, mult) {
+  const input = document.getElementById(`amt-${code}`);
+  const val = parseFloat(input.value);
+  if(!val || val <= 0) return showToast('値を入力してください');
+  saveUndoState();
+  const item = items.find(i => i.code === code);
+  if(item) {
+    item.stock += (val * mult);
+    saveData();
+    input.value = '';
+    renderList();
+    showToast('更新完了');
+  }
+}
+
+function editStockDirect(code, newVal) {
+  saveUndoState();
+  const item = items.find(i => i.code === code);
+  if(item) {
+    item.stock = parseFloat(newVal) || 0;
+    saveData();
+    showToast('実勘数を修正しました');
+  }
 }
 
 function renderList() {
   const target = document.getElementById('io-display-list');
-  const filtered = getFilteredItems();
+  const fWh = document.getElementById('f-wh').value.toLowerCase();
+  const fLoc = document.getElementById('f-loc').value.toLowerCase();
+  const fCode = document.getElementById('f-code').value.toLowerCase();
+  const fName = document.getElementById('f-name').value.toLowerCase();
+
+  const filtered = items.filter(i => 
+    i.warehouse.toLowerCase().includes(fWh) && i.location.toLowerCase().includes(fLoc) &&
+    i.code.toLowerCase().includes(fCode) && i.name.toLowerCase().includes(fName)
+  );
+
   target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:40px;color:#94a3b8;">該当なし</p>' : 
     filtered.map(item => `
     <div class="item-card">
       <div style="display:flex; justify-content:space-between; align-items: flex-start;">
         <div style="flex:1; padding-right:10px;">
           <div class="item-meta">${item.warehouse} / ${item.location}</div>
-          <div style="font-size:12px;color:var(--text2);font-family:monospace;">品番: ${item.code}</div>
+          <div style="font-size:12px;color:var(--text2); font-family:monospace;">品番: ${item.code}</div>
           <div style="font-weight:700;font-size:16px;">${item.name} <span style="font-weight:400;font-size:13px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
         </div>
         <button class="btn-delete-item" onclick="deleteItem('${item.code}')">削除</button>
       </div>
-      <div style="margin-top:12px; font-size:14px; color:var(--text2);">実勘数: <strong style="color:var(--accent); font-size:26px; margin-left:8px;">${item.stock}</strong></div>
+      <div class="stock-display">
+        <label style="margin:0; font-size:14px;">実勘数編集:</label>
+        <input type="number" class="stock-input-edit" value="${item.stock}" onchange="editStockDirect('${item.code}', this.value)">
+      </div>
       <div class="io-controls">
         <input type="number" class="io-input" id="amt-${item.code}" placeholder="0">
         <button class="btn btn-green io-btn" onclick="updateStock('${item.code}', 1)">入庫</button>
@@ -215,28 +235,104 @@ function renderList() {
     </div>`).join('');
 }
 
-function updateStock(code, mult) {
-  const input = document.getElementById(`amt-${code}`);
-  const val = parseFloat(input.value);
-  if(!val || val <= 0) return showToast('数を入力してください');
-  const item = items.find(i => i.code === code);
-  if(item) { item.stock += (val * mult); saveData(); input.value = ''; renderList(); showToast('更新完了'); }
-}
+async function exportExcel(isBackupAll = false) {
+  let targetData = items;
+  if (!isBackupAll) {
+    const fWh = document.getElementById('f-wh').value.toLowerCase();
+    const fLoc = document.getElementById('f-loc').value.toLowerCase();
+    const fCode = document.getElementById('f-code').value.toLowerCase();
+    const fName = document.getElementById('f-name').value.toLowerCase();
+    targetData = items.filter(i => 
+      i.warehouse.toLowerCase().includes(fWh) && i.location.toLowerCase().includes(fLoc) &&
+      i.code.toLowerCase().includes(fCode) && i.name.toLowerCase().includes(fName)
+    );
+  }
 
-function exportExcel() {
-  const filteredItems = getFilteredItems();
-  if (filteredItems.length === 0) return alert("出力するデータがありません");
+  if (targetData.length === 0) return alert("出力するデータがありません");
+
   const wsData = [["倉庫コード", "棚番コード", "品番", "商品名", "規格", "実勘数"]];
-  filteredItems.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
+  targetData.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
+  
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), "在庫");
-  XLSX.writeFile(wb, `在庫_${new Date().toLocaleDateString()}.xlsx`);
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  XLSX.utils.book_append_sheet(wb, ws, "在庫");
+  
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'binary'});
+  function s2ab(s) {
+    const buf = new ArrayBuffer(s.length);
+    const view = new Uint8Array(buf);
+    for (let i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+    return buf;
+  }
+  
+  const blob = new Blob([s2ab(wbout)], {type:"application/octet-stream"});
+  const fileName = isBackupAll ? `kosaku全データバックアップ_${new Date().toLocaleDateString()}.xlsx` : `表示中データ出力_${new Date().toLocaleDateString()}.xlsx`;
+
+  if (navigator.share) {
+    const file = new File([blob], fileName, {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    try {
+      await navigator.share({ files: [file], title: '在庫データ', text: 'エクセルデータを出力しました。' });
+    } catch (err) { downloadFile(blob, fileName); }
+  } else {
+    downloadFile(blob, fileName);
+  }
 }
 
-function deleteItem(code) { if(confirm('このデータを削除しますか？')) { items = items.filter(i => i.code !== code); saveData(); renderList(); } }
-function clearAllData() { if(confirm('全データを削除しますか？')) { items = []; saveData(); renderList(); } }
+function downloadFile(blob, fileName) {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = fileName; a.click();
+}
 
-renderList();
+function importExcel() {
+  const fileInput = document.getElementById('excel-file');
+  if (!fileInput.files[0]) return showToast('ファイルを選んでください');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+      let count = 0; let errors = [];
+      for (let i = 1; i < jsonData.length; i++) {
+        const row = jsonData[i];
+        if (!row || row.length < 4) continue;
+        if (!row[0] || !row[1] || !row[2] || !row[3]) {
+          errors.push(`${i+1}行目: 空欄あり`); continue;
+        }
+        const itemData = { warehouse:String(row[0]), location:String(row[1]), code:String(row[2]), name:String(row[3]), spec:row[4]?String(row[4]):"", stock:parseFloat(row[5])||0 };
+        const exIndex = items.findIndex(item => item.code === itemData.code);
+        if(exIndex > -1) items[exIndex] = itemData; else items.push(itemData);
+        count++;
+      }
+      saveData();
+      if(errors.length) alert("不備のある行は読み飛ばしました:\n" + errors.join("\n"));
+      showToast(`${count}件 更新完了`);
+      renderList();
+      fileInput.value = '';
+    } catch(err) { alert("読込失敗"); }
+  };
+  reader.readAsArrayBuffer(fileInput.files[0]);
+}
+
+function saveManualItem() {
+  const warehouse = document.getElementById('io-warehouse').value.trim();
+  const location = document.getElementById('io-location').value.trim();
+  const code = document.getElementById('io-code').value.trim();
+  const name = document.getElementById('io-name').value.trim();
+  const spec = document.getElementById('io-spec').value.trim();
+  const stockStr = document.getElementById('io-qty').value.trim();
+  if(!warehouse || !location || !code || !name || stockStr === "") return alert("入力不備があります");
+  saveUndoState();
+  const data = { warehouse, location, code, name, spec: spec || "", stock: parseFloat(stockStr) };
+  const exIndex = items.findIndex(i => i.code === code);
+  if(exIndex > -1) items[exIndex] = data; else items.push(data);
+  saveData();
+  showToast('登録しました');
+}
+
+function deleteItem(code) { if(confirm('削除しますか？')) { saveUndoState(); items = items.filter(i => i.code !== code); saveData(); renderList(); } }
+function clearAllData() { if(confirm('【警告】全データを消去しますか？')) { saveUndoState(); items = []; saveData(); renderList(); } }
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 </script>
 </body>
 </html>
