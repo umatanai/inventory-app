@@ -56,6 +56,13 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f1f5f9; padding: 12px; border-radius: 12px; }
 .filter-grid input { margin-bottom: 0; font-size: 13px; padding: 10px; background: white; }
 
+/* 修正した「ページのTOPへ」ボタンのスタイル（自然なグレーのアウトライン） */
+.btn-to-top { 
+  width: auto; padding: 10px 20px; font-size: 13px; border-radius: 8px; 
+  border: 1px solid var(--border); color: var(--text2); background: transparent; 
+  cursor: pointer; display: block; margin: 0 auto;
+}
+
 #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
 </style>
@@ -109,7 +116,9 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 
     <div id="io-display-list"></div>
 
-    <button class="btn btn-dark" style="margin-top: 20px; background: #64748b;" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
+    <div class="card" style="margin-top: 30px; text-align: center;">
+      <button class="btn-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
+    </div>
   </div>
 </div>
 
@@ -126,6 +135,9 @@ function switchSubView(view) {
   window.scrollTo(0,0);
   if(view === 'list') renderList();
 }
+
+function saveData() { localStorage.setItem('inventory_db', JSON.stringify(items)); }
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
 function saveManualItem() {
   const warehouse = document.getElementById('io-warehouse').value.trim();
@@ -181,14 +193,14 @@ function getFilteredItems() {
 function renderList() {
   const target = document.getElementById('io-display-list');
   const filtered = getFilteredItems();
-  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:40px;color:#94a3b8;">該当なし</p>' : 
+  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:40px;color:#94a3b8;font-size:14px;">該当なし</p>' : 
     filtered.map(item => `
     <div class="item-card">
       <div style="display:flex; justify-content:space-between; align-items: flex-start;">
         <div style="flex:1; padding-right:10px;">
           <div class="item-meta">${item.warehouse} / ${item.location}</div>
           <div style="font-size:12px;color:var(--text2);font-family:monospace;">品番: ${item.code}</div>
-          <div style="font-weight:700;font-size:16px;">${item.name} <span style="font-weight:400;font-size:13px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
+          <div style="font-weight:700;font-size:16px;">${item.name} <span style="font-weight:400;font-size:12px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
         </div>
         <button class="btn-delete-item" onclick="deleteItem('${item.code}')">削除</button>
       </div>
@@ -221,8 +233,7 @@ function exportExcel() {
 
 function deleteItem(code) { if(confirm('このデータを削除しますか？')) { items = items.filter(i => i.code !== code); saveData(); renderList(); } }
 function clearAllData() { if(confirm('全データを削除しますか？')) { items = []; saveData(); renderList(); } }
-function saveData() { localStorage.setItem('inventory_db', JSON.stringify(items)); }
-function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+
 renderList();
 </script>
 </body>
