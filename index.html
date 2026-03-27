@@ -8,49 +8,64 @@
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
-:root { --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --accent: #2563eb; --green: #059669; --red: #dc2626; --text: #1e293b; --text2: #64748b; }
+:root { 
+  /* 背景を薄い青に変更 */
+  --bg: #e0f2fe; 
+  --surface: #ffffff; 
+  --border: #e2e8f0; 
+  --accent: #2563eb; 
+  --accent-light: #eff6ff;
+  --green: #059669; 
+  --red: #dc2626; 
+  --text: #1e293b; 
+  --text2: #64748b; 
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 40px; touch-action: manipulation; }
 
-header { background: var(--surface); padding: 16px; text-align: center; border-bottom: 1px solid var(--border); }
+header { background: var(--surface); padding: 16px; text-align: center; border-bottom: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 header h1 { font-size: 18px; color: var(--accent); }
 
-.nav-tabs { display: flex; background: #e2e8f0; margin: 14px; border-radius: 12px; padding: 4px; }
-.nav-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; background: transparent; color: var(--text2); cursor: pointer; }
-.nav-btn.active { background: var(--surface); color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.nav-tabs { display: flex; background: #cbd5e1; margin: 14px; border-radius: 12px; padding: 4px; }
+.nav-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; background: transparent; color: var(--text); cursor: pointer; }
+.nav-btn.active { background: var(--surface); color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
 .main-container { padding: 0 14px; }
 .sub-view { display: none; }
 .sub-view.active { display: block; }
 
-.card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; }
-.card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+/* 白色を際立たせるカードスタイル */
+.card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: var(--shadow); }
+.card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); border-bottom: 2px solid var(--accent-light); padding-bottom: 8px; }
 
-/* ズーム対策: 入力欄は16px以上に固定 */
 label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 4px; }
 input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; outline: none; }
-input:focus { border-color: var(--accent); background: #fff; }
+input:focus { border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
 .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-blue { background: var(--accent); color: white; }
+.btn-blue:active { background: #1d4ed8; }
 .btn-green { background: var(--green); color: white; }
-.btn-undo { background: #64748b; color: white; margin-bottom: 8px; padding: 12px; font-size: 15px; }
-.btn-outline-red { background: transparent; border: 1px solid #fca5a5; color: var(--red); padding: 10px; font-size: 13px; }
+.btn-green:active { background: #047857; }
+.btn-undo { background: #64748b; color: white; margin-bottom: 12px; padding: 12px; font-size: 15px; }
+.btn-outline-red { background: transparent; border: 1px solid #fca5a5; color: var(--red); padding: 10px; font-size: 13px; font-weight: 700; background: #fff1f2; }
 
-.item-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; }
-.item-meta { font-size: 11px; font-weight: 700; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
-
-.btn-delete-item { 
+/* 小さなアウトラインボタン（編集用） */
+.btn-outline-sm {
   display: inline-flex; align-items: center; justify-content: center;
-  padding: 6px 12px; font-size: 13px; border-radius: 8px; border: 1px solid #fca5a5; 
-  color: var(--red); background: #fff1f2; cursor: pointer; height: 32px;
+  padding: 6px 12px; font-size: 13px; font-weight: 700; border-radius: 8px; 
+  border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; cursor: pointer; height: 32px;
 }
 
-/* 実勘数の表記デザイン */
-.stock-text-area { font-size: 18px; color: var(--text2); margin-top: 10px; display: flex; align-items: center; gap: 8px; }
-.stock-num-editable { font-size: 24px; font-weight: 700; color: var(--accent); border-bottom: 2px solid var(--border); padding: 0 4px; min-width: 40px; text-align: center; cursor: pointer; }
+.item-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.item-meta { font-size: 11px; font-weight: 700; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
 
-.io-controls { display: flex; gap: 10px; margin-top: 15px; }
+/* 在庫数エリアのデザイン */
+.stock-text-area { font-size: 18px; color: var(--text2); margin-top: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+.stock-num-editable { font-size: 28px; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 8px; cursor: pointer; }
+
+.io-controls { display: flex; gap: 10px; margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 12px; }
 .io-input { width: 80px; margin-bottom: 0; text-align: center; font-size: 20px; font-weight: 700; border: 2px solid var(--border); background: #fff; }
 .io-btn { flex: 1; padding: 16px 0; font-size: 17px; }
 
@@ -59,13 +74,13 @@ input:focus { border-color: var(--accent); background: #fff; }
 
 .btn-to-top { background: #f1f5f9; color: var(--text2); border: 1px solid var(--border); margin-top: 20px; font-size: 14px; }
 
-#toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 1000; pointer-events: none; opacity: 0; transition: 0.3s; }
+#toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 1000; pointer-events: none; opacity: 0; transition: 0.3s; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
 #toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<header><h1>📦 在庫・入出庫管理</h1></header>
+<header><h1>📦 kosaku在庫管理システム</h1></header>
 
 <div class="nav-tabs">
   <button class="nav-btn active" id="tab-reg" onclick="switchSubView('reg')">データ登録</button>
@@ -81,27 +96,32 @@ input:focus { border-color: var(--accent); background: #fff; }
     </div>
 
     <div class="card">
+      <div class="card-title">💾 データのバックアップ（エクセル出力）</div>
+      <p style="font-size: 12px; color: var(--text2); margin-bottom: 12px;">全データをエクセル化して保存・送信します。</p>
+      <button class="btn btn-blue" onclick="exportExcel(true)">📂 エクセル形式で保存・送信</button>
+    </div>
+
+    <div class="card">
       <div class="card-title">✏️ 手動で新規登録</div>
       <div class="row-2" style="display:flex; gap:10px;">
         <div style="flex:1;"><label>倉庫</label><input type="text" id="io-warehouse" placeholder="W-01"></div>
         <div style="flex:1;"><label>棚番</label><input type="text" id="io-location" placeholder="A-01"></div>
       </div>
-      <label>品番</label><input type="text" id="io-code" placeholder="品番">
-      <label>商品名</label><input type="text" id="io-name" placeholder="商品名">
-      <label>規格</label><input type="text" id="io-spec" placeholder="サイズ等">
-      <label>初期在庫数</label><input type="number" id="io-qty" value="0">
+      <label>品番</label><input type="text" id="io-code" placeholder="ITM-001">
+      <label>商品名</label><input type="text" id="io-name" placeholder="商品名を入力">
+      <label>規格</label><input type="text" id="io-spec" placeholder="サイズ・容量など">
+      <label>初期現在個数</label><input type="number" id="io-qty" value="0">
       <button class="btn btn-blue" onclick="saveManualItem()">この内容で登録する</button>
     </div>
   </div>
 
   <div class="sub-view" id="view-list">
     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: column;">
-      <button class="btn btn-blue" onclick="exportExcel(true)">📂 全データをバックアップ保存（エクセル）</button>
       <div style="display: flex; gap: 8px;">
         <button class="btn btn-green" style="flex: 2; font-size: 14px; padding: 12px;" onclick="exportExcel(false)">📤 表示中データのみ出力</button>
-        <button class="btn btn-outline-red" style="flex: 1;" onclick="clearAllData()">全消去</button>
+        <button class="btn btn-outline-red" style="flex: 1; border-radius: 12px;" onclick="clearAllData()">全消去</button>
       </div>
-      <button class="btn btn-undo" onclick="undoAction()">↩️ ひとつ戻る</button>
+      <button class="btn btn-undo" onclick="undoAction()">↩️ 直前のアクションを一つ戻す</button>
     </div>
 
     <div class="card" style="padding: 14px;">
@@ -124,7 +144,7 @@ input:focus { border-color: var(--accent); background: #fff; }
 
 <script>
 let items = JSON.parse(localStorage.getItem('inventory_db') || '[]');
-// 履歴を最大5件保持
+// Undo履歴（最大5件）
 let undoStack = [];
 
 window.onload = () => {
@@ -141,6 +161,7 @@ function switchSubView(view) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`view-${view}`).classList.add('active');
   document.getElementById(`tab-${view}`).classList.add('active');
+  window.scrollTo(0,0);
   if(view === 'list') renderList();
 }
 
@@ -159,7 +180,7 @@ function undoAction() {
   items = JSON.parse(prevState);
   saveData();
   renderList();
-  showToast('操作を戻しました ↩️');
+  showToast('操作を一つ戻しました ↩️');
 }
 
 function handleFilterChange() {
@@ -184,20 +205,21 @@ function updateStock(code, mult) {
     saveData();
     input.value = '';
     renderList();
-    showToast('更新しました');
+    showToast('個数を更新しました');
   }
 }
 
+// 現在個数の直接編集
 function editStockDirect(code) {
   const item = items.find(i => i.code === code);
   const current = item.stock;
-  const newVal = prompt("実勘数を直接編集します:", current);
-  if(newVal !== null && !isNaN(parseFloat(newVal))) {
+  const newVal = prompt(`「${item.name}」の現在個数を直接編集します:`, current);
+  if(newVal !== null && newVal !== "" && !isNaN(parseFloat(newVal))) {
     pushUndo();
     item.stock = parseFloat(newVal);
     saveData();
     renderList();
-    showToast('修正しました');
+    showToast('現在個数を修正しました');
   }
 }
 
@@ -213,22 +235,25 @@ function renderList() {
     i.code.toLowerCase().includes(fCode) && i.name.toLowerCase().includes(fName)
   );
 
-  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:40px;color:#94a3b8;">該当なし</p>' : 
+  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:50px;color:#94a3b8;background:white;border-radius:16px;">該当する在庫はありません</p>' : 
     filtered.map(item => `
     <div class="item-card">
       <div style="display:flex; justify-content:space-between; align-items: flex-start;">
         <div style="flex:1; padding-right:10px;">
           ${item.warehouse ? `<div class="item-meta">${item.warehouse} / ${item.location}</div>` : ''}
-          <div style="font-size:12px;color:var(--text2);">品番: ${item.code}</div>
-          <div style="font-weight:700;font-size:16px; margin-bottom:4px;">${item.name} <span style="font-weight:400;font-size:13px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
+          <div style="font-size:12px;color:var(--text2); font-family:monospace;">品番: ${item.code}</div>
+          <div style="font-weight:700;font-size:16px; margin-bottom:4px; line-height:1.4;">${item.name} <span style="font-weight:400;font-size:13px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
         </div>
-        <button class="btn-delete-item" onclick="deleteItem('${item.code}')">削除</button>
+        <div style="display:flex; gap:6px; flex-shrink:0;">
+          <button class="btn-outline-sm" onclick="editStockDirect('${item.code}')">編集</button>
+          <button class="btn-delete-item btn-outline-red" style="border-radius:8px;" onclick="deleteItem('${item.code}')">削除</button>
+        </div>
       </div>
       <div class="stock-text-area">
-        実勘数: <span class="stock-num-editable" onclick="editStockDirect('${item.code}')">${item.stock}</span>
+        現在個数: <span class="stock-num-editable" onclick="editStockDirect('${item.code}')">${item.stock}</span>
       </div>
       <div class="io-controls">
-        <input type="number" class="io-input" id="amt-${item.code}" placeholder="数">
+        <input type="number" class="io-input" id="amt-${item.code}" placeholder="0">
         <button class="btn btn-green io-btn" onclick="updateStock('${item.code}', 1)">入庫</button>
         <button class="btn io-btn" style="background:var(--red);color:white;" onclick="updateStock('${item.code}', -1)">出庫</button>
       </div>
@@ -250,7 +275,7 @@ async function exportExcel(isBackupAll = false) {
 
   if (targetData.length === 0) return alert("出力するデータがありません");
 
-  const wsData = [["倉庫コード", "棚番コード", "品番", "商品名", "規格", "実勘数"]];
+  const wsData = [["倉庫コード", "棚番コード", "品番", "商品名", "規格", "現在個数"]];
   targetData.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -263,12 +288,12 @@ async function exportExcel(isBackupAll = false) {
     return buf;
   }
   const blob = new Blob([s2ab(wbout)], {type:"application/octet-stream"});
-  const fileName = isBackupAll ? `kosaku全データバックアップ_${new Date().toLocaleDateString()}.xlsx` : `在庫抽出_${new Date().toLocaleDateString()}.xlsx`;
+  const fileName = isBackupAll ? `kosaku全データバックアップ_${new Date().toLocaleDateString()}.xlsx` : `表示中在庫出力_${new Date().toLocaleDateString()}.xlsx`;
 
   if (navigator.share) {
     const file = new File([blob], fileName, {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
     try {
-      await navigator.share({ files: [file], title: '在庫データ', text: '最新の在庫データ（エクセル）です。' });
+      await navigator.share({ files: [file], title: '在庫データ', text: 'エクセルを出力しました。' });
     } catch (err) { downloadFile(blob, fileName); }
   } else {
     downloadFile(blob, fileName);
@@ -320,10 +345,10 @@ function saveManualItem() {
   const exIndex = items.findIndex(i => i.code === code);
   if(exIndex > -1) items[exIndex] = data; else items.push(data);
   saveData();
-  showToast('登録完了');
+  showToast('登録しました');
 }
 
-function deleteItem(code) { if(confirm('本当に削除しますか？')) { pushUndo(); items = items.filter(i => i.code !== code); saveData(); renderList(); } }
+function deleteItem(code) { if(confirm('削除しますか？')) { pushUndo(); items = items.filter(i => i.code !== code); saveData(); renderList(); } }
 function clearAllData() { if(confirm('【警告】全データを消去しますか？')) { pushUndo(); items = []; saveData(); renderList(); } }
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 </script>
