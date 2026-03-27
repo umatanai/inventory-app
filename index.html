@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>K 在庫管理</title>
+<title>K 在庫管理システム</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -16,35 +16,52 @@
 :root { --bg: #f0f4f8; --surface: #ffffff; --border: #dde3ea; --accent: #2563eb; --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b; --text2: #64748b; --shadow: 0 1px 3px rgba(0,0,0,0.08); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 20px; }
-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
-header h1 { font-size: 17px; font-weight: 700; color: var(--accent); }
+header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
+header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+
 .main-container { padding: 14px; }
 .sub-view { display: none; }
 .sub-view.active { display: block; }
-.card { background: var(--surface); border-radius: 14px; padding: 16px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: var(--shadow); }
-.card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; border-bottom: 2px solid var(--accent-light); padding-bottom: 5px; }
-label { display: block; font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 5px; }
-input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px; width: 100%; font-size: 16px; margin-bottom: 10px; }
+
+/* カードデザイン */
+.card { background: var(--surface); border-radius: 14px; padding: 18px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: var(--shadow); }
+.card-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 14px; border-bottom: 2px solid var(--accent-light); padding-bottom: 6px; }
+
+/* 入力・ラベル */
+label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 6px; }
+input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; }
 .row-2 { display: flex; gap: 10px; }
 .row-2 > div { flex: 1; }
-.btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.1s; margin-top: 5px; }
+
+/* ボタン大型化 */
+.btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.1s; margin-top: 8px; }
 .btn-blue { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: white; }
 .btn-dark { background: #334155; color: white; }
 .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text2); }
 
-/* 削除ボタンの調整 */
-.btn-delete { width: auto; padding: 2px 8px; font-size: 10px; height: 22px; line-height: 18px; border-radius: 6px; border: 1px solid #fca5a5; color: var(--red); background: #fff1f2; cursor: pointer; }
+/* 削除ボタンの修正：位置を固定して崩れを防止 */
+.btn-delete { 
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 4px 10px; font-size: 12px; border-radius: 6px; border: 1px solid #fca5a5; 
+  color: var(--red); background: #fff1f2; cursor: pointer; white-space: nowrap;
+}
 
-.item-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 8px; }
-.item-meta { font-size: 11px; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; font-weight: 700; }
-.io-controls { display: flex; gap: 8px; margin-top: 12px; }
-.io-input { width: 60px; margin-bottom: 0; text-align: center; font-size: 18px; padding: 0; }
-.io-btn { flex: 1; padding: 14px 0; margin-top: 0; }
-#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
+/* 在庫リストのアイテム */
+.item-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 10px; box-shadow: var(--shadow); }
+.item-meta { font-size: 12px; color: #b45309; background: #fffbeb; padding: 5px 10px; border-radius: 6px; display: inline-block; margin-bottom: 8px; font-weight: 700; }
+
+/* 入出庫コントロール部 */
+.io-controls { display: flex; gap: 10px; margin-top: 15px; align-items: stretch; }
+.io-input { width: 70px; margin-bottom: 0; text-align: center; font-size: 20px; padding: 0; border: 2px solid var(--accent-light); }
+.io-btn { flex: 1; padding: 18px 0; margin-top: 0; font-size: 17px; }
+
+#toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
-.filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; background: #f1f5f9; padding: 12px; border-radius: 10px; }
-.filter-grid input { margin-bottom: 0; font-size: 13px; padding: 8px; }
+
+/* フィルター */
+.filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; background: #f1f5f9; padding: 14px; border-radius: 12px; }
+.filter-grid input { margin-bottom: 0; font-size: 14px; padding: 10px; }
 </style>
 </head>
 <body>
@@ -54,47 +71,45 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
 <div class="main-container">
   <div class="sub-view active" id="view-reg">
     <div class="card">
-      <div class="card-title">📥 エクセルから一括読み込み</div>
+      <div class="card-title">📥 エクセル一括読み込み</div>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
-      <button class="btn btn-green" onclick="importExcel()">エクセルを読み込んで反映</button>
+      <button class="btn btn-green" onclick="importExcel()">エクセルを反映する</button>
     </div>
 
     <div class="card">
-      <div class="card-title">✏️ 手動で新規登録</div>
+      <div class="card-title">✏️ 個別登録</div>
       <div class="row-2">
         <div><label>倉庫コード</label><input type="text" id="io-warehouse" placeholder="W-01"></div>
         <div><label>棚番コード</label><input type="text" id="io-location" placeholder="A-12"></div>
       </div>
-      <label>品番</label><input type="text" id="io-code" placeholder="ITM-001">
+      <label>品番</label><input type="text" id="io-code" placeholder="品番を入力">
       <label>商品名</label><input type="text" id="io-name" placeholder="商品名を入力">
-      <label>規格 (任意)</label><input type="text" id="io-spec" placeholder="10mm">
-      <label>実勘数</label><input type="number" id="io-qty" value="0">
+      <label>規格 (任意)</label><input type="text" id="io-spec" placeholder="サイズなど">
+      <label>現在の在庫数</label><input type="number" id="io-qty" value="0">
       
       <button class="btn btn-blue" onclick="saveManualItem()">✅ 登録を実行</button>
-      <button class="btn btn-dark" style="margin-top: 10px;" onclick="switchSubView('list')">🗂️ 在庫一覧ページへ ＞</button>
+      <button class="btn btn-dark" style="margin-top: 15px;" onclick="switchSubView('list')">🗂️ 在庫一覧を見る ＞</button>
     </div>
   </div>
 
   <div class="sub-view" id="view-list">
-    <button class="btn btn-outline" style="margin-bottom:15px;" onclick="switchSubView('reg')">＜ 登録ページに戻る</button>
+    <button class="btn btn-outline" style="margin-bottom:20px;" onclick="switchSubView('reg')">＜ 登録に戻る</button>
     
-    <div class="card" style="padding:12px;">
-      <label>🔍 項目別フィルター</label>
+    <div class="card" style="padding:14px;">
+      <label>🔍 在庫を絞り込み</label>
       <div class="filter-grid">
         <div><label>倉庫</label><input type="text" id="f-wh" placeholder="倉庫" oninput="renderList()"></div>
         <div><label>棚番</label><input type="text" id="f-loc" placeholder="棚番" oninput="renderList()"></div>
         <div><label>品番</label><input type="text" id="f-code" placeholder="品番" oninput="renderList()"></div>
         <div><label>商品名</label><input type="text" id="f-name" placeholder="商品名" oninput="renderList()"></div>
       </div>
-      <label>規格で絞り込み</label>
-      <input type="text" id="f-spec" placeholder="規格を入力..." oninput="renderList()">
     </div>
 
     <div id="io-display-list"></div>
     
-    <div class="card" style="background: #f8fafc; margin-top:20px;">
-      <button class="btn btn-blue" onclick="exportExcel()">⬇️ 現在の在庫をエクセル出力</button>
-      <button class="btn btn-outline" style="margin-top:10px; color:var(--red); border-color:#fca5a5;" onclick="clearAllData()">🗑️ 全データ初期化</button>
+    <div class="card" style="background: #f8fafc; margin-top:30px;">
+      <button class="btn btn-blue" onclick="exportExcel()">⬇️ エクセルで書き出す</button>
+      <button class="btn btn-outline" style="margin-top:15px; color:var(--red); border-color:#fca5a5;" onclick="clearAllData()">🗑️ 全データ削除</button>
     </div>
   </div>
 </div>
@@ -107,6 +122,7 @@ let items = JSON.parse(localStorage.getItem('inventory_db') || '[]');
 function switchSubView(view) {
   document.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
   document.getElementById(`view-${view}`).classList.add('active');
+  window.scrollTo(0,0);
   if(view === 'list') renderList();
 }
 
@@ -119,7 +135,7 @@ function saveManualItem() {
   const stockStr = document.getElementById('io-qty').value.trim();
 
   if(!warehouse || !location || !code || !name || stockStr === "") {
-    return alert("【入力不備】規格以外の項目をすべて入力してください");
+    return alert("必須項目をすべて入力してください");
   }
   
   const data = { warehouse, location, code, name, spec: spec || "", stock: parseFloat(stockStr) };
@@ -130,12 +146,11 @@ function saveManualItem() {
   saveData();
   showToast('登録完了 ✅');
   ['io-code','io-name','io-spec'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('io-qty').value = '0';
 }
 
 function importExcel() {
   const fileInput = document.getElementById('excel-file');
-  if (!fileInput.files[0]) return showToast('ファイルを選択してください');
+  if (!fileInput.files[0]) return showToast('ファイルを選んでください');
 
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -143,15 +158,9 @@ function importExcel() {
       const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
       const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
       let count = 0;
-      let errors = [];
-
       for (let i = 1; i < jsonData.length; i++) {
         const row = jsonData[i];
-        if (!row || row.length < 4) continue;
-        if (!row[0] || !row[1] || !row[2] || !row[3]) {
-          errors.push(`${i+1}行目: 必須項目空欄`);
-          continue;
-        }
+        if (!row[0] || !row[1] || !row[2] || !row[3]) continue;
         const itemData = { warehouse:String(row[0]), location:String(row[1]), code:String(row[2]), name:String(row[3]), spec:row[4]?String(row[4]):"", stock:parseFloat(row[5])||0 };
         const exIndex = items.findIndex(item => item.code === itemData.code);
         if(exIndex > -1) items[exIndex] = itemData;
@@ -159,10 +168,9 @@ function importExcel() {
         count++;
       }
       saveData();
-      if(errors.length) alert("不備行があります:\n" + errors.join("\n"));
-      showToast(`${count}件 読込完了`);
+      showToast(`${count}件 読み込みました`);
       fileInput.value = '';
-    } catch(err) { alert("読込失敗"); }
+    } catch(err) { alert("読込エラー"); }
   };
   reader.readAsArrayBuffer(fileInput.files[0]);
 }
@@ -172,28 +180,27 @@ function renderList() {
   const fLoc = document.getElementById('f-loc').value.toLowerCase();
   const fCode = document.getElementById('f-code').value.toLowerCase();
   const fName = document.getElementById('f-name').value.toLowerCase();
-  const fSpec = document.getElementById('f-spec').value.toLowerCase();
   const target = document.getElementById('io-display-list');
   
   const filtered = items.filter(i => 
     i.warehouse.toLowerCase().includes(fWh) && i.location.toLowerCase().includes(fLoc) &&
-    i.code.toLowerCase().includes(fCode) && i.name.toLowerCase().includes(fName) && i.spec.toLowerCase().includes(fSpec)
+    i.code.toLowerCase().includes(fCode) && i.name.toLowerCase().includes(fName)
   );
 
-  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:20px;color:#94a3b8;">なし</p>' : 
+  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:40px;color:#94a3b8;">該当なし</p>' : 
     filtered.map(item => `
     <div class="item-card">
       <div style="display:flex; justify-content:space-between; align-items: flex-start;">
         <div>
           <div class="item-meta">${item.warehouse} / ${item.location}</div>
-          <div style="font-size:12px;color:var(--text2);font-family:monospace;">品番: ${item.code}</div>
-          <div style="font-weight:700;font-size:15px;">${item.name} <span style="font-weight:400;font-size:12px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
+          <div style="font-size:12px;color:var(--text2);font-family:monospace; margin-bottom:2px;">品番: ${item.code}</div>
+          <div style="font-weight:700;font-size:16px;">${item.name} <span style="font-weight:400;font-size:13px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
         </div>
         <button class="btn-delete" onclick="deleteItem('${item.code}')">削除</button>
       </div>
-      <div style="margin-top:8px; font-size:13px; color:var(--text2);">実勘数: <strong style="color:var(--accent); font-size:20px; margin-left:5px;">${item.stock}</strong></div>
+      <div style="margin-top:12px; font-size:14px; color:var(--text2);">実勘数: <strong style="color:var(--accent); font-size:24px; margin-left:8px;">${item.stock}</strong></div>
       <div class="io-controls">
-        <input type="number" class="io-input" id="amt-${item.code}" placeholder="数">
+        <input type="number" class="io-input" id="amt-${item.code}" placeholder="0">
         <button class="btn btn-green io-btn" onclick="updateStock('${item.code}', 1)">入庫</button>
         <button class="btn btn-red io-btn" style="background:var(--red);color:white;" onclick="updateStock('${item.code}', -1)">出庫</button>
       </div>
@@ -203,9 +210,9 @@ function renderList() {
 function updateStock(code, mult) {
   const input = document.getElementById(`amt-${code}`);
   const val = parseFloat(input.value);
-  if(!val || val <= 0) return showToast('数を入力');
+  if(!val || val <= 0) return showToast('数を入力してください');
   const item = items.find(i => i.code === code);
-  if(item) { item.stock += (val * mult); saveData(); input.value = ''; renderList(); showToast('更新しました'); }
+  if(item) { item.stock += (val * mult); saveData(); input.value = ''; renderList(); showToast('更新完了'); }
 }
 
 function exportExcel() {
@@ -213,11 +220,11 @@ function exportExcel() {
   items.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), "在庫");
-  XLSX.writeFile(wb, `在庫データ_${new Date().toLocaleDateString()}.xlsx`);
+  XLSX.writeFile(wb, `在庫_${new Date().toLocaleDateString()}.xlsx`);
 }
 
-function deleteItem(code) { if(confirm('削除しますか？')) { items = items.filter(i => i.code !== code); saveData(); renderList(); } }
-function clearAllData() { if(confirm('全削除しますか？')) { items = []; saveData(); renderList(); } }
+function deleteItem(code) { if(confirm('このデータを削除しますか？')) { items = items.filter(i => i.code !== code); saveData(); renderList(); } }
+function clearAllData() { if(confirm('全データを削除しますか？')) { items = []; saveData(); renderList(); } }
 function saveData() { localStorage.setItem('inventory_db', JSON.stringify(items)); }
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 renderList();
