@@ -52,7 +52,6 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .item-card.selected .check-container::after { content: '✓'; font-weight: bold; font-size: 18px; }
 
 .stock-text-area { font-size: 18px; color: var(--text2); margin-top: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 12px; }
-/* タップ無効化 */
 .stock-num-display { font-size: 28px; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 8px; pointer-events: none; }
 
 .io-controls { display: flex; gap: 10px; margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 12px; }
@@ -256,25 +255,36 @@ async function exportExcel() {
   const targetData = getFilteredItems();
   if (targetData.length === 0) return alert("出力するデータがありません");
 
-  // ファイル名の入力ポップアップ
-  const defaultFileName = `在庫_${new Date().toLocaleDateString().replace(/\//g, '-')}`;
-  const inputName = prompt("出力するファイル名を入力してください:", defaultFileName);
-  if (inputName === null) return; // キャンセル時
+  // 担当者名の入力
+  const staffName = prompt("担当者名を入力してください:");
+  if (staffName === null) return; // キャンセル時
 
-  const wsData = [["倉庫コード", "棚番コード", "品番", "商品名", "規格", "現在個数"]];
-  targetData.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
+  // エクセル用データ作成
+  const wsData = [
+    ["倉庫コード", "棚番コード", "品番", "商品名", "規格", "現在個数", "担当者"] // ヘッダー
+  ];
+  targetData.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock, ""]));
+
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // セルG1（担当者ヘッダーの隣、またはヘッダー自体）に名前をセット
+  // utils.sheet_add_aoa を使って G1 (座標 {r:0, c:6}) に名前を上書き
+  XLSX.utils.sheet_add_aoa(ws, [[staffName]], { origin: "G1" });
+
   XLSX.utils.book_append_sheet(wb, ws, "在庫");
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'binary'});
   function s2ab(s) { const buf = new ArrayBuffer(s.length); const view = new Uint8Array(buf); for (let i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF; return buf; }
   const blob = new Blob([s2ab(wbout)], {type:"application/octet-stream"});
-  const finalFileName = `${inputName || "在庫リスト"}.xlsx`;
+  
+  // ファイル名に担当者名と日付を入れる
+  const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
+  const fileName = `在庫出力_${staffName || '不明'}_${dateStr}.xlsx`;
 
   if (navigator.share) {
-    const file = new File([blob], finalFileName, {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-    try { await navigator.share({ files: [file], title: '在庫データ' }); } catch (err) { downloadFile(blob, finalFileName); }
-  } else { downloadFile(blob, finalFileName); }
+    const file = new File([blob], fileName, {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    try { await navigator.share({ files: [file], title: '在庫データ' }); } catch (err) { downloadFile(blob, fileName); }
+  } else { downloadFile(blob, fileName); }
 }
 
 function downloadFile(blob, fileName) {
