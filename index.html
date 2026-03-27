@@ -122,7 +122,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
     </div>
 
     <div id="io-display-list"></div>
-    <button class="btn btn-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
+    <button class="btn btn-to-top" style="margin-top: 16px; background: #e2e8f0; color: var(--text);" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
   </div>
 </div>
 
@@ -286,6 +286,7 @@ function downloadFile(blob, fileName) {
 function importExcel() {
   const fileInput = document.getElementById('excel-file');
   if (!fileInput.files[0]) return showToast('ファイルを選んでください');
+  
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
@@ -293,41 +294,87 @@ function importExcel() {
       const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
       
       let newItems = [];
+      let errorMessages = [];
+      let totalAttempted = 0; // 空白行を除いた処理対象の合計数
+
+      // 1行目(インデックス0)はヘッダーなので2行目(インデックス1)からループ
       for (let i = 1; i < jsonData.length; i++) {
         const row = jsonData[i];
-        if (!row || row.length === 0) continue;
-
-        // 【不備詳細チェック】
-        let errors = [];
-        if (!row[0]) errors.push("倉庫");
-        if (!row[1]) errors.push("棚番");
-        if (!row[2]) errors.push("品番");
-        if (!row[3]) errors.push("商品名");
-        if (row[5] === undefined || row[5] === "" || isNaN(parseFloat(row[5]))) errors.push("現在個数");
-
-        if (errors.length > 0) {
-          alert(`${i + 1}行目に記入不備があります：\n[ ${errors.join(", ")} ] を確認してください。`);
-          return; // 取込を中断
+        
+        // 完全に空の行はスキップ（件数にも含めない）
+        if (!row || row.length === 0 || row.every(cell => cell === undefined || cell === "")) {
+          continue;
         }
 
-        const itemData = { 
-          warehouse: String(row[0]), 
-          location: String(row[1]), 
-          code: String(row[2]), 
-          name: String(row[3]), 
-          spec: row[4] ? String(row[4]) : "", 
-          stock: parseFloat(row[5])
-        };
-        newItems.push(itemData);
+        totalAttempted++;
+        let errors = [];
+
+        // 各セルの値を取得（undefined対策）
+        const warehouse = row[0] !== undefined ? String(row[0]).trim() : "";
+        const location = row[1] !== undefined ? String(row[1]).trim() : "";
+        const code = row[2] !== undefined ? String(row[2]).trim() : "";
+        const name = row[3] !== undefined ? String(row[3]).trim() : "";
+        const spec = row[4] !== undefined ? String(row[4]).trim() : "";
+        const stockVal = row[5];
+
+        // 【不備詳細チェック】
+        if (!warehouse) errors.push("倉庫");
+        if (!location) errors.push("棚番");
+        if (!code) errors.push("品番");
+        if (!name) errors.push("商品名");
+        if (stockVal === undefined || stockVal === "" || isNaN(parseFloat(stockVal))) errors.push("現在個数");
+
+        // エラーがあるか判定
+        if (errors.length > 0) {
+          errorMessages.push(`${i + 1}行目: [ ${errors.join(", ")} ]`);
+        } else {
+          // エラーがなければ追加対象にする
+          newItems.push({ 
+            warehouse: warehouse, 
+            location: location, 
+            code: code, 
+            name: name, 
+            spec: spec, 
+            stock: parseFloat(stockVal)
+          });
+        }
       }
 
+      if (totalAttempted === 0) {
+        return alert("読み込むデータがありませんでした。ファイルの中身を確認してください。");
+      }
+
+      // 成功したデータを一括で既存のデータに反映（上書き or 新規追加）
       newItems.forEach(itemData => {
         const exIndex = items.findIndex(item => item.code === itemData.code);
-        if(exIndex > -1) items[exIndex] = itemData; else items.push(itemData);
+        if(exIndex > -1) items[exIndex] = itemData; 
+        else items.push(itemData);
       });
 
-      saveData(); renderList(); showToast('取込完了'); fileInput.value = '';
-    } catch(err) { alert("読込失敗しました。ファイル形式を確認してください。"); }
+      // データの保存と画面の更新
+      saveData(); 
+      renderList(); 
+      fileInput.value = '';
+
+      // ▼ 結果をアラートで表示 ▼
+      let resultMsg = `${totalAttempted}件中、${newItems.length}件のデータを読み込みました。`;
+      
+      if (errorMessages.length > 0) {
+        // エラー件数が多すぎる場合、アラート画面が長くなりすぎるのを防ぐため最大15件まで表示
+        const displayErrors = errorMessages.slice(0, 15);
+        const moreErrorsMsg = errorMessages.length > 15 ? `\n...他 ${errorMessages.length - 15} 件のエラー` : "";
+        
+        resultMsg += `\n\n【以下の行に不備があったためスキップしました】\n${displayErrors.join("\n")}${moreErrorsMsg}`;
+        alert(resultMsg);
+      } else {
+        // 全て成功した場合はトースト表示のみ
+        showToast(`全件(${newItems.length}件)の取込が完了しました！`);
+      }
+
+    } catch(err) { 
+      console.error(err);
+      alert("読込失敗しました。ファイル形式が正しいか確認してください。"); 
+    }
   };
   reader.readAsArrayBuffer(fileInput.files[0]);
 }
@@ -348,6 +395,11 @@ function saveManualItem() {
 }
 
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+
+// 初期表示
+if(document.getElementById('view-list').classList.contains('active')) {
+  renderList();
+}
 </script>
 </body>
 </html>
