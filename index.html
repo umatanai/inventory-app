@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>在庫・入出庫管理 (詳細フィルター版)</title>
+<title>在庫・入出庫管理</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -26,6 +26,10 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
 .btn-green { background: var(--green); color: white; }
 .btn-dark { background: #334155; color: white; }
 .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text2); }
+
+/* 削除ボタンをより狭く修正 */
+.btn-delete { width: auto; padding: 2px 8px; font-size: 10px; height: 22px; line-height: 18px; border-radius: 6px; border: 1px solid #fca5a5; color: var(--red); background: #fff1f2; }
+
 .item-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 8px; }
 .item-meta { font-size: 11px; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; font-weight: 700; }
 .io-controls { display: flex; gap: 8px; margin-top: 12px; }
@@ -33,7 +37,6 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
 .io-btn { flex: 1; padding: 14px 0; margin-top: 0; }
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
-/* フィルター用スタイル */
 .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; background: #f1f5f9; padding: 12px; border-radius: 10px; }
 .filter-grid input { margin-bottom: 0; font-size: 13px; padding: 8px; }
 </style>
@@ -46,7 +49,6 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
   <div class="sub-view active" id="view-reg">
     <div class="card">
       <div class="card-title">📥 エクセルから一括読み込み</div>
-      <p style="font-size:11px; color:var(--text2); margin-bottom:10px;">※規格は空欄でもOK。1行目は飛ばします。</p>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
       <button class="btn btn-green" onclick="importExcel()">エクセルを読み込んで反映</button>
     </div>
@@ -57,9 +59,9 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
         <div><label>倉庫コード</label><input type="text" id="io-warehouse" placeholder="W-01"></div>
         <div><label>棚番コード</label><input type="text" id="io-location" placeholder="A-12"></div>
       </div>
-      <label>商品コード</label><input type="text" id="io-code" placeholder="ITM-001">
-      <label>品番名</label><input type="text" id="io-name" placeholder="特製ネジ">
-      <label>規格 (任意)</label><input type="text" id="io-spec" placeholder="10mm (空欄可)">
+      <label>品番</label><input type="text" id="io-code" placeholder="ITM-001">
+      <label>商品名</label><input type="text" id="io-name" placeholder="特製ネジ">
+      <label>規格 (任意)</label><input type="text" id="io-spec" placeholder="10mm">
       <label>実勘数</label><input type="number" id="io-qty" value="0">
       
       <button class="btn btn-blue" onclick="saveManualItem()">✅ 登録を実行</button>
@@ -75,8 +77,8 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
       <div class="filter-grid">
         <div><label>倉庫</label><input type="text" id="f-wh" placeholder="倉庫名" oninput="renderList()"></div>
         <div><label>棚番</label><input type="text" id="f-loc" placeholder="棚番号" oninput="renderList()"></div>
-        <div><label>コード</label><input type="text" id="f-code" placeholder="品番" oninput="renderList()"></div>
-        <div><label>商品名</label><input type="text" id="f-name" placeholder="名称" oninput="renderList()"></div>
+        <div><label>品番</label><input type="text" id="f-code" placeholder="品番" oninput="renderList()"></div>
+        <div><label>商品名</label><input type="text" id="f-name" placeholder="商品名" oninput="renderList()"></div>
       </div>
       <label>規格で絞り込み</label>
       <input type="text" id="f-spec" placeholder="規格を入力..." oninput="renderList()">
@@ -103,35 +105,19 @@ function switchSubView(view) {
 }
 
 function saveManualItem() {
-  const fields = [
-    { id: 'io-warehouse', name: '倉庫コード' },
-    { id: 'io-location', name: '棚番コード' },
-    { id: 'io-code', name: '商品コード' },
-    { id: 'io-name', name: '品番名' }
-  ];
-  
-  let errors = [];
-  fields.forEach(f => {
-    if (!document.getElementById(f.id).value.trim()) errors.push(f.name);
-  });
-  
+  const warehouse = document.getElementById('io-warehouse').value.trim();
+  const location = document.getElementById('io-location').value.trim();
+  const code = document.getElementById('io-code').value.trim();
+  const name = document.getElementById('io-name').value.trim();
+  const spec = document.getElementById('io-spec').value.trim();
   const stockStr = document.getElementById('io-qty').value.trim();
-  if (stockStr === "") errors.push("実勘数");
 
-  if(errors.length > 0) {
-    return alert("【入力不備】\n以下の必須項目を入力してください：\n・" + errors.join("\n・"));
+  if(!warehouse || !location || !code || !name || stockStr === "") {
+    return alert("【入力不備】規格以外の必須項目をすべて入力してください");
   }
   
-  const data = { 
-    warehouse: document.getElementById('io-warehouse').value.trim(),
-    location: document.getElementById('io-location').value.trim(),
-    code: document.getElementById('io-code').value.trim(),
-    name: document.getElementById('io-name').value.trim(),
-    spec: document.getElementById('io-spec').value.trim() || "", // 規格は空でもOK
-    stock: parseFloat(stockStr) 
-  };
-  
-  const exIndex = items.findIndex(i => i.code === data.code);
+  const data = { warehouse, location, code, name, spec: spec || "", stock: parseFloat(stockStr) };
+  const exIndex = items.findIndex(i => i.code === code);
   if(exIndex > -1) items[exIndex] = data;
   else items.push(data);
   
@@ -143,58 +129,34 @@ function saveManualItem() {
 
 function importExcel() {
   const fileInput = document.getElementById('excel-file');
-  const file = fileInput.files[0];
-  if (!file) return showToast('ファイルを選択してください');
+  if (!fileInput.files[0]) return showToast('ファイルを選択してください');
 
   const reader = new FileReader();
   reader.onload = function(e) {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    
+    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
     let count = 0;
-    let errorDetails = [];
+    let errors = [];
 
     for (let i = 1; i < jsonData.length; i++) {
       const row = jsonData[i];
-      if (!row || row.length === 0) continue;
-
-      let rowErrors = [];
-      // 必須チェック（規格以外）
-      if (!row[0]) rowErrors.push("倉庫");
-      if (!row[1]) rowErrors.push("棚番");
-      if (!row[2]) rowErrors.push("コード");
-      if (!row[3]) rowErrors.push("品番名");
-      if (row[5] === undefined || row[5] === "") rowErrors.push("実勘数");
-
-      if (rowErrors.length === 0) {
-        const itemData = {
-          warehouse: String(row[0]).trim(),
-          location: String(row[1]).trim(),
-          code: String(row[2]).trim(),
-          name: String(row[3]).trim(),
-          spec: row[4] ? String(row[4]).trim() : "", // 規格は空欄を許容
-          stock: parseFloat(row[5]) || 0
-        };
-        const exIndex = items.findIndex(item => item.code === itemData.code);
-        if(exIndex > -1) items[exIndex] = itemData;
-        else items.push(itemData);
-        count++;
-      } else {
-        errorDetails.push(`${i+1}行目: ${rowErrors.join(", ")}が空です`);
+      if (!row || row.length < 4) continue;
+      if (!row[0] || !row[1] || !row[2] || !row[3]) {
+        errors.push(`${i+1}行目: 必須項目空欄`);
+        continue;
       }
+      const itemData = { warehouse:String(row[0]), location:String(row[1]), code:String(row[2]), name:String(row[3]), spec:row[4]?String(row[4]):"", stock:parseFloat(row[5])||0 };
+      const exIndex = items.findIndex(item => item.code === itemData.code);
+      if(exIndex > -1) items[exIndex] = itemData;
+      else items.push(itemData);
+      count++;
     }
-    
     saveData();
-    if (errorDetails.length > 0) {
-      alert(`【読み込み完了】\n成功: ${count}件\n不備: ${errorDetails.length}件\n\n不備詳細:\n${errorDetails.slice(0,8).join("\n")}${errorDetails.length > 8 ? "\n...他省略" : ""}`);
-    } else {
-      showToast(`${count}件 読込完了 ✅`);
-    }
+    if(errors.length) alert("不備行があります:\n" + errors.join("\n"));
+    showToast(`${count}件 読込完了`);
     fileInput.value = '';
   };
-  reader.readAsArrayBuffer(file);
+  reader.readAsArrayBuffer(fileInput.files[0]);
 }
 
 function renderList() {
@@ -203,30 +165,25 @@ function renderList() {
   const fCode = document.getElementById('f-code').value.toLowerCase();
   const fName = document.getElementById('f-name').value.toLowerCase();
   const fSpec = document.getElementById('f-spec').value.toLowerCase();
-  
   const target = document.getElementById('io-display-list');
   
-  // 複数条件でのフィルター適用
   const filtered = items.filter(i => 
-    i.warehouse.toLowerCase().includes(fWh) &&
-    i.location.toLowerCase().includes(fLoc) &&
-    i.code.toLowerCase().includes(fCode) && 
-    i.name.toLowerCase().includes(fName) && 
-    i.spec.toLowerCase().includes(fSpec)
+    i.warehouse.toLowerCase().includes(fWh) && i.location.toLowerCase().includes(fLoc) &&
+    i.code.toLowerCase().includes(fCode) && i.name.toLowerCase().includes(fName) && i.spec.toLowerCase().includes(fSpec)
   );
 
-  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;color:#94a3b8;padding:20px;">該当するデータはありません</p>' : 
+  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:20px;color:#94a3b8;">なし</p>' : 
     filtered.map(item => `
     <div class="item-card">
-      <div style="display:flex; justify-content:space-between;">
+      <div style="display:flex; justify-content:space-between; align-items: flex-start;">
         <div>
           <div class="item-meta">${item.warehouse} / ${item.location}</div>
-          <div class="item-code">${item.code}</div>
-          <div class="item-name">${item.name} <span style="font-size:12px;font-weight:normal;color:#64748b;">${item.spec ? `(${item.spec})` : ''}</span></div>
+          <div style="font-size:12px;color:var(--text2);font-family:monospace;">${item.code}</div>
+          <div style="font-weight:700;font-size:15px;">${item.name} <span style="font-weight:400;font-size:12px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
         </div>
-        <button class="btn-outline" style="width:50px;padding:4px;font-size:10px;" onclick="deleteItem('${item.code}')">削除</button>
+        <button class="btn-delete" onclick="deleteItem('${item.code}')">削除</button>
       </div>
-      <div style="margin-top:8px; font-size:14px;">実勘数: <strong style="color:var(--accent); font-size:20px;">${item.stock}</strong></div>
+      <div style="margin-top:8px; font-size:13px; color:var(--text2);">実勘数: <strong style="color:var(--accent); font-size:20px; margin-left:5px;">${item.stock}</strong></div>
       <div class="io-controls">
         <input type="number" class="io-input" id="amt-${item.code}" placeholder="数">
         <button class="btn btn-green io-btn" onclick="updateStock('${item.code}', 1)">入庫</button>
@@ -238,24 +195,24 @@ function renderList() {
 function updateStock(code, mult) {
   const input = document.getElementById(`amt-${code}`);
   const val = parseFloat(input.value);
-  if(isNaN(val) || val <= 0) return showToast('数量を入れてください');
+  if(!val || val <= 0) return showToast('数値を入力してください');
   const item = items.find(i => i.code === code);
-  if(item) { item.stock += (val * mult); saveData(); input.value = ''; renderList(); showToast('更新完了'); }
+  if(item) { item.stock += (val * mult); saveData(); input.value = ''; renderList(); showToast('更新しました'); }
 }
 
 function exportExcel() {
-  const worksheetData = [["倉庫コード", "棚番コード", "商品コード", "品番名", "規格", "実勘数"]];
-  items.forEach(i => worksheetData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
-  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "在庫一覧");
-  XLSX.writeFile(workbook, `在庫データ_${new Date().toLocaleDateString()}.xlsx`);
+  const wsData = [["倉庫コード", "棚番コード", "品番", "商品名", "規格", "実勘数"]];
+  items.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), "在庫");
+  // ファイル出力
+  XLSX.writeFile(wb, `在庫一覧_${new Date().toLocaleDateString()}.xlsx`);
 }
 
 function deleteItem(code) { if(confirm('削除しますか？')) { items = items.filter(i => i.code !== code); saveData(); renderList(); } }
-function clearAllData() { if(confirm('全データを削除しますか？')) { items = []; saveData(); renderList(); } }
+function clearAllData() { if(confirm('全削除しますか？')) { items = []; saveData(); renderList(); } }
 function saveData() { localStorage.setItem('inventory_db', JSON.stringify(items)); }
-function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 renderList();
 </script>
 </body>
