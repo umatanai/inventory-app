@@ -69,6 +69,8 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
       <button class="btn btn-green" onclick="importExcel()">エクセルを反映する</button>
     </div>
 
+    <button class="btn btn-dark" style="margin-bottom: 14px;" onclick="switchSubView('list')">🗂️ 在庫一覧を見る ＞</button>
+
     <div class="card">
       <div class="card-title">✏️ 個別登録</div>
       <div class="row-2">
@@ -80,12 +82,17 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
       <label>規格 (任意)</label><input type="text" id="io-spec" placeholder="サイズなど">
       <label>現在の在庫数</label><input type="number" id="io-qty" value="0">
       <button class="btn btn-blue" onclick="saveManualItem()">✅ 登録を実行</button>
-      <button class="btn btn-dark" style="margin-top: 15px;" onclick="switchSubView('list')">🗂️ 在庫一覧を見る ＞</button>
     </div>
   </div>
 
   <div class="sub-view" id="view-list">
     <button class="btn btn-outline" style="margin-bottom:20px;" onclick="switchSubView('reg')">＜ 登録に戻る</button>
+    
+    <div style="margin-bottom: 14px;">
+      <button class="btn btn-blue" onclick="exportExcel()">⬇️ 表示中のデータをエクセル出力</button>
+      <button class="btn btn-outline" style="margin-top:10px; color:var(--red); border-color:#fca5a5;" onclick="clearAllData()">🗑️ 全データ削除</button>
+    </div>
+
     <div class="card" style="padding:14px;">
       <label>🔍 在庫を絞り込み</label>
       <div class="filter-grid">
@@ -95,10 +102,11 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
         <div><label>商品名</label><input type="text" id="f-name" placeholder="商品名" oninput="renderList()"></div>
       </div>
     </div>
+
     <div id="io-display-list"></div>
+    
     <div class="card" style="background: #f8fafc; margin-top:30px;">
-      <button class="btn btn-blue" onclick="exportExcel()">⬇️ 表示中のデータをエクセル出力</button>
-      <button class="btn btn-outline" style="margin-top:15px; color:var(--red); border-color:#fca5a5;" onclick="clearAllData()">🗑️ 全データ削除</button>
+      <button class="btn btn-dark" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
     </div>
   </div>
 </div>
@@ -170,7 +178,6 @@ function importExcel() {
   reader.readAsArrayBuffer(fileInput.files[0]);
 }
 
-// フィルター後のデータを取得する共通関数
 function getFilteredItems() {
   const fWh = document.getElementById('f-wh').value.toLowerCase();
   const fLoc = document.getElementById('f-loc').value.toLowerCase();
@@ -216,12 +223,8 @@ function updateStock(code, mult) {
 }
 
 function exportExcel() {
-  // フィルターされたデータのみを取得
   const filteredItems = getFilteredItems();
-  
-  if (filteredItems.length === 0) {
-    return alert("出力するデータがありません");
-  }
+  if (filteredItems.length === 0) return alert("出力するデータがありません");
 
   const wsData = [["倉庫コード", "棚番コード", "品番", "商品名", "規格", "実勘数"]];
   filteredItems.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock]));
