@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>在庫・入出庫管理 (詳細チェック版)</title>
+<title>在庫・入出庫管理 (詳細フィルター版)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -18,7 +18,7 @@ header h1 { font-size: 17px; font-weight: 700; color: var(--accent); }
 .card { background: var(--surface); border-radius: 14px; padding: 16px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: var(--shadow); }
 .card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; border-bottom: 2px solid var(--accent-light); padding-bottom: 5px; }
 label { display: block; font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 5px; }
-input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; }
+input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px; width: 100%; font-size: 16px; margin-bottom: 10px; }
 .row-2 { display: flex; gap: 10px; }
 .row-2 > div { flex: 1; }
 .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.1s; margin-top: 5px; }
@@ -33,6 +33,9 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
 .io-btn { flex: 1; padding: 14px 0; margin-top: 0; }
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
+/* フィルター用スタイル */
+.filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; background: #f1f5f9; padding: 12px; border-radius: 10px; }
+.filter-grid input { margin-bottom: 0; font-size: 13px; padding: 8px; }
 </style>
 </head>
 <body>
@@ -43,7 +46,7 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
   <div class="sub-view active" id="view-reg">
     <div class="card">
       <div class="card-title">📥 エクセルから一括読み込み</div>
-      <p style="font-size:11px; color:var(--text2); margin-bottom:10px;">※1行目は見出しとして飛ばします。</p>
+      <p style="font-size:11px; color:var(--text2); margin-bottom:10px;">※規格は空欄でもOK。1行目は飛ばします。</p>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
       <button class="btn btn-green" onclick="importExcel()">エクセルを読み込んで反映</button>
     </div>
@@ -56,7 +59,7 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
       </div>
       <label>商品コード</label><input type="text" id="io-code" placeholder="ITM-001">
       <label>品番名</label><input type="text" id="io-name" placeholder="特製ネジ">
-      <label>規格</label><input type="text" id="io-spec" placeholder="10mm">
+      <label>規格 (任意)</label><input type="text" id="io-spec" placeholder="10mm (空欄可)">
       <label>実勘数</label><input type="number" id="io-qty" value="0">
       
       <button class="btn btn-blue" onclick="saveManualItem()">✅ 登録を実行</button>
@@ -66,9 +69,21 @@ input { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 1
 
   <div class="sub-view" id="view-list">
     <button class="btn btn-outline" style="margin-bottom:15px;" onclick="switchSubView('reg')">＜ 登録ページに戻る</button>
-    <label>🔍 全項目から検索 (倉庫・棚番・コード・名称・規格)</label>
-    <input type="text" id="io-search" placeholder="キーワードを入力..." oninput="renderList()">
+    
+    <div class="card" style="padding:12px;">
+      <label>🔍 項目別フィルター</label>
+      <div class="filter-grid">
+        <div><label>倉庫</label><input type="text" id="f-wh" placeholder="倉庫名" oninput="renderList()"></div>
+        <div><label>棚番</label><input type="text" id="f-loc" placeholder="棚番号" oninput="renderList()"></div>
+        <div><label>コード</label><input type="text" id="f-code" placeholder="品番" oninput="renderList()"></div>
+        <div><label>商品名</label><input type="text" id="f-name" placeholder="名称" oninput="renderList()"></div>
+      </div>
+      <label>規格で絞り込み</label>
+      <input type="text" id="f-spec" placeholder="規格を入力..." oninput="renderList()">
+    </div>
+
     <div id="io-display-list"></div>
+    
     <div class="card" style="background: #f8fafc; margin-top:20px;">
       <button class="btn btn-blue" onclick="exportExcel()">⬇️ 現在の在庫をエクセル出力</button>
       <button class="btn btn-outline" style="margin-top:10px; color:var(--red); border-color:#fca5a5;" onclick="clearAllData()">🗑️ 全データ初期化</button>
@@ -92,8 +107,7 @@ function saveManualItem() {
     { id: 'io-warehouse', name: '倉庫コード' },
     { id: 'io-location', name: '棚番コード' },
     { id: 'io-code', name: '商品コード' },
-    { id: 'io-name', name: '品番名' },
-    { id: 'io-spec', name: '規格' }
+    { id: 'io-name', name: '品番名' }
   ];
   
   let errors = [];
@@ -105,7 +119,7 @@ function saveManualItem() {
   if (stockStr === "") errors.push("実勘数");
 
   if(errors.length > 0) {
-    return alert("【入力不備】\n以下の項目を入力してください：\n・" + errors.join("\n・"));
+    return alert("【入力不備】\n以下の必須項目を入力してください：\n・" + errors.join("\n・"));
   }
   
   const data = { 
@@ -113,7 +127,7 @@ function saveManualItem() {
     location: document.getElementById('io-location').value.trim(),
     code: document.getElementById('io-code').value.trim(),
     name: document.getElementById('io-name').value.trim(),
-    spec: document.getElementById('io-spec').value.trim(),
+    spec: document.getElementById('io-spec').value.trim() || "", // 規格は空でもOK
     stock: parseFloat(stockStr) 
   };
   
@@ -147,11 +161,11 @@ function importExcel() {
       if (!row || row.length === 0) continue;
 
       let rowErrors = [];
+      // 必須チェック（規格以外）
       if (!row[0]) rowErrors.push("倉庫");
       if (!row[1]) rowErrors.push("棚番");
       if (!row[2]) rowErrors.push("コード");
       if (!row[3]) rowErrors.push("品番名");
-      if (!row[4]) rowErrors.push("規格");
       if (row[5] === undefined || row[5] === "") rowErrors.push("実勘数");
 
       if (rowErrors.length === 0) {
@@ -160,7 +174,7 @@ function importExcel() {
           location: String(row[1]).trim(),
           code: String(row[2]).trim(),
           name: String(row[3]).trim(),
-          spec: String(row[4]).trim(),
+          spec: row[4] ? String(row[4]).trim() : "", // 規格は空欄を許容
           stock: parseFloat(row[5]) || 0
         };
         const exIndex = items.findIndex(item => item.code === itemData.code);
@@ -174,9 +188,9 @@ function importExcel() {
     
     saveData();
     if (errorDetails.length > 0) {
-      alert(`【読み込み結果】\n成功: ${count}件\n不備: ${errorDetails.length}件\n\n不備詳細:\n${errorDetails.slice(0,10).join("\n")}${errorDetails.length > 10 ? "\n...他" : ""}`);
+      alert(`【読み込み完了】\n成功: ${count}件\n不備: ${errorDetails.length}件\n\n不備詳細:\n${errorDetails.slice(0,8).join("\n")}${errorDetails.length > 8 ? "\n...他省略" : ""}`);
     } else {
-      showToast(`${count}件すべて読込完了 ✅`);
+      showToast(`${count}件 読込完了 ✅`);
     }
     fileInput.value = '';
   };
@@ -184,26 +198,31 @@ function importExcel() {
 }
 
 function renderList() {
-  const query = document.getElementById('io-search').value.toLowerCase();
+  const fWh = document.getElementById('f-wh').value.toLowerCase();
+  const fLoc = document.getElementById('f-loc').value.toLowerCase();
+  const fCode = document.getElementById('f-code').value.toLowerCase();
+  const fName = document.getElementById('f-name').value.toLowerCase();
+  const fSpec = document.getElementById('f-spec').value.toLowerCase();
+  
   const target = document.getElementById('io-display-list');
   
-  // 全項目検索ロジック
+  // 複数条件でのフィルター適用
   const filtered = items.filter(i => 
-    i.warehouse.toLowerCase().includes(query) ||
-    i.location.toLowerCase().includes(query) ||
-    i.code.toLowerCase().includes(query) || 
-    i.name.toLowerCase().includes(query) || 
-    i.spec.toLowerCase().includes(query)
+    i.warehouse.toLowerCase().includes(fWh) &&
+    i.location.toLowerCase().includes(fLoc) &&
+    i.code.toLowerCase().includes(fCode) && 
+    i.name.toLowerCase().includes(fName) && 
+    i.spec.toLowerCase().includes(fSpec)
   );
 
-  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;color:#94a3b8;padding:20px;">条件に合うデータがありません</p>' : 
+  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;color:#94a3b8;padding:20px;">該当するデータはありません</p>' : 
     filtered.map(item => `
     <div class="item-card">
       <div style="display:flex; justify-content:space-between;">
         <div>
           <div class="item-meta">${item.warehouse} / ${item.location}</div>
           <div class="item-code">${item.code}</div>
-          <div class="item-name">${item.name} (${item.spec})</div>
+          <div class="item-name">${item.name} <span style="font-size:12px;font-weight:normal;color:#64748b;">${item.spec ? `(${item.spec})` : ''}</span></div>
         </div>
         <button class="btn-outline" style="width:50px;padding:4px;font-size:10px;" onclick="deleteItem('${item.code}')">削除</button>
       </div>
@@ -219,9 +238,9 @@ function renderList() {
 function updateStock(code, mult) {
   const input = document.getElementById(`amt-${code}`);
   const val = parseFloat(input.value);
-  if(isNaN(val) || val <= 0) return showToast('数量を入力してください');
+  if(isNaN(val) || val <= 0) return showToast('数量を入れてください');
   const item = items.find(i => i.code === code);
-  if(item) { item.stock += (val * mult); saveData(); input.value = ''; renderList(); showToast('更新しました'); }
+  if(item) { item.stock += (val * mult); saveData(); input.value = ''; renderList(); showToast('更新完了'); }
 }
 
 function exportExcel() {
