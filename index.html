@@ -84,7 +84,6 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <div class="sub-view active" id="view-reg">
     <div class="card">
       <div class="card-title">📥 エクセルからデータ取込</div>
-      <p style="font-size:11px; color:var(--text2); margin-bottom:8px;">※「品番＋棚番」の両方が一致する場合のみ上書き更新されます。</p>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
       <button class="btn btn-green" onclick="importExcel()">ファイルを読み込む</button>
     </div>
@@ -123,7 +122,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
     </div>
 
     <div id="io-display-list"></div>
-    <button class="btn btn-to-top" style="margin-top: 16px; background: #e2e8f0; color: var(--text);" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
+    <button class="btn btn-to-top" style="margin-top: 16px; background: #e2e2e2; color: var(--text);" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
   </div>
 </div>
 
@@ -138,7 +137,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 let items = JSON.parse(localStorage.getItem('inventory_db') || '[]');
 let undoStack = [];
 let deleteMode = false;
-let selectedIds = new Set(); // 品番+棚番で識別するためIDに変更
+let selectedUids = new Set(); // 内部一連番号（uid）で管理
 
 function switchSubView(view) {
   if(deleteMode) toggleDeleteMode();
@@ -162,59 +161,48 @@ function handleFilterChange() { renderList(); }
 
 function toggleDeleteMode() {
   deleteMode = !deleteMode;
-  selectedIds.clear();
+  selectedUids.clear();
   document.getElementById('delete-bar').style.display = deleteMode ? 'flex' : 'none';
   document.getElementById('btn-select-all').style.display = deleteMode ? 'flex' : 'none';
   document.getElementById('btn-delete-mode').textContent = deleteMode ? '選択解除' : '選択して削除';
   renderList();
 }
 
-// 内部的なユニークID生成（品番と棚番を結合）
-function getItemId(item) {
-  return `${item.code}:::${item.location}`;
-}
-
-function selectItem(id) {
+function selectItem(uid) {
   if(!deleteMode) return;
-  if(selectedIds.has(id)) selectedIds.delete(id);
-  else selectedIds.add(id);
+  if(selectedUids.has(uid)) selectedUids.delete(uid);
+  else selectedUids.add(uid);
   renderList();
 }
 
 function selectAllItems() {
   const currentItems = getFilteredItems();
-  if(selectedIds.size === currentItems.length) {
-    selectedIds.clear();
+  if(selectedUids.size === currentItems.length) {
+    selectedUids.clear();
   } else {
-    currentItems.forEach(i => selectedIds.add(getItemId(i)));
+    currentItems.forEach(i => selectedUids.add(i.uid));
   }
   renderList();
 }
 
 function executeDelete() {
-  if(selectedIds.size === 0) return alert("削除する項目を選んでください");
-  if(confirm(`${selectedIds.size}件の項目を削除しますか？`)) {
+  if(selectedUids.size === 0) return alert("削除する項目を選んでください");
+  if(confirm(`${selectedUids.size}件の項目を削除しますか？`)) {
     pushUndo();
-    items = items.filter(i => !selectedIds.has(getItemId(i)));
+    items = items.filter(i => !selectedUids.has(i.uid));
     saveData();
     toggleDeleteMode();
     showToast('削除しました');
   }
 }
 
-function updateStock(id, mult) {
-  // IDから該当するアイテムを探す（ID = code:::location）
-  const parts = id.split(':::');
-  const code = parts[0];
-  const loc = parts[1];
-
-  const safeId = id.replace(/[:.]/g, '\\$&'); // ID内の記号をエスケープ
-  const input = document.getElementById(`amt-${id}`);
+function updateStock(uid, mult) {
+  const input = document.getElementById(`amt-${uid}`);
   const val = parseFloat(input.value);
   if(!val || val <= 0) return showToast('数を入力してください');
   
   pushUndo();
-  const item = items.find(i => i.code === code && i.location === loc);
+  const item = items.find(i => i.uid === uid);
   if(item) { 
     item.stock += (val * mult); 
     saveData(); 
@@ -224,19 +212,19 @@ function updateStock(id, mult) {
   }
 }
 
-function editStockDirect(code, location) {
-  const item = items.find(i => i.code === code && i.location === location);
-  const newVal = prompt(`${item.name} (${location}) の個数入力:`, item.stock);
+function editStockDirect(uid) {
+  const item = items.find(i => i.uid === uid);
+  const newVal = prompt(`${item.name} (${item.location}) の個数修正:`, item.stock);
   if(newVal !== null && newVal !== "" && !isNaN(parseFloat(newVal))) {
     pushUndo(); item.stock = parseFloat(newVal); saveData(); renderList(); showToast('修正完了');
   }
 }
 
 function getFilteredItems() {
-  const fWh = document.getElementById('f-wh').value.toLowerCase();
-  const fLoc = document.getElementById('f-loc').value.toLowerCase();
-  const fCode = document.getElementById('f-code').value.toLowerCase();
-  const fName = document.getElementById('f-name').value.toLowerCase();
+  const fWh = (document.getElementById('f-wh').value || "").toLowerCase();
+  const fLoc = (document.getElementById('f-loc').value || "").toLowerCase();
+  const fCode = (document.getElementById('f-code').value || "").toLowerCase();
+  const fName = (document.getElementById('f-name').value || "").toLowerCase();
   return items.filter(i => 
     (i.warehouse || "").toLowerCase().includes(fWh) && 
     (i.location || "").toLowerCase().includes(fLoc) &&
@@ -251,27 +239,26 @@ function renderList() {
 
   target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:50px;color:#94a3b8;background:white;border-radius:16px;">該当なし</p>' : 
     filtered.map(item => {
-      const id = getItemId(item);
-      const isSelected = selectedIds.has(id);
+      const isSelected = selectedUids.has(item.uid);
       return `
-    <div class="item-card ${isSelected ? 'selected' : ''}" onclick="selectItem('${id}')">
+    <div class="item-card ${isSelected ? 'selected' : ''}" onclick="selectItem('${item.uid}')">
       <div class="check-container" style="display: ${deleteMode ? 'flex' : 'none'}"></div>
       <div style="display:flex; justify-content:space-between; align-items: flex-start;">
         <div style="flex:1;">
-          ${item.warehouse ? `<div class="item-meta">${item.warehouse} / ${item.location}</div>` : `<div class="item-meta">棚番: ${item.location}</div>`}
+          <div class="item-meta">${item.warehouse || '倉庫不明'} / ${item.location || '棚番不明'}</div>
           <div style="font-size:11px;color:var(--text2);">品番: ${item.code}</div>
           <div style="font-weight:700;font-size:15px; margin-bottom:4px; line-height:1.4;">${item.name} <span style="font-weight:400;font-size:12px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
         </div>
-        ${!deleteMode ? `<button class="btn-edit-stock" onclick="event.stopPropagation(); editStockDirect('${item.code}', '${item.location}')">個数修正</button>` : ''}
+        ${!deleteMode ? `<button class="btn-edit-stock" onclick="event.stopPropagation(); editStockDirect('${item.uid}')">個数修正</button>` : ''}
       </div>
       <div class="stock-text-area">
         現在個数: <span class="stock-num-display">${item.stock}</span>
       </div>
       ${!deleteMode ? `
       <div class="io-controls" onclick="event.stopPropagation()">
-        <input type="number" class="io-input" id="amt-${id}" placeholder="0">
-        <button class="btn btn-green io-btn" onclick="updateStock('${id}', 1)">入庫</button>
-        <button class="btn io-btn" style="background:var(--red);color:white;" onclick="updateStock('${id}', -1)">出庫</button>
+        <input type="number" class="io-input" id="amt-${item.uid}" placeholder="0">
+        <button class="btn btn-green io-btn" onclick="updateStock('${item.uid}', 1)">入庫</button>
+        <button class="btn io-btn" style="background:var(--red);color:white;" onclick="updateStock('${item.uid}', -1)">出庫</button>
       </div>` : ''}
     </div>`;
   }).join('');
@@ -317,7 +304,7 @@ function importExcel() {
       
       let newItems = [];
       let errorMessages = [];
-      let duplicateIds = new Set(); // 品番+棚番が完全に一致する場合
+      let duplicateInfo = new Set();
       let seenIdsInExcel = {};
       let totalAttempted = 0; 
 
@@ -344,32 +331,33 @@ function importExcel() {
         if (errors.length > 0) {
           errorMessages.push(`${i + 1}行目: [ ${errors.join(", ")} ]`);
         } else {
-          // 品番+棚番の組み合わせで重複チェック
+          // 重複チェック用ID
           const id = `${code}:::${location}`;
           if (seenIdsInExcel[id]) {
-            duplicateIds.add(`${code} (${location})`);
+            duplicateInfo.add(`${code} (${location})`);
           }
           seenIdsInExcel[id] = true;
 
-          newItems.push({ warehouse, location, code, name, spec, stock: parseFloat(stockVal) });
+          // 重複していても上書きせず、すべて新規データ（uid付与）として追加
+          newItems.push({ 
+            uid: Date.now().toString(36) + Math.random().toString(36).substr(2, 5) + i, // 完全にユニークなIDを作成
+            warehouse, location, code, name, spec, 
+            stock: parseFloat(stockVal) 
+          });
         }
       }
 
       if (totalAttempted === 0) return alert("データがありませんでした。");
 
       pushUndo();
-      // 既存データへの反映（品番＋棚番が両方一致なら上書き、片方でも違えば新規）
-      newItems.forEach(itemData => {
-        const exIndex = items.findIndex(item => item.code === itemData.code && item.location === itemData.location);
-        if(exIndex > -1) items[exIndex] = itemData; 
-        else items.push(itemData);
-      });
+      // 既存データを残したまま、新しいデータをすべて結合
+      items = items.concat(newItems);
 
       saveData(); renderList(); fileInput.value = '';
 
-      let resultMsg = `${totalAttempted}件中、${newItems.length}件を処理しました。\n全在庫数は ${items.length} 件です。`;
-      if (duplicateIds.size > 0) {
-        resultMsg += `\n\n⚠️【上書き通知】同一の「品番＋棚番」が複数あったため上書きされました：\n${Array.from(duplicateIds).slice(0, 10).join(", ")}${duplicateIds.size > 10 ? " ...他" : ""}`;
+      let resultMsg = `${totalAttempted}件中、${newItems.length}件をすべて別データとして取り込みました。\n現在の全在庫数は ${items.length} 件です。`;
+      if (duplicateInfo.size > 0) {
+        resultMsg += `\n\n⚠️【重複通知】以下の品番＋棚番がエクセル内に複数ありましたが、すべて別々に読み込みました：\n${Array.from(duplicateInfo).slice(0, 10).join(", ")}${duplicateInfo.size > 10 ? " ...他" : ""}`;
       }
       if (errorMessages.length > 0) {
         resultMsg += `\n\n❌【不備スキップ】\n${errorMessages.slice(0, 5).join("\n")}${errorMessages.length > 5 ? "\n...他" : ""}`;
@@ -392,26 +380,24 @@ function saveManualItem() {
   if(!code || !name || !location) return alert("棚番、品番、商品名は必須です");
 
   pushUndo();
-  // 手動登録時も「品番＋棚番」が一致すれば上書き
-  const exIndex = items.findIndex(item => item.code === code && item.location === location);
-  const newItem = { warehouse, location, code, name, spec, stock };
-
-  if(exIndex > -1) {
-    if(confirm("同じ品番と棚番のデータが既にあります。上書きしますか？")) {
-      items[exIndex] = newItem;
-    } else { return; }
-  } else {
-    items.push(newItem);
-  }
+  // 手動登録時もユニークなuidを付与して常に追加
+  const newItem = { 
+    uid: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+    warehouse, location, code, name, spec, stock 
+  };
+  items.push(newItem);
 
   saveData(); 
-  showToast('登録・更新しました');
-  // 入力欄をクリア（任意）
+  renderList();
+  showToast('新規登録しました');
   document.getElementById('io-code').value = '';
   document.getElementById('io-name').value = '';
 }
 
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+
+// 初期表示
+if(items.length > 0) renderList();
 </script>
 </body>
 </html>
