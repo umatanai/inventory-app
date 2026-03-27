@@ -3,34 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>入出庫管理・棚卸し</title>
+<title>在庫・入出庫管理</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap');
 :root { --bg: #f0f4f8; --surface: #ffffff; --border: #dde3ea; --accent: #2563eb; --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b; --text2: #64748b; --shadow: 0 1px 3px rgba(0,0,0,0.08); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 20px; }
-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); }
+header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
 header h1 { font-size: 17px; font-weight: 700; color: var(--accent); }
 
-.tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
-.tab { flex: 1; padding: 14px 4px; text-align: center; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; background: var(--accent-light); }
-
-.main-container { display: none; padding: 14px; }
-.main-container.active { display: block; }
+/* コンテナとビューの切り替え */
+.main-container { padding: 14px; }
 .sub-view { display: none; }
 .sub-view.active { display: block; }
 
-.howto { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
-.howto-title { font-size: 13px; font-weight: 700; color: #b45309; margin-bottom: 10px; }
-.howto-step { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 6px; }
-.step-num { width: 18px; height: 18px; border-radius: 50%; background: #b45309; color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
+/* 入力欄・カードスタイル */
 .card { background: var(--surface); border-radius: 14px; padding: 16px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: var(--shadow); }
+.card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; border-bottom: 2px solid var(--accent-light); padding-bottom: 5px; }
 label { display: block; font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 5px; }
 input, select { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
+input[type="file"] { font-size: 14px; padding: 8px; background: white; }
 input:focus, select:focus { outline: none; border-color: var(--accent); }
+.row-2 { display: flex; gap: 10px; }
+.row-2 > div { flex: 1; }
 
+/* ボタン類 */
 .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.1s; margin-top: 5px; }
 .btn:active { opacity: 0.8; transform: scale(0.98); }
 .btn-blue { background: var(--accent); color: white; }
@@ -40,215 +37,160 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .btn-dark { background: #334155; color: white; }
 .btn-small { padding: 8px 12px; font-size: 12px; width: auto; }
 
+/* リストアイテム */
 .item-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 8px; position: relative; }
 .item-name { font-weight: 700; font-size: 15px; }
-.item-code { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
-.edit-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); gap: 8px; align-items: center; }
-.edit-row.active { display: flex; }
+.item-code { font-size: 12px; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+.item-meta { font-size: 11px; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; font-weight: 700; }
 
+/* 入出庫コントロール部 */
 .io-controls { display: flex; gap: 8px; margin-top: 12px; align-items: stretch; }
 .io-input { width: 60px; margin-bottom: 0; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px; padding: 0; }
 .io-btn { flex: 1; padding: 14px 0; font-size: 15px; margin-top: 0; }
 
+/* その他UI */
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
 #toast.show { opacity: 1; }
-.scan-area { background: #eff6ff; border: 2px dashed var(--accent); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
-.scan-area input { margin-bottom: 0; } 
 hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
-.card hr { border-top: 1px solid #f1f5f9; margin: 16px 0; }
+.help-text { font-size: 11px; color: var(--text2); margin-top: -8px; margin-bottom: 12px; display: block; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>📦 入出庫管理・棚卸し</h1>
+  <h1>📦 在庫・入出庫管理</h1>
 </header>
 
-<div class="tab-bar">
-  <div class="tab active" id="tab-io" onclick="switchMainTab('io')">📥 入出庫管理</div>
-  <div class="tab" id="tab-inv" onclick="switchMainTab('inv')">📋 棚卸し</div>
-</div>
-
-<div class="main-container active" id="container-io">
-  <div class="sub-view active" id="view-io-reg">
-    <div class="howto">
-      <div class="howto-title">💡 テキストスキャン手順</div>
-      <div class="howto-step"><span class="step-num">1</span>記入欄を一度タップして、カーソルが点滅したら</div>
-      <div class="howto-step"><span class="step-num">2</span>再度記入欄をタップ</div>
-      <div class="howto-step"><span class="step-num">3</span>「自動入力」を選択</div>
-      <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
-    </div>
-
-    <div class="scan-area">
-      <input type="text" id="io-extractor" placeholder="ここをタップしてスキャン" oninput="extractData(this.value, 'io')">
-    </div>
+<div class="main-container">
+  
+  <div class="sub-view active" id="view-reg">
     
     <div class="card">
-      <label>品番</label>
-      <input type="text" id="io-code-scan" placeholder="自動抽出されます">
-      <label>商品名</label>
-      <input type="text" id="io-name-scan" placeholder="自動抽出されます">
-      <button class="btn btn-blue" onclick="saveIOMaster()">✅ 登録を実行</button>
-      <hr>
-      <button class="btn btn-dark" style="margin-top: 0;" onclick="switchSubView('io', 'list')">🗂️ 入出庫一覧ページへ ＞</button>
-    </div>
-  </div>
-
-  <div class="sub-view" id="view-io-list">
-    <button class="btn btn-outline" style="margin-bottom:15px;" onclick="switchSubView('io', 'reg')">＜ 登録ページに戻る</button>
-    <input type="text" id="io-search" placeholder="品番・名称で検索..." oninput="renderIOList()">
-    <div id="io-display-list"></div>
-  </div>
-</div>
-
-<div class="main-container" id="container-inv">
-  <div class="sub-view active" id="view-inv-reg">
-    <div class="howto">
-      <div class="howto-title">💡 テキストスキャン手順</div>
-      <div class="howto-step"><span class="step-num">1</span>記入欄を一度タップして、カーソルが点滅したら</div>
-      <div class="howto-step"><span class="step-num">2</span>再度記入欄をタップ</div>
-      <div class="howto-step"><span class="step-num">3</span>「自動入力」を選択</div>
-      <div class="howto-step"><span class="step-num">4</span>「テキストをスキャン」を選択</div>
-    </div>
-
-    <div class="scan-area">
-      <input type="text" id="inv-extractor" placeholder="ここをタップしてスキャン" oninput="extractData(this.value, 'inv')">
+      <div class="card-title">📥 エクセル(CSV)から一括読み込み</div>
+      <span class="help-text">※エクセルで「CSV(コンマ区切り)」形式で保存したファイルを選択してください。<br>1行目は見出しとしてスキップされます。</span>
+      <input type="file" id="csv-file" accept=".csv">
+      <button class="btn btn-green" onclick="importCSV()">ファイルを読み込んで反映</button>
     </div>
 
     <div class="card">
-      <label>棚番</label>
-      <input type="text" id="inv-location" placeholder="自動抽出されます">
-      <label>品番</label>
-      <input type="text" id="inv-code" placeholder="自動抽出されます">
-      <label>商品名</label>
-      <input type="text" id="inv-name" placeholder="自動抽出されます">
+      <div class="card-title">✏️ 手動で新規登録</div>
       
-      <div style="display:flex; gap:10px;">
-        <div style="flex:2;">
-          <label>数量</label>
-          <input type="number" id="inv-qty" placeholder="0">
+      <div class="row-2">
+        <div>
+          <label>倉庫コード</label>
+          <input type="text" id="io-warehouse" placeholder="例: W-01">
         </div>
-        <div style="flex:1;">
-          <label>単位</label>
-          <select id="inv-unit">
-            <option>個</option>
-            <option>mm</option>
-          </select>
+        <div>
+          <label>棚番コード</label>
+          <input type="text" id="io-location" placeholder="例: A-12">
         </div>
       </div>
-      <button class="btn btn-blue" onclick="saveInventory()">✅ 登録を実行</button>
-      <hr>
-      <button class="btn btn-dark" style="margin-top: 0;" onclick="switchSubView('inv', 'list')">📋 棚卸し一覧ページへ ＞</button>
+
+      <label>商品コード (必須)</label>
+      <input type="text" id="io-code" placeholder="例: ITM-001">
+      
+      <label>品番名 (必須)</label>
+      <input type="text" id="io-name" placeholder="例: 特製ネジ">
+      
+      <label>規格</label>
+      <input type="text" id="io-spec" placeholder="例: 10mm x 50mm">
+      
+      <label>実勘数（現在庫）</label>
+      <input type="number" id="io-qty" placeholder="0" value="0">
+      
+      <button class="btn btn-blue" onclick="saveManualItem()">✅ 登録を実行</button>
+      <button class="btn btn-dark" style="margin-top: 10px;" onclick="switchSubView('list')">🗂️ 在庫一覧ページへ ＞</button>
     </div>
   </div>
 
-  <div class="sub-view" id="view-inv-list">
-    <button class="btn btn-outline" style="margin-bottom:15px;" onclick="switchSubView('inv', 'reg')">＜ 登録ページに戻る</button>
-    <div id="inv-display-list"></div>
+  <div class="sub-view" id="view-list">
+    <button class="btn btn-outline" style="margin-bottom:15px;" onclick="switchSubView('reg')">＜ 登録ページに戻る</button>
+    
+    <input type="text" id="io-search" placeholder="品番・名称・規格で検索..." oninput="renderList()">
+    
+    <div id="io-display-list"></div>
+    
     <hr>
-    <button class="btn btn-green" onclick="exportCSV()">⬇️ 棚卸エクセル(CSV)出力</button>
-    <button class="btn btn-outline" style="margin-top:10px;" onclick="clearAll('inventory')">🗑️ 棚卸データ全削除</button>
+    <div class="card" style="background: #f8fafc;">
+      <button class="btn btn-blue" onclick="exportCSV()">⬇️ 現在の在庫をエクセル(CSV)出力</button>
+      <button class="btn btn-outline" style="margin-top:10px; color:var(--red); border-color:#fca5a5;" onclick="clearAllData()">🗑️ 全データ初期化(削除)</button>
+    </div>
   </div>
+
 </div>
 
 <div id="toast"></div>
 
 <script>
-let ioItems = JSON.parse(localStorage.getItem('io_data') || '[]');
-let inventoryItems = JSON.parse(localStorage.getItem('inv_data') || '[]');
+let items = JSON.parse(localStorage.getItem('inventory_db') || '[]');
 
 function init() {
-  renderIOList();
-  renderInvList();
+  renderList();
 }
 
-function switchMainTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.main-container').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  document.getElementById('container-' + tab).classList.add('active');
-  switchSubView(tab, 'reg');
+function switchSubView(view) {
+  document.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${view}`).classList.add('active');
+  if(view === 'list') renderList();
 }
 
-function switchSubView(tab, view) {
-  const container = document.getElementById('container-' + tab);
-  container.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
-  document.getElementById(`view-${tab}-${view}`).classList.add('active');
-  if(tab === 'io' && view === 'list') renderIOList();
-  if(tab === 'inv' && view === 'list') renderInvList();
-}
+// ---------------- 手動登録 ----------------
+function saveManualItem() {
+  const warehouse = document.getElementById('io-warehouse').value.trim();
+  const location = document.getElementById('io-location').value.trim();
+  const code = document.getElementById('io-code').value.trim();
+  const name = document.getElementById('io-name').value.trim();
+  const spec = document.getElementById('io-spec').value.trim();
+  const stock = parseFloat(document.getElementById('io-qty').value) || 0;
 
-// ---------------- 最新抽出ロジック（「倉庫」除外対応） ----------------
-function extractData(val, target) {
-  if (!val) return;
+  if(!code || !name) return showToast('商品コードと品番名は必須です');
   
-  const words = val.split(/[\s\n\t,、]+/);
-  let shelf = ""; // 棚番
-  let code = "";  // 品番
-  let name = "";  // 商品名
-
-  for (let w of words) {
-    // 1. 商品名の判定：漢字・カタカナ・ひらがなが含まれる
-    // かつ、「倉庫」という文字が含まれていない場合のみ採用
-    if (/[一-龠ぁ-んァ-ヶー]/.test(w)) {
-      if (!w.includes("倉庫")) {
-        name = w;
-        continue;
-      }
-    }
-
-    // 2. 英数字の判定（商品名以外）
-    if (/^[A-Za-z0-9\-]+$/.test(w)) {
-      if (w.length >= 5) {
-        // 5文字以上の英数字は「品番」
-        code = w;
-      } else {
-        // 5文字未満の英数字は「棚番」
-        shelf = w;
-      }
-    }
+  const exIndex = items.findIndex(i => i.code === code);
+  if(exIndex > -1) { 
+    // 上書き
+    items[exIndex] = { warehouse, location, code, name, spec, stock }; 
+  } else { 
+    // 新規
+    items.push({ warehouse, location, code, name, spec, stock }); 
   }
-
-  // 反映
-  if (target === 'io') {
-    if (code) document.getElementById('io-code-scan').value = code;
-    if (name) document.getElementById('io-name-scan').value = name;
-    setTimeout(() => document.getElementById('io-extractor').value = '', 800);
-  } else {
-    if (shelf) document.getElementById('inv-location').value = shelf;
-    if (code) document.getElementById('inv-code').value = code;
-    if (name) document.getElementById('inv-name').value = name;
-    setTimeout(() => document.getElementById('inv-extractor').value = '', 800);
-  }
-}
-
-function saveIOMaster() {
-  const code = document.getElementById('io-code-scan').value.trim();
-  const name = document.getElementById('io-name-scan').value.trim();
-  if(!code || !name) return showToast('データが不足しています');
-  const exIndex = ioItems.findIndex(i => i.code === code);
-  if(exIndex > -1) { ioItems[exIndex].name = name; } 
-  else { ioItems.push({ code, name, stock: 0 }); }
-  localStorage.setItem('io_data', JSON.stringify(ioItems));
+  
+  saveData();
   showToast('登録を実行しました ✅');
-  document.getElementById('io-code-scan').value = '';
-  document.getElementById('io-name-scan').value = '';
+  
+  // フォームクリア（倉庫と棚番は連続入力のため残す）
+  document.getElementById('io-code').value = '';
+  document.getElementById('io-name').value = '';
+  document.getElementById('io-spec').value = '';
+  document.getElementById('io-qty').value = '0';
 }
 
-function renderIOList() {
+// ---------------- 一覧描画 ----------------
+function renderList() {
   const query = document.getElementById('io-search').value.toLowerCase();
   const target = document.getElementById('io-display-list');
-  const filtered = ioItems.filter(i => i.code.toLowerCase().includes(query) || i.name.toLowerCase().includes(query));
+  
+  const filtered = items.filter(i => 
+    i.code.toLowerCase().includes(query) || 
+    i.name.toLowerCase().includes(query) ||
+    (i.spec && i.spec.toLowerCase().includes(query))
+  );
+
+  if(filtered.length === 0) {
+    target.innerHTML = '<p style="text-align:center; padding:20px; color:#94a3b8;">データがありません</p>';
+    return;
+  }
+
   target.innerHTML = filtered.map(item => `
     <div class="item-card">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
+          <div class="item-meta">倉庫: ${item.warehouse || '-'} | 棚番: ${item.location || '-'}</div>
           <div class="item-code">${item.code}</div>
-          <div class="item-name">${item.name}</div>
+          <div class="item-name">${item.name} <span style="font-size:13px; font-weight:normal; color:var(--text2);">${item.spec ? `(${item.spec})` : ''}</span></div>
         </div>
-        <button class="btn-outline btn-small" style="color:var(--red); border-color:#fca5a5;" onclick="deleteIOItem('${item.code}')">🗑️ 削除</button>
+        <button class="btn-outline btn-small" style="color:var(--red); border-color:#fca5a5;" onclick="deleteItem('${item.code}')">🗑️ 削除</button>
       </div>
-      <div style="margin-top:8px; font-size:14px; color:var(--text2);">現在の在庫: <strong style="color:var(--accent); font-size:18px;">${item.stock}</strong></div>
+      <div style="margin-top:8px; font-size:14px; color:var(--text2);">現在の在庫(実勘数): <strong style="color:var(--accent); font-size:20px;">${item.stock}</strong></div>
       <div class="io-controls">
         <input type="number" class="io-input" id="amt-${item.code}" placeholder="数">
         <button class="btn btn-green io-btn" onclick="updateStock('${item.code}', 1)">入庫</button>
@@ -258,122 +200,148 @@ function renderIOList() {
   `).join('');
 }
 
+// ---------------- 入出庫処理 ----------------
 function updateStock(code, multiplier) {
   const inputEl = document.getElementById(`amt-${code}`);
   const amount = parseFloat(inputEl.value);
   if(isNaN(amount) || amount <= 0) return showToast('数量を入力してください');
-  const item = ioItems.find(i => i.code === code);
+  
+  const item = items.find(i => i.code === code);
   if(item) {
     item.stock += (amount * multiplier);
-    localStorage.setItem('io_data', JSON.stringify(ioItems));
+    saveData();
     inputEl.value = '';
-    renderIOList();
+    renderList();
     showToast(multiplier > 0 ? '入庫しました' : '出庫しました');
   }
 }
 
-function deleteIOItem(code) {
+function deleteItem(code) {
   if(!confirm('この品番のデータを削除しますか？')) return;
-  ioItems = ioItems.filter(i => i.code !== code);
-  localStorage.setItem('io_data', JSON.stringify(ioItems));
-  renderIOList();
+  items = items.filter(i => i.code !== code);
+  saveData();
+  renderList();
   showToast('削除しました');
 }
 
-function saveInventory() {
-  const loc = document.getElementById('inv-location').value.trim();
-  const code = document.getElementById('inv-code').value.trim();
-  const name = document.getElementById('inv-name').value.trim();
-  const qty = parseFloat(document.getElementById('inv-qty').value) || 0;
-  const unit = document.getElementById('inv-unit').value;
-  if(!name) return showToast('商品名を入力してください');
-  const id = Date.now();
-  inventoryItems.push({ id, loc, code, name, qty, unit });
-  localStorage.setItem('inv_data', JSON.stringify(inventoryItems));
-  document.getElementById('inv-location').value = '';
-  document.getElementById('inv-code').value = '';
-  document.getElementById('inv-name').value = '';
-  document.getElementById('inv-qty').value = '';
-  showToast('登録を実行しました ✅');
+function clearAllData() {
+  if(!confirm('本当にすべての在庫データを削除しますか？（元に戻せません）')) return;
+  items = [];
+  saveData();
+  renderList();
+  showToast('全データを削除しました');
 }
 
-function renderInvList() {
-  const target = document.getElementById('inv-display-list');
-  if(inventoryItems.length === 0) {
-    target.innerHTML = '<p style="text-align:center; padding:20px; color:#94a3b8;">棚卸データがありません</p>';
-    return;
+// ---------------- CSVインポート (読み込み) ----------------
+function importCSV() {
+  const fileInput = document.getElementById('csv-file');
+  const file = fileInput.files[0];
+  if (!file) return showToast('ファイルを選択してください');
+
+  const reader = new FileReader();
+  
+  // 日本語エクセル特有のShift_JIS文字化け対策として、まずShift_JISで読み込む
+  reader.readAsText(file, 'Shift_JIS'); 
+  
+  reader.onload = function(e) {
+    const text = e.target.result;
+    
+    const lines = text.split(/\r\n|\n/);
+    let count = 0;
+
+    // 1行目はヘッダーと見なして i=1 からスタート
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      // CSVのカンマ区切りをパース（ダブルクォーテーション対応）
+      const row = parseCSVRow(line);
+
+      // 6列以上あると見なす: 0:倉庫, 1:棚番, 2:商品コード, 3:品番名, 4:規格, 5:実勘数
+      if(row.length >= 6) {
+        const warehouse = row[0];
+        const location = row[1];
+        const code = row[2];
+        const name = row[3];
+        const spec = row[4];
+        const stock = parseFloat(row[5]) || 0;
+
+        if(!code) continue; // コードが空ならスキップ
+
+        const exIndex = items.findIndex(item => item.code === code);
+        if(exIndex > -1) {
+          // 既存の場合は上書き
+          items[exIndex] = { warehouse, location, code, name, spec, stock };
+        } else {
+          // 新規追加
+          items.push({ warehouse, location, code, name, spec, stock });
+        }
+        count++;
+      }
+    }
+    
+    saveData();
+    showToast(`${count}件のデータを読み込みました`);
+    fileInput.value = ''; // 選択解除
+  };
+}
+
+// CSVパース用の補助関数（カンマが含まれる文字列への対応）
+function parseCSVRow(str) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (char === '"' && str[i+1] === '"') {
+      current += '"'; i++; // エスケープされたクォーテーション
+    } else if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
   }
-  target.innerHTML = inventoryItems.slice().reverse().map(item => `
-    <div class="item-card">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-        <div>
-          <div class="item-code">棚番: ${item.loc || '-'} | 品番: ${item.code || '-'}</div>
-          <div class="item-name">${item.name}</div>
-        </div>
-        <button class="btn-outline btn-small" style="color:var(--red); border-color:#fca5a5;" onclick="deleteInvItem(${item.id})">🗑️ 削除</button>
-      </div>
-      <div style="margin-top:8px; font-size:14px;">数量: <strong style="color:var(--green); font-size:18px;">${item.qty}</strong> <span style="font-size:12px; color:var(--text2);">${item.unit}</span></div>
-      <button class="btn btn-outline btn-small" style="margin-top:8px; width:100%;" onclick="toggleEdit(${item.id})">✏️ 数量を修正する</button>
-      <div class="edit-row" id="edit-${item.id}">
-        <input type="number" id="newqty-${item.id}" value="${item.qty}" style="margin-bottom:0; flex:1; font-family:'JetBrains Mono', monospace; font-weight:700;">
-        <button class="btn btn-green" style="width:70px; margin-top:0;" onclick="saveEdit(${item.id})">保存</button>
-      </div>
-    </div>
-  `).join('');
+  result.push(current.trim());
+  return result;
 }
 
-function toggleEdit(id) {
-  document.getElementById('edit-' + id).classList.toggle('active');
-}
-
-function saveEdit(id) {
-  const newQty = parseFloat(document.getElementById('newqty-' + id).value) || 0;
-  const index = inventoryItems.findIndex(i => i.id === id);
-  if(index > -1) {
-    inventoryItems[index].qty = newQty;
-    localStorage.setItem('inv_data', JSON.stringify(inventoryItems));
-    renderInvList();
-    showToast('数量を修正しました');
-  }
-}
-
-function deleteInvItem(id) {
-  if(!confirm('この棚卸データを削除しますか？')) return;
-  inventoryItems = inventoryItems.filter(i => i.id !== id);
-  localStorage.setItem('inv_data', JSON.stringify(inventoryItems));
-  renderInvList();
-  showToast('削除しました');
-}
-
+// ---------------- CSVエクスポート (出力) ----------------
 function exportCSV() {
-  if(!inventoryItems.length) return showToast('データがありません');
-  const userName = prompt('出力者の名前を入力してください', '');
-  if (userName === null) return;
-  let csv = `\uFEFF"棚番","品番","商品名","数量","${userName}"\n`;
-  inventoryItems.forEach(i => {
-    csv += `"${i.loc || ''}","${i.code || ''}","${i.name}",${i.qty}\n`;
+  if(!items.length) return showToast('出力するデータがありません');
+  
+  const userName = prompt('出力者の名前を入力してください（未入力でも可）', '') || '';
+  
+  // ヘッダー行 (BOM付きでExcel文字化け防止)
+  let csv = `\uFEFF"倉庫コード","棚番コード","商品コード","品番名","規格","実勘数(現在庫)","出力者"\n`;
+  
+  // データ行
+  items.forEach(i => {
+    // 文字列内のダブルクォートをエスケープ
+    const escapeQ = (str) => (str || '').toString().replace(/"/g, '""');
+    csv += `"${escapeQ(i.warehouse)}","${escapeQ(i.location)}","${escapeQ(i.code)}","${escapeQ(i.name)}","${escapeQ(i.spec)}",${i.stock},"${escapeQ(userName)}"\n`;
   });
+  
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `棚卸_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `在庫・棚卸データ_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
 
-function clearAll(type) {
-  if(!confirm('本当に全データを削除しますか？')) return;
-  inventoryItems = [];
-  localStorage.setItem('inv_data', '[]');
-  renderInvList();
-  showToast('削除しました');
+function saveData() {
+  localStorage.setItem('inventory_db', JSON.stringify(items));
 }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+// アプリ起動時の初期化
 init();
 </script>
 </body>
