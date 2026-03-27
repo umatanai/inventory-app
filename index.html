@@ -252,7 +252,7 @@ function renderList() {
         <button class="btn io-btn" style="background:var(--red);color:white;" onclick="updateStock('${item.code}', -1)">出庫</button>
       </div>` : ''}
     </div>`;
-    }).join('');
+  }).join('');
 }
 
 async function exportExcel() {
@@ -291,14 +291,43 @@ function importExcel() {
     try {
       const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
       const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+      
+      let newItems = [];
       for (let i = 1; i < jsonData.length; i++) {
-        const row = jsonData[i]; if (!row || row.length < 4) continue;
-        const itemData = { warehouse:String(row[0]||''), location:String(row[1]||''), code:String(row[2]), name:String(row[3]), spec:row[4]?String(row[4]):"", stock:parseFloat(row[5])||0 };
+        const row = jsonData[i];
+        if (!row || row.length === 0) continue;
+
+        // 【不備詳細チェック】
+        let errors = [];
+        if (!row[0]) errors.push("倉庫");
+        if (!row[1]) errors.push("棚番");
+        if (!row[2]) errors.push("品番");
+        if (!row[3]) errors.push("商品名");
+        if (row[5] === undefined || row[5] === "" || isNaN(parseFloat(row[5]))) errors.push("現在個数");
+
+        if (errors.length > 0) {
+          alert(`${i + 1}行目に記入不備があります：\n[ ${errors.join(", ")} ] を確認してください。`);
+          return; // 取込を中断
+        }
+
+        const itemData = { 
+          warehouse: String(row[0]), 
+          location: String(row[1]), 
+          code: String(row[2]), 
+          name: String(row[3]), 
+          spec: row[4] ? String(row[4]) : "", 
+          stock: parseFloat(row[5])
+        };
+        newItems.push(itemData);
+      }
+
+      newItems.forEach(itemData => {
         const exIndex = items.findIndex(item => item.code === itemData.code);
         if(exIndex > -1) items[exIndex] = itemData; else items.push(itemData);
-      }
+      });
+
       saveData(); renderList(); showToast('取込完了'); fileInput.value = '';
-    } catch(err) { alert("読込失敗しました。"); }
+    } catch(err) { alert("読込失敗しました。ファイル形式を確認してください。"); }
   };
   reader.readAsArrayBuffer(fileInput.files[0]);
 }
