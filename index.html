@@ -84,7 +84,6 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <div class="sub-view active" id="view-reg">
     <div class="card">
       <div class="card-title">📥 エクセルからデータ取込</div>
-      <p style="font-size:11px; color:var(--text2); margin-bottom:8px;">※「品番＋棚番」の両方が一致する場合のみ上書き更新されます。</p>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
       <button class="btn btn-green" onclick="importExcel()">ファイルを読み込む</button>
     </div>
@@ -138,7 +137,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 let items = JSON.parse(localStorage.getItem('inventory_db') || '[]');
 let undoStack = [];
 let deleteMode = false;
-let selectedIds = new Set(); // 品番+棚番で識別するためIDに変更
+let selectedIds = new Set();
 
 function switchSubView(view) {
   if(deleteMode) toggleDeleteMode();
@@ -169,7 +168,6 @@ function toggleDeleteMode() {
   renderList();
 }
 
-// 内部的なユニークID生成（品番と棚番を結合）
 function getItemId(item) {
   return `${item.code}:::${item.location}`;
 }
@@ -203,12 +201,10 @@ function executeDelete() {
 }
 
 function updateStock(id, mult) {
-  // IDから該当するアイテムを探す（ID = code:::location）
   const parts = id.split(':::');
   const code = parts[0];
   const loc = parts[1];
 
-  const safeId = id.replace(/[:.]/g, '\\$&'); // ID内の記号をエスケープ
   const input = document.getElementById(`amt-${id}`);
   const val = parseFloat(input.value);
   if(!val || val <= 0) return showToast('数を入力してください');
@@ -317,7 +313,7 @@ function importExcel() {
       
       let newItems = [];
       let errorMessages = [];
-      let duplicateIds = new Set(); // 品番+棚番が完全に一致する場合
+      let duplicateIds = new Set();
       let seenIdsInExcel = {};
       let totalAttempted = 0; 
 
@@ -344,13 +340,11 @@ function importExcel() {
         if (errors.length > 0) {
           errorMessages.push(`${i + 1}行目: [ ${errors.join(", ")} ]`);
         } else {
-          // 品番+棚番の組み合わせで重複チェック
           const id = `${code}:::${location}`;
           if (seenIdsInExcel[id]) {
             duplicateIds.add(`${code} (${location})`);
           }
           seenIdsInExcel[id] = true;
-
           newItems.push({ warehouse, location, code, name, spec, stock: parseFloat(stockVal) });
         }
       }
@@ -358,7 +352,6 @@ function importExcel() {
       if (totalAttempted === 0) return alert("データがありませんでした。");
 
       pushUndo();
-      // 既存データへの反映（品番＋棚番が両方一致なら上書き、片方でも違えば新規）
       newItems.forEach(itemData => {
         const exIndex = items.findIndex(item => item.code === itemData.code && item.location === itemData.location);
         if(exIndex > -1) items[exIndex] = itemData; 
@@ -369,7 +362,7 @@ function importExcel() {
 
       let resultMsg = `${totalAttempted}件中、${newItems.length}件を処理しました。\n全在庫数は ${items.length} 件です。`;
       if (duplicateIds.size > 0) {
-        resultMsg += `\n\n⚠️【上書き通知】同一の「品番＋棚番」が複数あったため上書きされました：\n${Array.from(duplicateIds).slice(0, 10).join(", ")}${duplicateIds.size > 10 ? " ...他" : ""}`;
+        resultMsg += `\n\n⚠️【重複通知】同一の「品番＋棚番」が複数あったため上書きされました：\n${Array.from(duplicateIds).slice(0, 10).join(", ")}${duplicateIds.size > 10 ? " ...他" : ""}`;
       }
       if (errorMessages.length > 0) {
         resultMsg += `\n\n❌【不備スキップ】\n${errorMessages.slice(0, 5).join("\n")}${errorMessages.length > 5 ? "\n...他" : ""}`;
@@ -387,28 +380,33 @@ function saveManualItem() {
   const code = document.getElementById('io-code').value.trim();
   const name = document.getElementById('io-name').value.trim();
   const spec = document.getElementById('io-spec').value.trim();
-  const stock = parseFloat(document.getElementById('io-qty').value) || 0;
+  const qtyInput = document.getElementById('io-qty');
+  const stock = parseFloat(qtyInput.value) || 0;
 
   if(!code || !name || !location) return alert("棚番、品番、商品名は必須です");
 
-  pushUndo();
-  // 手動登録時も「品番＋棚番」が一致すれば上書き
   const exIndex = items.findIndex(item => item.code === code && item.location === location);
   const newItem = { warehouse, location, code, name, spec, stock };
 
   if(exIndex > -1) {
-    if(confirm("同じ品番と棚番のデータが既にあります。上書きしますか？")) {
-      items[exIndex] = newItem;
-    } else { return; }
+    if(!confirm("同じ品番と棚番のデータが既にあります。上書きしますか？")) return;
+    pushUndo();
+    items[exIndex] = newItem;
   } else {
+    pushUndo();
     items.push(newItem);
   }
 
   saveData(); 
   showToast('登録・更新しました');
-  // 入力欄をクリア（任意）
+  
+  // 入力リセット
   document.getElementById('io-code').value = '';
   document.getElementById('io-name').value = '';
+  document.getElementById('io-spec').value = '';
+  qtyInput.value = '0';
+  
+  if(document.getElementById('view-list').classList.contains('active')) renderList();
 }
 
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
