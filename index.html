@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="kosaku管理">
+<meta name="theme-color" content="#2563eb">
 <title>kosaku在庫管理システム</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -254,33 +258,19 @@ function renderList() {
 async function exportExcel() {
   const targetData = getFilteredItems();
   if (targetData.length === 0) return alert("出力するデータがありません");
-
-  // 担当者名の入力
   const staffName = prompt("担当者名を入力してください:");
-  if (staffName === null) return; // キャンセル時
-
-  // エクセル用データ作成
-  const wsData = [
-    ["倉庫コード", "棚番コード", "品番", "商品名", "規格", "現在個数", "担当者"] // ヘッダー
-  ];
+  if (staffName === null) return;
+  const wsData = [["倉庫コード", "棚番コード", "品番", "商品名", "規格", "現在個数", "担当者"]];
   targetData.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock, ""]));
-
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-  // セルG1（担当者ヘッダーの隣、またはヘッダー自体）に名前をセット
-  // utils.sheet_add_aoa を使って G1 (座標 {r:0, c:6}) に名前を上書き
   XLSX.utils.sheet_add_aoa(ws, [[staffName]], { origin: "G1" });
-
   XLSX.utils.book_append_sheet(wb, ws, "在庫");
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'binary'});
   function s2ab(s) { const buf = new ArrayBuffer(s.length); const view = new Uint8Array(buf); for (let i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF; return buf; }
   const blob = new Blob([s2ab(wbout)], {type:"application/octet-stream"});
-  
-  // ファイル名に担当者名と日付を入れる
   const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
   const fileName = `在庫出力_${staffName || '不明'}_${dateStr}.xlsx`;
-
   if (navigator.share) {
     const file = new File([blob], fileName, {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
     try { await navigator.share({ files: [file], title: '在庫データ' }); } catch (err) { downloadFile(blob, fileName); }
