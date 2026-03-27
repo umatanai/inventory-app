@@ -295,21 +295,17 @@ function importExcel() {
       
       let newItems = [];
       let errorMessages = [];
-      let totalAttempted = 0; // 空白行を除いた処理対象の合計数
+      let duplicateCodes = new Set(); // 重複した品番を記録用
+      let seenCodesInExcel = {};      // エクセル内での出現チェック用
+      let totalAttempted = 0; 
 
-      // 1行目(インデックス0)はヘッダーなので2行目(インデックス1)からループ
       for (let i = 1; i < jsonData.length; i++) {
         const row = jsonData[i];
-        
-        // 完全に空の行はスキップ（件数にも含めない）
-        if (!row || row.length === 0 || row.every(cell => cell === undefined || cell === "")) {
-          continue;
-        }
+        if (!row || row.length === 0 || row.every(cell => cell === undefined || cell === "")) continue;
 
         totalAttempted++;
         let errors = [];
 
-        // 各セルの値を取得（undefined対策）
         const warehouse = row[0] !== undefined ? String(row[0]).trim() : "";
         const location = row[1] !== undefined ? String(row[1]).trim() : "";
         const code = row[2] !== undefined ? String(row[2]).trim() : "";
@@ -317,63 +313,56 @@ function importExcel() {
         const spec = row[4] !== undefined ? String(row[4]).trim() : "";
         const stockVal = row[5];
 
-        // 【不備詳細チェック】
         if (!warehouse) errors.push("倉庫");
         if (!location) errors.push("棚番");
         if (!code) errors.push("品番");
         if (!name) errors.push("商品名");
         if (stockVal === undefined || stockVal === "" || isNaN(parseFloat(stockVal))) errors.push("現在個数");
 
-        // エラーがあるか判定
         if (errors.length > 0) {
           errorMessages.push(`${i + 1}行目: [ ${errors.join(", ")} ]`);
         } else {
-          // エラーがなければ追加対象にする
+          // エクセル内での「品番」重複チェック
+          if (seenCodesInExcel[code]) {
+            duplicateCodes.add(code);
+          }
+          seenCodesInExcel[code] = true;
+
           newItems.push({ 
-            warehouse: warehouse, 
-            location: location, 
-            code: code, 
-            name: name, 
-            spec: spec, 
+            warehouse, location, code, name, spec, 
             stock: parseFloat(stockVal)
           });
         }
       }
 
-      if (totalAttempted === 0) {
-        return alert("読み込むデータがありませんでした。ファイルの中身を確認してください。");
-      }
+      if (totalAttempted === 0) return alert("データがありませんでした。");
 
-      // 成功したデータを一括で既存のデータに反映（上書き or 新規追加）
+      // 既存データへの反映（品番が同じなら上書き）
       newItems.forEach(itemData => {
         const exIndex = items.findIndex(item => item.code === itemData.code);
         if(exIndex > -1) items[exIndex] = itemData; 
         else items.push(itemData);
       });
 
-      // データの保存と画面の更新
-      saveData(); 
-      renderList(); 
-      fileInput.value = '';
+      saveData(); renderList(); fileInput.value = '';
 
-      // ▼ 結果をアラートで表示 ▼
-      let resultMsg = `${totalAttempted}件中、${newItems.length}件のデータを読み込みました。`;
+      // 結果通知の作成
+      let resultMsg = `${totalAttempted}件中、${newItems.length}件のデータを正常に読み込みました。\n現在、システムに登録されている全在庫は ${items.length} 件です。`;
       
-      if (errorMessages.length > 0) {
-        // エラー件数が多すぎる場合、アラート画面が長くなりすぎるのを防ぐため最大15件まで表示
-        const displayErrors = errorMessages.slice(0, 15);
-        const moreErrorsMsg = errorMessages.length > 15 ? `\n...他 ${errorMessages.length - 15} 件のエラー` : "";
-        
-        resultMsg += `\n\n【以下の行に不備があったためスキップしました】\n${displayErrors.join("\n")}${moreErrorsMsg}`;
-        alert(resultMsg);
-      } else {
-        // 全て成功した場合はトースト表示のみ
-        showToast(`全件(${newItems.length}件)の取込が完了しました！`);
+      if (duplicateCodes.size > 0) {
+        resultMsg += `\n\n⚠️【注意：エクセル内で品番が重複していました】\n以下の品番は複数行見つかったため、後の行の内容で上書きされました：\n${Array.from(duplicateCodes).slice(0, 10).join(", ")}${duplicateCodes.size > 10 ? " ...他" : ""}`;
       }
+
+      if (errorMessages.length > 0) {
+        const displayErrors = errorMessages.slice(0, 10);
+        resultMsg += `\n\n❌【不備によりスキップした行】\n${displayErrors.join("\n")}${errorMessages.length > 10 ? "\n...他" : ""}`;
+      }
+
+      alert(resultMsg);
 
     } catch(err) { 
       console.error(err);
-      alert("読込失敗しました。ファイル形式が正しいか確認してください。"); 
+      alert("読込に失敗しました。ファイル形式を確認してください。"); 
     }
   };
   reader.readAsArrayBuffer(fileInput.files[0]);
@@ -395,11 +384,6 @@ function saveManualItem() {
 }
 
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
-
-// 初期表示
-if(document.getElementById('view-list').classList.contains('active')) {
-  renderList();
-}
 </script>
 </body>
 </html>
