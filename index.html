@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kosaku管理システム</title>
+<title>kosaku在庫管理システム</title>
+
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#2563eb">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
@@ -38,7 +41,6 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .btn-green { background: var(--green); color: white; }
 .btn-outline-red { background: transparent; border: 1px solid #fca5a5; color: var(--red); padding: 10px; font-size: 13px; }
 
-/* 品番ごとの削除ボタン（元のデザイン） */
 .btn-delete-item { 
   display: inline-flex; align-items: center; justify-content: center;
   padding: 6px 12px; font-size: 13px; border-radius: 8px; border: 1px solid #fca5a5; 
@@ -60,7 +62,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 </head>
 <body>
 
-<header><h1>📦 K 在庫管理</h1></header>
+<header><h1>📦 kosaku在庫管理システム</h1></header>
 
 <div class="nav-tabs">
   <button class="nav-btn active" id="tab-reg" onclick="switchSubView('reg')">データ登録</button>
