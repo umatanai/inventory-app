@@ -84,6 +84,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <div class="sub-view active" id="view-reg">
     <div class="card">
       <div class="card-title">📥 エクセルからデータ取込</div>
+      <p style="font-size:11px; color:var(--text2); margin-bottom:8px;">※「品番＋棚番」の両方が一致する場合のみ上書き更新されます。</p>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
       <button class="btn btn-green" onclick="importExcel()">ファイルを読み込む</button>
     </div>
@@ -137,7 +138,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 let items = JSON.parse(localStorage.getItem('inventory_db') || '[]');
 let undoStack = [];
 let deleteMode = false;
-let selectedCodes = new Set();
+let selectedIds = new Set(); // 品番+棚番で識別するためIDに変更
 
 function switchSubView(view) {
   if(deleteMode) toggleDeleteMode();
@@ -161,53 +162,71 @@ function handleFilterChange() { renderList(); }
 
 function toggleDeleteMode() {
   deleteMode = !deleteMode;
-  selectedCodes.clear();
+  selectedIds.clear();
   document.getElementById('delete-bar').style.display = deleteMode ? 'flex' : 'none';
   document.getElementById('btn-select-all').style.display = deleteMode ? 'flex' : 'none';
   document.getElementById('btn-delete-mode').textContent = deleteMode ? '選択解除' : '選択して削除';
   renderList();
 }
 
-function selectItem(code) {
+// 内部的なユニークID生成（品番と棚番を結合）
+function getItemId(item) {
+  return `${item.code}:::${item.location}`;
+}
+
+function selectItem(id) {
   if(!deleteMode) return;
-  if(selectedCodes.has(code)) selectedCodes.delete(code);
-  else selectedCodes.add(code);
+  if(selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
   renderList();
 }
 
 function selectAllItems() {
   const currentItems = getFilteredItems();
-  if(selectedCodes.size === currentItems.length) {
-    selectedCodes.clear();
+  if(selectedIds.size === currentItems.length) {
+    selectedIds.clear();
   } else {
-    currentItems.forEach(i => selectedCodes.add(i.code));
+    currentItems.forEach(i => selectedIds.add(getItemId(i)));
   }
   renderList();
 }
 
 function executeDelete() {
-  if(selectedCodes.size === 0) return alert("削除する項目を選んでください");
-  if(confirm(`${selectedCodes.size}件の項目を削除しますか？`)) {
+  if(selectedIds.size === 0) return alert("削除する項目を選んでください");
+  if(confirm(`${selectedIds.size}件の項目を削除しますか？`)) {
     pushUndo();
-    items = items.filter(i => !selectedCodes.has(i.code));
+    items = items.filter(i => !selectedIds.has(getItemId(i)));
     saveData();
     toggleDeleteMode();
     showToast('削除しました');
   }
 }
 
-function updateStock(code, mult) {
-  const input = document.getElementById(`amt-${code}`);
+function updateStock(id, mult) {
+  // IDから該当するアイテムを探す（ID = code:::location）
+  const parts = id.split(':::');
+  const code = parts[0];
+  const loc = parts[1];
+
+  const safeId = id.replace(/[:.]/g, '\\$&'); // ID内の記号をエスケープ
+  const input = document.getElementById(`amt-${id}`);
   const val = parseFloat(input.value);
   if(!val || val <= 0) return showToast('数を入力してください');
+  
   pushUndo();
-  const item = items.find(i => i.code === code);
-  if(item) { item.stock += (val * mult); saveData(); input.value = ''; renderList(); showToast('更新完了'); }
+  const item = items.find(i => i.code === code && i.location === loc);
+  if(item) { 
+    item.stock += (val * mult); 
+    saveData(); 
+    input.value = ''; 
+    renderList(); 
+    showToast('更新完了'); 
+  }
 }
 
-function editStockDirect(code) {
-  const item = items.find(i => i.code === code);
-  const newVal = prompt(`${item.name}の個数入力:`, item.stock);
+function editStockDirect(code, location) {
+  const item = items.find(i => i.code === code && i.location === location);
+  const newVal = prompt(`${item.name} (${location}) の個数入力:`, item.stock);
   if(newVal !== null && newVal !== "" && !isNaN(parseFloat(newVal))) {
     pushUndo(); item.stock = parseFloat(newVal); saveData(); renderList(); showToast('修正完了');
   }
@@ -219,8 +238,10 @@ function getFilteredItems() {
   const fCode = document.getElementById('f-code').value.toLowerCase();
   const fName = document.getElementById('f-name').value.toLowerCase();
   return items.filter(i => 
-    i.warehouse.toLowerCase().includes(fWh) && i.location.toLowerCase().includes(fLoc) &&
-    i.code.toLowerCase().includes(fCode) && i.name.toLowerCase().includes(fName)
+    (i.warehouse || "").toLowerCase().includes(fWh) && 
+    (i.location || "").toLowerCase().includes(fLoc) &&
+    (i.code || "").toLowerCase().includes(fCode) && 
+    (i.name || "").toLowerCase().includes(fName)
   );
 }
 
@@ -230,26 +251,27 @@ function renderList() {
 
   target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:50px;color:#94a3b8;background:white;border-radius:16px;">該当なし</p>' : 
     filtered.map(item => {
-      const isSelected = selectedCodes.has(item.code);
+      const id = getItemId(item);
+      const isSelected = selectedIds.has(id);
       return `
-    <div class="item-card ${isSelected ? 'selected' : ''}" onclick="selectItem('${item.code}')">
+    <div class="item-card ${isSelected ? 'selected' : ''}" onclick="selectItem('${id}')">
       <div class="check-container" style="display: ${deleteMode ? 'flex' : 'none'}"></div>
       <div style="display:flex; justify-content:space-between; align-items: flex-start;">
         <div style="flex:1;">
-          ${item.warehouse ? `<div class="item-meta">${item.warehouse} / ${item.location}</div>` : ''}
+          ${item.warehouse ? `<div class="item-meta">${item.warehouse} / ${item.location}</div>` : `<div class="item-meta">棚番: ${item.location}</div>`}
           <div style="font-size:11px;color:var(--text2);">品番: ${item.code}</div>
           <div style="font-weight:700;font-size:15px; margin-bottom:4px; line-height:1.4;">${item.name} <span style="font-weight:400;font-size:12px;color:var(--text2);">${item.spec?`(${item.spec})`:''}</span></div>
         </div>
-        ${!deleteMode ? `<button class="btn-edit-stock" onclick="event.stopPropagation(); editStockDirect('${item.code}')">現在個数の編集</button>` : ''}
+        ${!deleteMode ? `<button class="btn-edit-stock" onclick="event.stopPropagation(); editStockDirect('${item.code}', '${item.location}')">個数修正</button>` : ''}
       </div>
       <div class="stock-text-area">
         現在個数: <span class="stock-num-display">${item.stock}</span>
       </div>
       ${!deleteMode ? `
       <div class="io-controls" onclick="event.stopPropagation()">
-        <input type="number" class="io-input" id="amt-${item.code}" placeholder="0">
-        <button class="btn btn-green io-btn" onclick="updateStock('${item.code}', 1)">入庫</button>
-        <button class="btn io-btn" style="background:var(--red);color:white;" onclick="updateStock('${item.code}', -1)">出庫</button>
+        <input type="number" class="io-input" id="amt-${id}" placeholder="0">
+        <button class="btn btn-green io-btn" onclick="updateStock('${id}', 1)">入庫</button>
+        <button class="btn io-btn" style="background:var(--red);color:white;" onclick="updateStock('${id}', -1)">出庫</button>
       </div>` : ''}
     </div>`;
   }).join('');
@@ -295,8 +317,8 @@ function importExcel() {
       
       let newItems = [];
       let errorMessages = [];
-      let duplicateCodes = new Set(); // 重複した品番を記録用
-      let seenCodesInExcel = {};      // エクセル内での出現チェック用
+      let duplicateIds = new Set(); // 品番+棚番が完全に一致する場合
+      let seenIdsInExcel = {};
       let totalAttempted = 0; 
 
       for (let i = 1; i < jsonData.length; i++) {
@@ -322,65 +344,71 @@ function importExcel() {
         if (errors.length > 0) {
           errorMessages.push(`${i + 1}行目: [ ${errors.join(", ")} ]`);
         } else {
-          // エクセル内での「品番」重複チェック
-          if (seenCodesInExcel[code]) {
-            duplicateCodes.add(code);
+          // 品番+棚番の組み合わせで重複チェック
+          const id = `${code}:::${location}`;
+          if (seenIdsInExcel[id]) {
+            duplicateIds.add(`${code} (${location})`);
           }
-          seenCodesInExcel[code] = true;
+          seenIdsInExcel[id] = true;
 
-          newItems.push({ 
-            warehouse, location, code, name, spec, 
-            stock: parseFloat(stockVal)
-          });
+          newItems.push({ warehouse, location, code, name, spec, stock: parseFloat(stockVal) });
         }
       }
 
       if (totalAttempted === 0) return alert("データがありませんでした。");
 
-      // 既存データへの反映（品番が同じなら上書き）
+      pushUndo();
+      // 既存データへの反映（品番＋棚番が両方一致なら上書き、片方でも違えば新規）
       newItems.forEach(itemData => {
-        const exIndex = items.findIndex(item => item.code === itemData.code);
+        const exIndex = items.findIndex(item => item.code === itemData.code && item.location === itemData.location);
         if(exIndex > -1) items[exIndex] = itemData; 
         else items.push(itemData);
       });
 
       saveData(); renderList(); fileInput.value = '';
 
-      // 結果通知の作成
-      let resultMsg = `${totalAttempted}件中、${newItems.length}件のデータを正常に読み込みました。\n現在、システムに登録されている全在庫は ${items.length} 件です。`;
-      
-      if (duplicateCodes.size > 0) {
-        resultMsg += `\n\n⚠️【注意：エクセル内で品番が重複していました】\n以下の品番は複数行見つかったため、後の行の内容で上書きされました：\n${Array.from(duplicateCodes).slice(0, 10).join(", ")}${duplicateCodes.size > 10 ? " ...他" : ""}`;
+      let resultMsg = `${totalAttempted}件中、${newItems.length}件を処理しました。\n全在庫数は ${items.length} 件です。`;
+      if (duplicateIds.size > 0) {
+        resultMsg += `\n\n⚠️【上書き通知】同一の「品番＋棚番」が複数あったため上書きされました：\n${Array.from(duplicateIds).slice(0, 10).join(", ")}${duplicateIds.size > 10 ? " ...他" : ""}`;
       }
-
       if (errorMessages.length > 0) {
-        const displayErrors = errorMessages.slice(0, 10);
-        resultMsg += `\n\n❌【不備によりスキップした行】\n${displayErrors.join("\n")}${errorMessages.length > 10 ? "\n...他" : ""}`;
+        resultMsg += `\n\n❌【不備スキップ】\n${errorMessages.slice(0, 5).join("\n")}${errorMessages.length > 5 ? "\n...他" : ""}`;
       }
-
       alert(resultMsg);
 
-    } catch(err) { 
-      console.error(err);
-      alert("読込に失敗しました。ファイル形式を確認してください。"); 
-    }
+    } catch(err) { alert("読込失敗しました。"); }
   };
   reader.readAsArrayBuffer(fileInput.files[0]);
 }
 
 function saveManualItem() {
+  const warehouse = document.getElementById('io-warehouse').value.trim();
+  const location = document.getElementById('io-location').value.trim();
   const code = document.getElementById('io-code').value.trim();
   const name = document.getElementById('io-name').value.trim();
-  if(!code || !name) return alert("品番と商品名は必須です");
+  const spec = document.getElementById('io-spec').value.trim();
+  const stock = parseFloat(document.getElementById('io-qty').value) || 0;
+
+  if(!code || !name || !location) return alert("棚番、品番、商品名は必須です");
+
   pushUndo();
-  items.push({ 
-    warehouse: document.getElementById('io-warehouse').value,
-    location: document.getElementById('io-location').value,
-    code, name, 
-    spec: document.getElementById('io-spec').value,
-    stock: parseFloat(document.getElementById('io-qty').value)||0 
-  });
-  saveData(); showToast('登録完了');
+  // 手動登録時も「品番＋棚番」が一致すれば上書き
+  const exIndex = items.findIndex(item => item.code === code && item.location === location);
+  const newItem = { warehouse, location, code, name, spec, stock };
+
+  if(exIndex > -1) {
+    if(confirm("同じ品番と棚番のデータが既にあります。上書きしますか？")) {
+      items[exIndex] = newItem;
+    } else { return; }
+  } else {
+    items.push(newItem);
+  }
+
+  saveData(); 
+  showToast('登録・更新しました');
+  // 入力欄をクリア（任意）
+  document.getElementById('io-code').value = '';
+  document.getElementById('io-name').value = '';
 }
 
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
