@@ -23,12 +23,12 @@ body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: va
 header { background: var(--surface); padding: 16px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
 header h1 { font-size: 18px; color: var(--accent); }
 
-/* ギアメニューと設定項目 */
+/* ギアメニュー：横並びを修正 */
 .settings-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: var(--text2); }
-.settings-menu { display: none; position: absolute; right: 10px; top: 55px; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1100; min-width: 200px; }
+.settings-menu { display: none; position: absolute; right: 10px; top: 55px; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1100; min-width: 220px; }
 .settings-menu.active { display: block; }
-.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; cursor: pointer; }
-.switch-label input { width: 24px; height: 24px; margin-left: 10px; cursor: pointer; margin-bottom: 0; }
+.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.switch-label input { width: 20px; height: 20px; cursor: pointer; margin-left: 12px; }
 
 .nav-tabs { display: flex; background: #cbd5e1; margin: 14px; border-radius: 12px; padding: 4px; }
 .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; background: transparent; color: var(--text); cursor: pointer; }
@@ -47,7 +47,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-blue { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: white; }
-.btn-undo { background: #64748b; color: white; margin-bottom: 12px; padding: 12px; font-size: 15px; }
+.btn-undo { background: #64748b; color: white; }
 .btn-outline-red { background: #fff1f2; border: 1px solid #fca5a5; color: var(--red); }
 
 .btn-edit-stock { padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; cursor: pointer; }
@@ -71,11 +71,20 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 
 .delete-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 16px; display: none; gap: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 1000; }
 
-/* 上へ戻るボタン：中央配置、重ならないように調整 */
+/* 上へ戻るボタン：削除バーと被らないようz-indexと位置を調整 */
 .btn-to-top-fixed { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; border-radius: 50%; background: #e2e8f0; color: var(--text); border: 1px solid var(--border); font-size: 20px; cursor: pointer; z-index: 500; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
 
 #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 2000; pointer-events: none; opacity: 0; transition: 0.3s; }
 #toast.show { opacity: 1; }
+
+/* プレビュー用オーバーレイ */
+#preview-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 3000; display: none; padding: 10px; }
+.preview-content { background: white; width: 100%; height: 100%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+.preview-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
+.preview-body { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; }
+.preview-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 500px; }
+.preview-table th, .preview-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+.preview-table th { background: #f1f5f9; position: sticky; top: 0; z-index: 10; }
 </style>
 </head>
 <body>
@@ -96,7 +105,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 <div class="main-container">
   <div class="sub-view" id="view-reg">
     <div class="card">
-      <div class="card-title">📥 エクセルからデータ取込</div>
+      <div class="card-title">📥 エクセルからデータ取込み</div>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
       <button class="btn btn-green" onclick="importExcel()">ファイルを読み込む</button>
     </div>
@@ -117,10 +126,13 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <div class="sub-view" id="view-list">
     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: column;">
       <div style="display: flex; gap: 8px;">
-        <button class="btn btn-green" style="flex: 2; font-size: 14px; padding: 12px;" onclick="exportExcel()">📤 表示中データを出力</button>
-        <button class="btn btn-outline-red" id="btn-delete-mode" style="flex: 1; font-size: 13px;" onclick="toggleDeleteMode()">選択して削除</button>
+        <button class="btn btn-green" style="flex: 2; font-size: 13px; padding: 12px;" onclick="exportExcel()">📤 表示中データ出力</button>
+        <button class="btn btn-blue" style="flex: 1; font-size: 13px; padding: 12px;" onclick="showPreview()">👁️ プレビュー</button>
       </div>
-      <button class="btn btn-undo" onclick="undoAction()">↩️ アクションを１つ戻す</button>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-undo" style="flex: 1; font-size: 13px; padding: 12px;" onclick="undoAction()">↩️ １つ戻す</button>
+        <button class="btn btn-outline-red" id="btn-delete-mode" style="flex: 1; font-size: 13px; padding: 12px;" onclick="toggleDeleteMode()">選択して削除</button>
+      </div>
       <button class="btn" id="btn-select-all" style="display:none; background:#cbd5e1; color:var(--text); padding:10px; font-size:13px;" onclick="selectAllItems()">すべて選択 / 解除</button>
     </div>
 
@@ -144,6 +156,21 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <button class="btn" style="background:var(--red); color:white; flex:2;" onclick="executeDelete()">選択した項目を削除</button>
 </div>
 
+<div id="preview-overlay">
+  <div class="preview-content">
+    <div class="preview-header">
+      <span id="preview-title" style="font-weight:bold; font-size:14px;"></span>
+      <button onclick="closePreview()" style="padding:8px 16px; border-radius:8px; border:none; background:#64748b; color:white; font-size:12px;">閉じる</button>
+    </div>
+    <div class="preview-body">
+      <table class="preview-table" id="preview-table">
+        <thead><tr><th>倉庫</th><th>棚番</th><th>品番</th><th>商品名</th><th>規格</th><th>個数</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -153,23 +180,19 @@ let deleteMode = false;
 let selectedIds = new Set();
 
 // 起動時に在庫一覧を表示
-window.onload = () => {
-  switchSubView('list');
-};
+window.onload = () => { switchSubView('list'); };
 
 function toggleSettings() { document.getElementById('settings-menu').classList.toggle('active'); }
 
-// 全角カタカナを半角に、大文字を小文字に変換して「あいまい」な比較を可能にする関数
+// 検索強化：全角・半角カタカナのゆらぎを吸収する関数
 function normalizeText(text) {
   if (!text) return "";
-  let res = text.replace(/[！-～]/g, function(s) {
-    return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-  });
+  let res = text.replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
   const kanaMap = {
-    "ガ":"ｶﾞ","ギ":"ｷﾞ","グ":"ｸﾞ","ゲ":"ｹﾞ","ゴ":"ｺﾞ","ザ":"ｻﾞ","ジ":"ｼﾞ","ズ":"ｽﾞ","ゼ":"ｾﾞ","ゾ":"ｿﾞ","ダ":"ﾀﾞ","ヂ":"ﾁﾞ","ヅ":"ﾂﾞ","デ":"ﾃﾞ","ド":"ﾄﾞ","バ":"ﾊﾞ","ビ":"ﾋﾞ","ブ":"ﾌﾞ","ベ":"ﾍﾞ","ボ":"ﾎﾞ","パ":"ﾊﾟ","ピ":"ﾋﾟ","プ":"ﾌﾟ","ペ":"ﾍﾟ","ポ":"ﾎﾟ","ヴ":"ｳﾞ","ヷ":"ﾜﾞ","ヺ":"ｦﾞ","ア":"ｱ","イ":"ｲ","ウ":"ｳ","エ":"ｴ","オ":"ｵ","カ":"ｶ","キ":"ｷ","ク":"ｸ","ケ":"ｹ","コ":"ｺ","サ":"ｻ","シ":"ｼ","ス":"ｽ","セ":"ｾ","ソ":"ｿ","タ":"ﾀ","チ":"ﾁ","ツ":"ﾂ","テ":"ﾃ","ト":"ﾄ","ナ":"ﾅ","ニ":"ﾆ","ヌ":"ﾇ","ネ":"ﾈ","ノ":"ﾉ","ハ":"ﾊ","ヒ":"ﾋ","フ":"ﾌ","ヘ":"ﾍ","ホ":"ﾎ","マ":"ﾏ","ミ":"ﾐ","ム":"ﾑ","メ":"ﾒ","モ":"ﾓ","ヤ":"ﾔ","ユ":"ﾕ","ヨ":"ﾖ","ラ":"ﾗ","リ":"ﾘ","ル":"ﾙ","レ":"ﾚ","ロ":"ﾛ","ワ":"ﾜ","ヲ":"ｦ","ン":"ﾝ","ァ":"ｧ","ィ":"ｨ","ゥ":"ｩ","ェ":"ｪ","ォ":"ｫ","ッ":"ｯ","ャ":"ｬ","ュ":"ｭ","ョ":"ｮ","。":"｡","、":"､","ー":"ｰ","「":"｢","」":"｣","・":"･"
+    "ガ":"ｶﾞ","ギ":"ｷﾞ","グ":"ｸﾞ","ゲ":"ｹﾞ","ゴ":"ｺﾞ","ザ":"ｻﾞ","ジ":"ｼﾞ","ズ":"ｽﾞ","ゼ":"ｾﾞ","ゾ":"ｿﾞ","ダ":"ﾀﾞ","ヂ":"ﾁﾞ","ヅ":"ﾂﾞ","デ":"ﾃﾞ","ド":"ﾄﾞ","バ":"ﾊﾞ","ビ":"ﾋﾞ","ブ":"ﾌﾞ","ベ":"ﾍﾞ","ボ":"ﾎﾞ","パ":"ﾊﾟ","ピ":"ﾋﾟ","プ":"ﾌﾟ","ペ":"ﾍﾟ","ポ":"ﾎﾟ","ヴ":"ｳﾞ","ア":"ｱ","イ":"ｲ","ウ":"ｳ","エ":"ｴ","オ":"ｵ","カ":"ｶ","キ":"ｷ","ク":"ｸ","ケ":"ｹ","コ":"ｺ","サ":"ｻ","シ":"ｼ","ス":"ｽ","セ":"ｾ","ソ":"ｿ","タ":"ﾀ","チ":"ﾁ","ツ":"ﾂ","テ":"ﾃ","ト":"ﾄ","ナ":"ﾅ","ニ":"ﾆ","ヌ":"ﾇ","ネ":"ﾈ","ノ":"ﾉ","ハ":"ﾊ","ヒ":"ﾋ","フ":"ﾌ","ヘ":"ﾍ","ホ":"ﾎ","マ":"ﾏ","ミ":"ﾐ","ム":"ﾑ","メ":"ﾒ","モ":"ﾓ","ヤ":"ﾔ","ユ":"ﾕ","ヨ":"ﾖ","ラ":"ﾗ","リ":"ﾘ","ル":"ﾙ","レ":"ﾚ","ロ":"ﾛ","ワ":"ﾜ","ヲ":"ｦ","ン":"ﾝ","ァ":"ｧ","ィ":"ｨ","ゥ":"ｩ","ェ":"ｪ","ォ":"ｫ","ッ":"ｯ","ャ":"ｬ","ュ":"ｭ","ョ":"ｮ","。":"｡","、":"､","ー":"ｰ","「":"｢","」":"｣","・":"･"
   };
   const reg = new RegExp('(' + Object.keys(kanaMap).join('|') + ')', 'g');
-  res = res.replace(reg, function (match) { return kanaMap[match]; });
+  res = res.replace(reg, match => kanaMap[match]);
   return res.toLowerCase();
 }
 
@@ -199,7 +222,6 @@ function toggleDeleteMode() {
   document.getElementById('delete-bar').style.display = deleteMode ? 'flex' : 'none';
   document.getElementById('btn-select-all').style.display = deleteMode ? 'flex' : 'none';
   document.getElementById('btn-delete-mode').textContent = deleteMode ? '選択解除' : '選択して削除';
-  // 削除バーが出た時に「上へ戻る」ボタンを少し上に逃がす
   document.getElementById('btn-to-top').style.bottom = deleteMode ? '90px' : '20px';
   renderList();
 }
@@ -253,12 +275,8 @@ function getFilteredItems() {
   const fCode = normalizeText(document.getElementById('f-code').value);
   const fName = normalizeText(document.getElementById('f-name').value);
   const hideZero = document.getElementById('hide-zero-stock').checked;
-  
   return items.filter(i => {
-    const match = normalizeText(i.warehouse).includes(fWh) && 
-                  normalizeText(i.location).includes(fLoc) &&
-                  normalizeText(i.code).includes(fCode) && 
-                  normalizeText(i.name).includes(fName);
+    const match = normalizeText(i.warehouse).includes(fWh) && normalizeText(i.location).includes(fLoc) && normalizeText(i.code).includes(fCode) && normalizeText(i.name).includes(fName);
     return match && (hideZero ? i.stock !== 0 : true);
   });
 }
@@ -287,22 +305,31 @@ function renderList() {
   }).join('');
 }
 
-// 共有・保存系関数
+function showPreview() {
+  const filtered = getFilteredItems();
+  const tbody = document.querySelector('#preview-table tbody');
+  tbody.innerHTML = filtered.map(i => `<tr><td>${i.warehouse}</td><td>${i.location}</td><td>${i.code}</td><td>${i.name}</td><td>${i.spec || ''}</td><td>${i.stock}</td></tr>`).join('');
+  document.getElementById('preview-title').textContent = `一覧プレビュー (${filtered.length}件)`;
+  document.getElementById('preview-overlay').style.display = 'block';
+}
+
+function closePreview() { document.getElementById('preview-overlay').style.display = 'none'; }
+
 async function exportExcel() {
   const targetData = getFilteredItems();
-  if (targetData.length === 0) return alert("出力するデータがありません");
-  const staffName = prompt("担当者名を入力してください:");
-  if (staffName === null) return;
+  if (targetData.length === 0) return alert("出力データなし");
+  const staff = prompt("担当者名:");
+  if (staff === null) return;
   const wsData = [["倉庫", "棚番", "品番", "商品名", "規格", "個数", "担当者"]];
   targetData.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock, ""]));
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  XLSX.utils.sheet_add_aoa(ws, [[staffName]], { origin: "G1" });
+  XLSX.utils.sheet_add_aoa(ws, [[staff]], { origin: "G1" });
   XLSX.utils.book_append_sheet(wb, ws, "在庫");
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'binary'});
   function s2ab(s) { const b = new ArrayBuffer(s.length); const v = new Uint8Array(b); for (let i=0; i<s.length; i++) v[i] = s.charCodeAt(i) & 0xFF; return b; }
   const blob = new Blob([s2ab(wbout)], {type:"application/octet-stream"});
-  const fileName = `在庫_${staffName || '不明'}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`;
+  const fileName = `在庫_${staff || '不明'}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`;
   if (navigator.share) {
     try { await navigator.share({ files: [new File([blob], fileName, {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})], title: '在庫' }); } 
     catch (e) { downloadFile(blob, fileName); }
@@ -326,7 +353,7 @@ function importExcel() {
       }
       pushUndo();
       n.forEach(d => { const idx = items.findIndex(i => i.code === d.code && i.location === d.location); if(idx > -1) items[idx] = d; else items.push(d); });
-      saveData(); renderList(); f.value = ''; alert(`${n.length}件を処理しました`);
+      saveData(); renderList(); f.value = ''; alert(`${n.length}件を処理`);
     } catch(err) { alert("読込失敗"); }
   };
   r.readAsArrayBuffer(f.files[0]);
@@ -339,7 +366,7 @@ function saveManualItem() {
   const n = document.getElementById('io-name').value.trim();
   const s = document.getElementById('io-spec').value.trim();
   const q = parseFloat(document.getElementById('io-qty').value) || 0;
-  if(!c || !n || !l) return alert("棚番、品番、商品名は必須です");
+  if(!c || !n || !l) return alert("必須項目未入力");
   const idx = items.findIndex(i => i.code === c && i.location === l);
   pushUndo();
   if(idx > -1) items[idx] = { warehouse: w, location: l, code: c, name: n, spec: s, stock: q };
