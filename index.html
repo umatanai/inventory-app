@@ -53,7 +53,6 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .btn-undo { background: #64748b; color: white; }
 .btn-outline-red { background: #fff1f2; border: 1px solid #fca5a5; color: var(--red); }
 
-/* ボタン文字サイズ：中間（16px）に調整 */
 .btn-mid-text { font-size: 16px !important; }
 
 .btn-edit-stock { padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; cursor: pointer; }
@@ -349,31 +348,42 @@ function importExcel() {
       const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
       const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
       let n = [];
+      let totalLines = json.length - 1; // ヘッダーを除いた行数
       
-      // 不備チェック用ループ
       for (let i = 1; i < json.length; i++) {
         const row = json[i];
-        if (!row || row.length === 0) continue;
+        if (!row || row.length === 0) {
+          totalLines--; // 空行は分母から除く
+          continue;
+        }
         
         const rowNum = i + 1;
+        // 各項目の取得（規格:row[4] 以外をチェック）
+        const wh = String(row[0] || '').trim();
         const loc = String(row[1] || '').trim();
         const code = String(row[2] || '').trim();
         const name = String(row[3] || '').trim();
+        const spec = String(row[4] || '').trim();
         const stock = row[5];
 
+        // 規格(spec)以外が空欄ならアラーム
+        if (!wh) return alert(`${rowNum}行目：倉庫が空です。修正してください。`);
         if (!loc) return alert(`${rowNum}行目：棚番が空です。修正してください。`);
         if (!code) return alert(`${rowNum}行目：品番が空です。修正してください。`);
         if (!name) return alert(`${rowNum}行目：商品名が空です。修正してください。`);
-        if (stock !== undefined && isNaN(parseFloat(stock))) {
+        if (stock === undefined || stock === null || stock === "") {
+          return alert(`${rowNum}行目：個数が空です。修正してください。`);
+        }
+        if (isNaN(parseFloat(stock))) {
           return alert(`${rowNum}行目：個数に数値以外の値が入っています。`);
         }
 
         n.push({ 
-          warehouse: String(row[0] || ''), 
+          warehouse: wh, 
           location: loc, 
           code: code, 
           name: name, 
-          spec: String(row[4] || ''), 
+          spec: spec, // 規格は空欄でもOK（上のチェックを通っている）
           stock: parseFloat(stock) || 0 
         });
       }
@@ -383,7 +393,9 @@ function importExcel() {
         const idx = items.findIndex(i => i.code === d.code && i.location === d.location); 
         if(idx > -1) items[idx] = d; else items.push(d); 
       });
-      saveData(); renderList(); f.value = ''; alert(`${n.length}件を処理しました。`);
+      saveData(); renderList(); f.value = ''; 
+      // メッセージを「何件中何件」に変更
+      alert(`${totalLines}件中、${n.length}件を処理しました。`);
     } catch(err) { alert("読込失敗。ファイル形式を確認してください。"); }
   };
   r.readAsArrayBuffer(f.files[0]);
@@ -397,7 +409,11 @@ function saveManualItem() {
   const s = document.getElementById('io-spec').value.trim();
   const q = parseFloat(document.getElementById('io-qty').value) || 0;
   
-  if(!l || !c || !n) return alert("棚番、品番、商品名は必須入力です。");
+  // 手動登録でも規格以外をチェック
+  if(!w) return alert("「倉庫」を入力してください。");
+  if(!l) return alert("「棚番」を入力してください。");
+  if(!c) return alert("「品番」を入力してください。");
+  if(!n) return alert("「商品名」を入力してください。");
 
   const idx = items.findIndex(i => i.code === c && i.location === l);
   pushUndo();
