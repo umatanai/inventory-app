@@ -20,73 +20,73 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 100px; touch-action: manipulation; }
 
-header { background: var(--surface); padding: 12px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
-header h1 { font-size: 16px; color: var(--accent); }
+header { background: var(--surface); padding: 16px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
+header h1 { font-size: 18px; color: var(--accent); }
 
-/* ギアメニュー：垂直中央揃え */
-.settings-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; cursor: pointer; color: var(--text2); }
-.settings-menu { display: none; position: absolute; right: 10px; top: 45px; background: white; border: 1px solid var(--border); padding: 10px; border-radius: 10px; box-shadow: var(--shadow); z-index: 1100; min-width: 200px; }
+/* ギアメニュー修正：垂直中央揃え */
+.settings-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: var(--text2); }
+.settings-menu { display: none; position: absolute; right: 10px; top: 55px; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1100; min-width: 220px; }
 .settings-menu.active { display: block; }
 
-.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; gap: 8px; }
-.switch-label input { width: 18px; height: 18px; cursor: pointer; margin: 0; flex-shrink: 0; }
+.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; gap: 10px; }
+.switch-label input { width: 20px; height: 20px; cursor: pointer; margin: 0; flex-shrink: 0; }
 
-.nav-tabs { display: flex; background: #cbd5e1; margin: 10px 14px; border-radius: 10px; padding: 3px; }
-.nav-btn { flex: 1; padding: 10px; border: none; border-radius: 7px; font-weight: 700; font-size: 13px; background: transparent; color: var(--text); cursor: pointer; }
+.nav-tabs { display: flex; background: #cbd5e1; margin: 14px; border-radius: 12px; padding: 4px; }
+.nav-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; background: transparent; color: var(--text); cursor: pointer; }
 .nav-btn.active { background: var(--surface); color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
 .main-container { padding: 0 14px; }
 .sub-view { display: none; }
 .sub-view.active { display: block; }
 
-/* ボタン横並びレイアウト（余白を詰めた版） */
-.action-row { display: flex; gap: 6px; margin-bottom: 6px; }
-.action-row .btn { flex: 1; font-size: 13px; padding: 10px 4px; white-space: nowrap; border-radius: 10px; }
+/* ボタン横並び用レイアウト */
+.action-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.action-row .btn { flex: 1; font-size: 13px; padding: 12px 4px; white-space: nowrap; }
 
-.card { background: var(--surface); border-radius: 14px; padding: 16px; border: 1px solid var(--border); margin-bottom: 12px; box-shadow: var(--shadow); }
-.card-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text); border-bottom: 2px solid var(--accent-light); padding-bottom: 6px; }
+.card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: var(--shadow); }
+.card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); border-bottom: 2px solid var(--accent-light); padding-bottom: 8px; }
 
-label { display: block; font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 3px; }
-input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px; padding: 10px; width: 100%; font-size: 15px; margin-bottom: 10px; outline: none; }
+label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 4px; }
+input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; outline: none; }
 
-.btn { width: 100%; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.btn { width: 100%; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .btn-blue { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: white; }
 .btn-undo { background: #64748b; color: white; }
 .btn-outline-red { background: #fff1f2; border: 1px solid #fca5a5; color: var(--red); }
 
-.btn-edit-stock { padding: 6px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; cursor: pointer; }
+.btn-edit-stock { padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; cursor: pointer; }
 
-.item-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 10px; position: relative; }
-.item-meta { font-size: 10px; font-weight: 700; color: #b45309; background: #fffbeb; padding: 3px 6px; border-radius: 4px; margin-bottom: 6px; display: inline-block; }
+.item-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; position: relative; }
+.item-meta { font-size: 11px; font-weight: 700; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
 
-.check-container { position: absolute; top: 14px; right: 14px; width: 24px; height: 24px; border: 2px solid #cbd5e1; border-radius: 5px; display: none; align-items: center; justify-content: center; cursor: pointer; background: #fff; }
+.check-container { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border: 2px solid #cbd5e1; border-radius: 6px; display: none; align-items: center; justify-content: center; cursor: pointer; background: #fff; }
 .item-card.selected .check-container { border-color: var(--green); background: var(--green); color: white; }
-.item-card.selected .check-container::after { content: '✓'; font-weight: bold; font-size: 16px; }
+.item-card.selected .check-container::after { content: '✓'; font-weight: bold; font-size: 18px; }
 
-.stock-text-area { font-size: 16px; color: var(--text2); margin-top: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 10px; }
-.stock-num-display { font-size: 24px; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 2px 8px; border-radius: 6px; pointer-events: none; }
+.stock-text-area { font-size: 18px; color: var(--text2); margin-top: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+.stock-num-display { font-size: 28px; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 8px; pointer-events: none; }
 
-.io-controls { display: flex; gap: 8px; margin-top: 12px; background: #f8fafc; padding: 8px; border-radius: 10px; }
-.io-input { width: 70px; margin-bottom: 0; text-align: center; font-size: 18px; font-weight: 700; border: 2px solid var(--border); background: #fff; padding: 8px; }
-.io-btn { flex: 1; padding: 12px 0; font-size: 15px; border-radius: 8px; }
+.io-controls { display: flex; gap: 10px; margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 12px; }
+.io-input { width: 80px; margin-bottom: 0; text-align: center; font-size: 20px; font-weight: 700; border: 2px solid var(--border); background: #fff; }
+.io-btn { flex: 1; padding: 16px 0; font-size: 17px; }
 
-.filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f1f5f9; padding: 10px; border-radius: 10px; }
-.filter-grid input { margin-bottom: 0; font-size: 14px; padding: 8px; background: white; }
+.filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f1f5f9; padding: 12px; border-radius: 12px; }
+.filter-grid input { margin-bottom: 0; font-size: 16px; padding: 10px; background: white; }
 
-.delete-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 14px; display: none; gap: 8px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 1000; }
+.delete-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 16px; display: none; gap: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 1000; }
 
-.btn-to-top-fixed { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; color: var(--text); border: 1px solid var(--border); font-size: 18px; cursor: pointer; z-index: 500; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
+.btn-to-top-fixed { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; border-radius: 50%; background: #e2e8f0; color: var(--text); border: 1px solid var(--border); font-size: 20px; cursor: pointer; z-index: 500; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
 
-#toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 10px 20px; border-radius: 40px; font-size: 13px; z-index: 2000; pointer-events: none; opacity: 0; transition: 0.3s; }
+#toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 2000; pointer-events: none; opacity: 0; transition: 0.3s; }
 #toast.show { opacity: 1; }
 
 #preview-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 3000; display: none; padding: 10px; }
 .preview-content { background: white; width: 100%; height: 100%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-.preview-header { padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
+.preview-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
 .preview-body { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; }
 .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 500px; }
-.preview-table th, .preview-table td { border: 1px solid #e2e8f0; padding: 6px; text-align: left; }
+.preview-table th, .preview-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
 .preview-table th { background: #f1f5f9; position: sticky; top: 0; z-index: 10; }
 </style>
 </head>
@@ -110,11 +110,11 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px
     <div class="card">
       <div class="card-title">📥 エクセルからデータ取込</div>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
-      <button class="btn btn-green" style="padding:14px; border-radius:10px;" onclick="importExcel()">ファイルを読み込む</button>
+      <button class="btn btn-green" style="padding:16px;" onclick="importExcel()">ファイルを読み込む</button>
     </div>
     <div class="card">
       <div class="card-title">✏️ 手動で新規登録</div>
-      <div style="display:flex; gap:8px;">
+      <div style="display:flex; gap:10px;">
         <div style="flex:1;"><label>倉庫</label><input type="text" id="io-warehouse" placeholder="W-01"></div>
         <div style="flex:1;"><label>棚番</label><input type="text" id="io-location" placeholder="A-01"></div>
       </div>
@@ -122,12 +122,12 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px
       <label>商品名</label><input type="text" id="io-name" placeholder="商品名">
       <label>規格</label><input type="text" id="io-spec" placeholder="サイズ等">
       <label>初期現在個数</label><input type="number" id="io-qty" value="0">
-      <button class="btn btn-blue" style="padding:14px; border-radius:10px;" onclick="saveManualItem()">この内容で登録する</button>
+      <button class="btn btn-blue" style="padding:16px;" onclick="saveManualItem()">この内容で登録する</button>
     </div>
   </div>
 
   <div class="sub-view" id="view-list">
-    <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-direction: column;">
+    <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: column;">
       <div class="action-row">
         <button class="btn btn-green" onclick="exportExcel()">📤 表示中データ出力</button>
         <button class="btn btn-blue" onclick="showPreview()">👁️ プレビュー</button>
@@ -136,11 +136,11 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px
         <button class="btn btn-undo" onclick="undoAction()">↩️ １つ戻す</button>
         <button class="btn btn-outline-red" id="btn-delete-mode" onclick="toggleDeleteMode()">選択して削除</button>
       </div>
-      <button class="btn" id="btn-select-all" style="display:none; background:#cbd5e1; color:var(--text); padding:8px; font-size:12px; margin-top:-2px;" onclick="selectAllItems()">すべて選択 / 解除</button>
+      <button class="btn" id="btn-select-all" style="display:none; background:#cbd5e1; color:var(--text); padding:10px; font-size:13px;" onclick="selectAllItems()">すべて選択 / 解除</button>
     </div>
 
-    <div class="card" style="padding: 12px;">
-      <div class="card-title" style="margin-bottom: 8px; font-size: 14px;">🔍 フィルター</div>
+    <div class="card" style="padding: 14px;">
+      <div class="card-title" style="margin-bottom: 10px;">🔍 フィルター</div>
       <div class="filter-grid">
         <input type="text" id="f-wh" placeholder="倉庫" oninput="handleFilterChange()">
         <input type="text" id="f-loc" placeholder="棚番" oninput="handleFilterChange()">
@@ -155,15 +155,15 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px
 <button class="btn-to-top-fixed" id="btn-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
 
 <div class="delete-bar" id="delete-bar">
-  <button class="btn" style="background:#64748b; color:white; flex:1; padding:14px;" onclick="toggleDeleteMode()">キャンセル</button>
-  <button class="btn" style="background:var(--red); color:white; flex:2; padding:14px;" onclick="executeDelete()">選択した項目を削除</button>
+  <button class="btn" style="background:#64748b; color:white; flex:1; padding:16px;" onclick="toggleDeleteMode()">キャンセル</button>
+  <button class="btn" style="background:var(--red); color:white; flex:2; padding:16px;" onclick="executeDelete()">選択した項目を削除</button>
 </div>
 
 <div id="preview-overlay">
   <div class="preview-content">
     <div class="preview-header">
-      <span id="preview-title" style="font-weight:bold; font-size:13px;"></span>
-      <button onclick="closePreview()" style="padding:6px 12px; border-radius:8px; border:none; background:#64748b; color:white; font-size:11px;">閉じる</button>
+      <span id="preview-title" style="font-weight:bold; font-size:14px;"></span>
+      <button onclick="closePreview()" style="padding:8px 16px; border-radius:8px; border:none; background:#64748b; color:white; font-size:12px;">閉じる</button>
     </div>
     <div class="preview-body">
       <table class="preview-table" id="preview-table">
@@ -285,7 +285,7 @@ function getFilteredItems() {
 function renderList() {
   const target = document.getElementById('io-display-list');
   const filtered = getFilteredItems();
-  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:50px;color:#94a3b8;background:white;border-radius:14px;">該当なし</p>' : 
+  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:50px;color:#94a3b8;background:white;border-radius:16px;">該当なし</p>' : 
     filtered.map(item => {
       const id = getItemId(item);
       const isSelected = selectedIds.has(id);
@@ -295,8 +295,8 @@ function renderList() {
         <div style="flex:1;">
           <div class="item-meta">${item.warehouse ? item.warehouse + ' / ' : ''}${item.location}</div>
           <div style="font-size:11px;color:var(--text2);">品番: ${item.code}</div>
-          <div style="font-weight:700; font-size:14px; line-height:1.4;">${item.name}</div>
-          ${item.spec ? `<div style="font-size:11px; color:var(--text2); margin-top:2px;">(${item.spec})</div>` : ''}
+          <div style="font-weight:700; font-size:15px; line-height:1.4;">${item.name}</div>
+          ${item.spec ? `<div style="font-size:12px; color:var(--text2); margin-top:2px;">(${item.spec})</div>` : ''}
         </div>
         ${!deleteMode ? `<button class="btn-edit-stock" onclick="event.stopPropagation(); editStockDirect('${item.code}', '${item.location}')">個数修正</button>` : ''}
       </div>
