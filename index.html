@@ -38,7 +38,6 @@ header h1 { font-size: 18px; color: var(--accent); }
 .sub-view { display: none; }
 .sub-view.active { display: block; }
 
-/* ボタンレイアウト調整：上下の隙間を詰める */
 .action-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .action-row .btn { flex: 1; font-size: 14px; padding: 14px 4px; white-space: nowrap; }
 
@@ -53,6 +52,9 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .btn-green { background: var(--green); color: white; }
 .btn-undo { background: #64748b; color: white; }
 .btn-outline-red { background: #fff1f2; border: 1px solid #fca5a5; color: var(--red); }
+
+/* ボタン文字サイズ調整 */
+.btn-large-text { font-size: 18px !important; }
 
 .btn-edit-stock { padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; cursor: pointer; }
 
@@ -107,9 +109,9 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 <div class="main-container">
   <div class="sub-view" id="view-reg">
     <div class="card">
-      <div class="card-title">📥 エクセルからデータを取込み</div>
+      <div class="card-title">📥 エクセルからデータ取込</div>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
-      <button class="btn btn-green" style="padding:16px;" onclick="importExcel()">ファイルを読み込む</button>
+      <button class="btn btn-green btn-large-text" style="padding:20px;" onclick="importExcel()">ファイルを読み込む</button>
     </div>
     <div class="card">
       <div class="card-title">✏️ 手動で新規登録</div>
@@ -121,7 +123,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
       <label>商品名</label><input type="text" id="io-name" placeholder="商品名">
       <label>規格</label><input type="text" id="io-spec" placeholder="サイズ等">
       <label>初期現在個数</label><input type="number" id="io-qty" value="0">
-      <button class="btn btn-blue" style="padding:16px;" onclick="saveManualItem()">この内容で登録する</button>
+      <button class="btn btn-blue btn-large-text" style="padding:20px;" onclick="saveManualItem()">この内容で登録する</button>
     </div>
   </div>
 
@@ -187,7 +189,7 @@ function toggleSettings() { document.getElementById('settings-menu').classList.t
 
 function normalizeText(text) {
   if (!text) return "";
-  let res = text.replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+  let res = String(text).replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
   const kanaMap = {
     "ガ":"ｶﾞ","ギ":"ｷﾞ","グ":"ｸﾞ","ゲ":"ｹﾞ","ゴ":"ｺﾞ","ザ":"ｻﾞ","ジ":"ｼﾞ","ズ":"ｽﾞ","ゼ":"ｾﾞ","ゾ":"ｿﾞ","ダ":"ﾀﾞ","ヂ":"ﾁﾞ","ヅ":"ﾂﾞ","デ":"ﾃﾞ","ド":"ﾄﾞ","バ":"ﾊﾞ","ビ":"ﾋﾞ","ブ":"ﾊﾞ","ベ":"ﾍﾞ","ボ":"ﾎﾞ","パ":"ﾊﾟ","ピ":"ﾋﾟ","プ":"ﾌﾟ","ペ":"ﾍﾟ","ポ":"ﾎﾟ","ヴ":"ｳﾞ","ア":"ｱ","イ":"ｲ","ウ":"ｳ","エ":"ｴ","オ":"ｵ","カ":"ｶ","キ":"ｷ","ク":"ｸ","ケ":"ｹ","コ":"ｺ","サ":"ｻ","シ":"ｼ","ス":"ｽ","セ":"ｾ","ソ":"ｿ","タ":"ﾀ","チ":"ﾁ","ツ":"ﾂ","テ":"ﾃ","ト":"ﾄ","ナ":"ﾅ","ニ":"ﾆ","ヌ":"ﾇ","ネ":"ﾈ","ノ":"ﾉ","ハ":"ﾊ","ヒ":"ﾋ","フ":"ﾌ","ヘ":"ﾍ","ホ":"ﾎ","マ":"ﾏ","ミ":"ﾐ","ム":"ﾑ","メ":"ﾒ","モ":"ﾓ","ヤ":"ﾔ","ユ":"ﾕ","ヨ":"ﾖ","ラ":"ﾗ","リ":"ﾘ","ル":"ﾙ","レ":"ﾚ","ロ":"ﾛ","ワ":"ﾜ","ヲ":"ｦ","ン":"ﾝ","ァ":"ｧ","ィ":"ｨ","ゥ":"ｩ","ェ":"ｪ","ォ":"ｫ","ッ":"ｯ","ャ":"ｬ","ュ":"ｭ","ョ":"ｮ","。":"｡","、":"､","ー":"ｰ","「":"｢","」":"｣","・":"･"
   };
@@ -347,14 +349,50 @@ function importExcel() {
       const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
       const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
       let n = [];
+      
+      // バリデーションループ
       for (let i = 1; i < json.length; i++) {
-        const row = json[i]; if (!row || row.length < 6) continue;
-        n.push({ warehouse: String(row[0]||''), location: String(row[1]||''), code: String(row[2]||''), name: String(row[3]||''), spec: String(row[4]||''), stock: parseFloat(row[5])||0 });
+        const row = json[i];
+        if (!row || row.length === 0) continue; // 空行はスキップ
+        
+        const rowNum = i + 1; // 実際の行番号
+        const loc = String(row[1] || '').trim();
+        const code = String(row[2] || '').trim();
+        const name = String(row[3] || '').trim();
+        const stock = row[5];
+
+        // 必須チェック（棚番、品番、商品名）
+        if (!loc) return alert(`${rowNum}行目：棚番が空です。修正してください。`);
+        if (!code) return alert(`${rowNum}行目：品番が空です。修正してください。`);
+        if (!name) return alert(`${rowNum}行目：商品名が空です。修正してください。`);
+        
+        // 個数数値チェック
+        if (stock !== undefined && isNaN(parseFloat(stock))) {
+          return alert(`${rowNum}行目：個数に数値以外の値（${stock}）が入っています。`);
+        }
+
+        n.push({ 
+          warehouse: String(row[0] || ''), 
+          location: loc, 
+          code: code, 
+          name: name, 
+          spec: String(row[4] || ''), 
+          stock: parseFloat(stock) || 0 
+        });
       }
+
+      if (n.length === 0) return alert("取り込めるデータが見つかりませんでした。");
+
       pushUndo();
-      n.forEach(d => { const idx = items.findIndex(i => i.code === d.code && i.location === d.location); if(idx > -1) items[idx] = d; else items.push(d); });
-      saveData(); renderList(); f.value = ''; alert(`${n.length}件を処理`);
-    } catch(err) { alert("読込失敗"); }
+      n.forEach(d => { 
+        const idx = items.findIndex(i => i.code === d.code && i.location === d.location); 
+        if(idx > -1) items[idx] = d; else items.push(d); 
+      });
+      saveData(); renderList(); f.value = ''; alert(`${n.length}件のデータを正常に処理しました。`);
+    } catch(err) { 
+      console.error(err);
+      alert("ファイルの読み込みに失敗しました。正しいExcel形式か確認してください。"); 
+    }
   };
   r.readAsArrayBuffer(f.files[0]);
 }
@@ -366,7 +404,11 @@ function saveManualItem() {
   const n = document.getElementById('io-name').value.trim();
   const s = document.getElementById('io-spec').value.trim();
   const q = parseFloat(document.getElementById('io-qty').value) || 0;
-  if(!c || !n || !l) return alert("必須項目未入力");
+  
+  if(!l) return alert("「棚番」を入力してください。");
+  if(!c) return alert("「品番」を入力してください。");
+  if(!n) return alert("「商品名」を入力してください。");
+
   const idx = items.findIndex(i => i.code === c && i.location === l);
   pushUndo();
   if(idx > -1) items[idx] = { warehouse: w, location: l, code: c, name: n, spec: s, stock: q };
