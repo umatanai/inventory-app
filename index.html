@@ -14,7 +14,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
 :root { 
   --bg: #e0f2fe; --surface: #ffffff; --border: #e2e8f0; --accent: #2563eb; 
-  --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b; 
+  --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b;
   --text2: #64748b; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,12 +23,12 @@ body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: va
 header { background: var(--surface); padding: 16px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
 header h1 { font-size: 18px; color: var(--accent); }
 
+/* ギアメニューと設定項目 */
 .settings-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: var(--text2); }
-.settings-menu { display: none; position: absolute; right: 10px; top: 50px; background: white; border: 1px solid var(--border); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1000; min-width: 220px; }
+.settings-menu { display: none; position: absolute; right: 10px; top: 55px; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1100; min-width: 200px; }
 .settings-menu.active { display: block; }
-.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; cursor: pointer; gap: 10px; }
-/* スイッチの大きさを調整 */
-.switch-input { width: 44px; height: 22px; cursor: pointer; }
+.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; cursor: pointer; }
+.switch-label input { width: 24px; height: 24px; margin-left: 10px; cursor: pointer; margin-bottom: 0; }
 
 .nav-tabs { display: flex; background: #cbd5e1; margin: 14px; border-radius: 12px; padding: 4px; }
 .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; background: transparent; color: var(--text); cursor: pointer; }
@@ -47,19 +47,20 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-blue { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: white; }
-.btn-undo { background: #64748b; color: white; }
+.btn-undo { background: #64748b; color: white; margin-bottom: 12px; padding: 12px; font-size: 15px; }
 .btn-outline-red { background: #fff1f2; border: 1px solid #fca5a5; color: var(--red); }
-.btn-edit-stock { padding: 8px 10px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; white-space: nowrap; }
+
+.btn-edit-stock { padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; cursor: pointer; }
 
 .item-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; position: relative; }
 .item-meta { font-size: 11px; font-weight: 700; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
 
-.check-container { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border: 2px solid #cbd5e1; border-radius: 6px; display: none; align-items: center; justify-content: center; background: #fff; }
+.check-container { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border: 2px solid #cbd5e1; border-radius: 6px; display: none; align-items: center; justify-content: center; cursor: pointer; background: #fff; }
 .item-card.selected .check-container { border-color: var(--green); background: var(--green); color: white; }
 .item-card.selected .check-container::after { content: '✓'; font-weight: bold; font-size: 18px; }
 
 .stock-text-area { font-size: 18px; color: var(--text2); margin-top: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 12px; }
-.stock-num-display { font-size: 28px; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 8px; }
+.stock-num-display { font-size: 28px; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 8px; pointer-events: none; }
 
 .io-controls { display: flex; gap: 10px; margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 12px; }
 .io-input { width: 80px; margin-bottom: 0; text-align: center; font-size: 20px; font-weight: 700; border: 2px solid var(--border); background: #fff; }
@@ -68,20 +69,13 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f1f5f9; padding: 12px; border-radius: 12px; }
 .filter-grid input { margin-bottom: 0; font-size: 16px; padding: 10px; background: white; }
 
-.delete-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 16px; display: none; gap: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 100; }
+.delete-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 16px; display: none; gap: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 1000; }
 
-.btn-to-top-fixed { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; border-radius: 50%; background: rgba(226, 232, 240, 0.8); color: var(--text); border: 1px solid var(--border); font-size: 20px; cursor: pointer; z-index: 500; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
+/* 上へ戻るボタン：中央配置、重ならないように調整 */
+.btn-to-top-fixed { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; border-radius: 50%; background: #e2e8f0; color: var(--text); border: 1px solid var(--border); font-size: 20px; cursor: pointer; z-index: 500; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
 
 #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 2000; pointer-events: none; opacity: 0; transition: 0.3s; }
 #toast.show { opacity: 1; }
-
-#preview-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 3000; display: none; padding: 10px; }
-.preview-content { background: white; width: 100%; height: 100%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-.preview-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
-.preview-body { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; }
-.preview-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 500px; }
-.preview-table th, .preview-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
-.preview-table th { background: #f1f5f9; position: sticky; top: 0; z-index: 10; }
 </style>
 </head>
 <body>
@@ -90,10 +84,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <h1>📦 kosaku在庫管理システム</h1>
   <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
   <div class="settings-menu" id="settings-menu">
-    <label class="switch-label">
-      <span>個数0を表示しない</span>
-      <input type="checkbox" id="hide-zero-stock" class="switch-input" onchange="handleFilterChange()">
-    </label>
+    <label class="switch-label">個数0を表示しない<input type="checkbox" id="hide-zero-stock" onchange="handleFilterChange()"></label>
   </div>
 </header>
 
@@ -126,13 +117,10 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <div class="sub-view" id="view-list">
     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: column;">
       <div style="display: flex; gap: 8px;">
-        <button class="btn btn-green" style="flex: 1; font-size: 13px; padding: 12px;" onclick="exportExcel()">📤 表示中データ出力</button>
-        <button class="btn btn-blue" style="flex: 1; font-size: 13px; padding: 12px;" onclick="showPreview()">👁️ プレビュー</button>
+        <button class="btn btn-green" style="flex: 2; font-size: 14px; padding: 12px;" onclick="exportExcel()">📤 表示中データを出力</button>
+        <button class="btn btn-outline-red" id="btn-delete-mode" style="flex: 1; font-size: 13px;" onclick="toggleDeleteMode()">選択して削除</button>
       </div>
-      <div style="display: flex; gap: 8px;">
-        <button class="btn btn-undo" style="flex: 1; font-size: 13px; padding: 12px;" onclick="undoAction()">↩️ １つ戻す</button>
-        <button class="btn btn-outline-red" id="btn-delete-mode" style="flex: 1; font-size: 13px; padding: 12px;" onclick="toggleDeleteMode()">選択して削除</button>
-      </div>
+      <button class="btn btn-undo" onclick="undoAction()">↩️ アクションを１つ戻す</button>
       <button class="btn" id="btn-select-all" style="display:none; background:#cbd5e1; color:var(--text); padding:10px; font-size:13px;" onclick="selectAllItems()">すべて選択 / 解除</button>
     </div>
 
@@ -149,26 +137,11 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   </div>
 </div>
 
-<button class="btn-to-top-fixed" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
+<button class="btn-to-top-fixed" id="btn-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
 
 <div class="delete-bar" id="delete-bar">
   <button class="btn" style="background:#64748b; color:white; flex:1;" onclick="toggleDeleteMode()">キャンセル</button>
   <button class="btn" style="background:var(--red); color:white; flex:2;" onclick="executeDelete()">選択した項目を削除</button>
-</div>
-
-<div id="preview-overlay">
-  <div class="preview-content">
-    <div class="preview-header">
-      <span id="preview-title" style="font-weight:bold; font-size:14px;"></span>
-      <button onclick="closePreview()" style="padding:8px 16px; border-radius:8px; border:none; background:#64748b; color:white; font-size:12px;">閉じる</button>
-    </div>
-    <div class="preview-body">
-      <table class="preview-table" id="preview-table">
-        <thead><tr><th>倉庫</th><th>棚番</th><th>品番</th><th>商品名</th><th>規格</th><th>個数</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
 </div>
 
 <div id="toast"></div>
@@ -179,30 +152,25 @@ let undoStack = [];
 let deleteMode = false;
 let selectedIds = new Set();
 
-// 起動時は「在庫一覧」を優先的に表示
+// 起動時に在庫一覧を表示
 window.onload = () => {
-  const lastTab = localStorage.getItem('last_active_tab') || 'list'; 
-  switchSubView(lastTab);
+  switchSubView('list');
 };
 
 function toggleSettings() { document.getElementById('settings-menu').classList.toggle('active'); }
 
-// 全角半角・カタカナを正規化する関数
+// 全角カタカナを半角に、大文字を小文字に変換して「あいまい」な比較を可能にする関数
 function normalizeText(text) {
   if (!text) return "";
-  let res = text.toLowerCase();
-  // 全角英数を半角に
-  res = res.replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-  // 半角カタカナを全角に変換（比較を容易にするため）
+  let res = text.replace(/[！-～]/g, function(s) {
+    return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+  });
   const kanaMap = {
-    'ｶ': 'カ', 'ｷ': 'キ', 'ｸ': 'ク', 'ｹ': 'ケ', 'ｺ': 'コ', 'ｻ': 'サ', 'ｼ': 'シ', 'ｽ': 'ス', 'ｾ': 'セ', 'ｿ': 'ソ',
-    'ﾀ': 'タ', 'ﾁ': 'チ', 'ﾂ': 'ツ', 'ﾃ': 'テ', 'ﾄ': 'ト', 'ﾅ': 'ナ', 'ﾆ': 'ニ', 'ﾇ': 'ヌ', 'ﾈ': 'ネ', 'ﾉ': 'ノ',
-    'ﾊ': 'ハ', 'ﾋ': 'ヒ', 'ﾌ': 'フ', 'ﾍ': 'ヘ', 'ﾎ': 'ホ', 'ﾏ': 'マ', 'ﾐ': 'ミ', 'ﾑ': 'ム', 'ﾒ': 'メ', 'ﾓ': 'モ',
-    'ﾔ': 'ヤ', 'ﾕ': 'ユ', 'ﾖ': 'ヨ', 'ﾗ': 'ラ', 'ﾘ': 'リ', 'ﾙ': 'ル', 'ﾚ': 'レ', 'ﾛ': 'ロ', 'ﾜ': 'ワ', 'ｦ': 'ヲ', 'ﾝ': 'ン'
+    "ガ":"ｶﾞ","ギ":"ｷﾞ","グ":"ｸﾞ","ゲ":"ｹﾞ","ゴ":"ｺﾞ","ザ":"ｻﾞ","ジ":"ｼﾞ","ズ":"ｽﾞ","ゼ":"ｾﾞ","ゾ":"ｿﾞ","ダ":"ﾀﾞ","ヂ":"ﾁﾞ","ヅ":"ﾂﾞ","デ":"ﾃﾞ","ド":"ﾄﾞ","バ":"ﾊﾞ","ビ":"ﾋﾞ","ブ":"ﾌﾞ","ベ":"ﾍﾞ","ボ":"ﾎﾞ","パ":"ﾊﾟ","ピ":"ﾋﾟ","プ":"ﾌﾟ","ペ":"ﾍﾟ","ポ":"ﾎﾟ","ヴ":"ｳﾞ","ヷ":"ﾜﾞ","ヺ":"ｦﾞ","ア":"ｱ","イ":"ｲ","ウ":"ｳ","エ":"ｴ","オ":"ｵ","カ":"ｶ","キ":"ｷ","ク":"ｸ","ケ":"ｹ","コ":"ｺ","サ":"ｻ","シ":"ｼ","ス":"ｽ","セ":"ｾ","ソ":"ｿ","タ":"ﾀ","チ":"ﾁ","ツ":"ﾂ","テ":"ﾃ","ト":"ﾄ","ナ":"ﾅ","ニ":"ﾆ","ヌ":"ﾇ","ネ":"ﾈ","ノ":"ﾉ","ハ":"ﾊ","ヒ":"ﾋ","フ":"ﾌ","ヘ":"ﾍ","ホ":"ﾎ","マ":"ﾏ","ミ":"ﾐ","ム":"ﾑ","メ":"ﾒ","モ":"ﾓ","ヤ":"ﾔ","ユ":"ﾕ","ヨ":"ﾖ","ラ":"ﾗ","リ":"ﾘ","ル":"ﾙ","レ":"ﾚ","ロ":"ﾛ","ワ":"ﾜ","ヲ":"ｦ","ン":"ﾝ","ァ":"ｧ","ィ":"ｨ","ゥ":"ｩ","ェ":"ｪ","ォ":"ｫ","ッ":"ｯ","ャ":"ｬ","ュ":"ｭ","ョ":"ｮ","。":"｡","、":"､","ー":"ｰ","「":"｢","」":"｣","・":"･"
   };
   const reg = new RegExp('(' + Object.keys(kanaMap).join('|') + ')', 'g');
-  res = res.replace(reg, match => kanaMap[match]);
-  return res;
+  res = res.replace(reg, function (match) { return kanaMap[match]; });
+  return res.toLowerCase();
 }
 
 function switchSubView(view) {
@@ -211,7 +179,6 @@ function switchSubView(view) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`view-${view}`).classList.add('active');
   document.getElementById(`tab-${view}`).classList.add('active');
-  localStorage.setItem('last_active_tab', view);
   if(view === 'list') renderList();
 }
 
@@ -232,6 +199,8 @@ function toggleDeleteMode() {
   document.getElementById('delete-bar').style.display = deleteMode ? 'flex' : 'none';
   document.getElementById('btn-select-all').style.display = deleteMode ? 'flex' : 'none';
   document.getElementById('btn-delete-mode').textContent = deleteMode ? '選択解除' : '選択して削除';
+  // 削除バーが出た時に「上へ戻る」ボタンを少し上に逃がす
+  document.getElementById('btn-to-top').style.bottom = deleteMode ? '90px' : '20px';
   renderList();
 }
 
@@ -272,7 +241,7 @@ function updateStock(id, mult) {
 
 function editStockDirect(code, location) {
   const item = items.find(i => i.code === code && i.location === location);
-  const newVal = prompt(`${item.name} の個数入力:`, item.stock);
+  const newVal = prompt(`${item.name} (${location}) の個数入力:`, item.stock);
   if(newVal !== null && newVal !== "" && !isNaN(parseFloat(newVal))) {
     pushUndo(); item.stock = parseFloat(newVal); saveData(); renderList(); showToast('修正完了');
   }
@@ -284,9 +253,13 @@ function getFilteredItems() {
   const fCode = normalizeText(document.getElementById('f-code').value);
   const fName = normalizeText(document.getElementById('f-name').value);
   const hideZero = document.getElementById('hide-zero-stock').checked;
+  
   return items.filter(i => {
-    const m = normalizeText(i.warehouse).includes(fWh) && normalizeText(i.location).includes(fLoc) && normalizeText(i.code).includes(fCode) && normalizeText(i.name).includes(fName);
-    return m && (hideZero ? i.stock !== 0 : true);
+    const match = normalizeText(i.warehouse).includes(fWh) && 
+                  normalizeText(i.location).includes(fLoc) &&
+                  normalizeText(i.code).includes(fCode) && 
+                  normalizeText(i.name).includes(fName);
+    return match && (hideZero ? i.stock !== 0 : true);
   });
 }
 
@@ -301,10 +274,10 @@ function renderList() {
       <div class="check-container" style="display: ${deleteMode ? 'flex' : 'none'}"></div>
       <div style="display:flex; justify-content:space-between; align-items: flex-start;">
         <div style="flex:1;">
-          <div class="item-meta">${item.warehouse || '設定なし'} / ${item.location}</div>
+          <div class="item-meta">${item.warehouse ? item.warehouse + ' / ' : ''}${item.location}</div>
           <div style="font-size:11px;color:var(--text2);">品番: ${item.code}</div>
-          <div style="font-weight:700; font-size:15px;">${item.name}</div>
-          ${item.spec ? `<div style="font-size:12px; color:var(--text2);">(${item.spec})</div>` : ''}
+          <div style="font-weight:700; font-size:15px; line-height:1.4;">${item.name}</div>
+          ${item.spec ? `<div style="font-size:12px; color:var(--text2); margin-top:2px;">(${item.spec})</div>` : ''}
         </div>
         ${!deleteMode ? `<button class="btn-edit-stock" onclick="event.stopPropagation(); editStockDirect('${item.code}', '${item.location}')">個数修正</button>` : ''}
       </div>
@@ -314,31 +287,22 @@ function renderList() {
   }).join('');
 }
 
-function showPreview() {
-  const filtered = getFilteredItems();
-  const tbody = document.querySelector('#preview-table tbody');
-  tbody.innerHTML = filtered.map(i => `<tr><td>${i.warehouse}</td><td>${i.location}</td><td>${i.code}</td><td>${i.name}</td><td>${i.spec || ''}</td><td>${i.stock}</td></tr>`).join('');
-  document.getElementById('preview-title').textContent = `一覧プレビュー (${filtered.length}件)`;
-  document.getElementById('preview-overlay').style.display = 'block';
-}
-
-function closePreview() { document.getElementById('preview-overlay').style.display = 'none'; }
-
+// 共有・保存系関数
 async function exportExcel() {
   const targetData = getFilteredItems();
-  if (targetData.length === 0) return alert("データがありません");
-  const staff = prompt("担当者名:");
-  if (staff === null) return;
+  if (targetData.length === 0) return alert("出力するデータがありません");
+  const staffName = prompt("担当者名を入力してください:");
+  if (staffName === null) return;
   const wsData = [["倉庫", "棚番", "品番", "商品名", "規格", "個数", "担当者"]];
   targetData.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock, ""]));
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  XLSX.utils.sheet_add_aoa(ws, [[staff]], { origin: "G1" });
+  XLSX.utils.sheet_add_aoa(ws, [[staffName]], { origin: "G1" });
   XLSX.utils.book_append_sheet(wb, ws, "在庫");
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'binary'});
   function s2ab(s) { const b = new ArrayBuffer(s.length); const v = new Uint8Array(b); for (let i=0; i<s.length; i++) v[i] = s.charCodeAt(i) & 0xFF; return b; }
   const blob = new Blob([s2ab(wbout)], {type:"application/octet-stream"});
-  const fileName = `在庫_${staff || '不明'}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`;
+  const fileName = `在庫_${staffName || '不明'}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`;
   if (navigator.share) {
     try { await navigator.share({ files: [new File([blob], fileName, {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})], title: '在庫' }); } 
     catch (e) { downloadFile(blob, fileName); }
@@ -360,11 +324,10 @@ function importExcel() {
         const row = json[i]; if (!row || row.length < 6) continue;
         n.push({ warehouse: String(row[0]||''), location: String(row[1]||''), code: String(row[2]||''), name: String(row[3]||''), spec: String(row[4]||''), stock: parseFloat(row[5])||0 });
       }
-      if (n.length === 0) return alert("有効なデータがありません");
       pushUndo();
       n.forEach(d => { const idx = items.findIndex(i => i.code === d.code && i.location === d.location); if(idx > -1) items[idx] = d; else items.push(d); });
       saveData(); renderList(); f.value = ''; alert(`${n.length}件を処理しました`);
-    } catch(err) { alert("失敗"); }
+    } catch(err) { alert("読込失敗"); }
   };
   r.readAsArrayBuffer(f.files[0]);
 }
@@ -376,13 +339,12 @@ function saveManualItem() {
   const n = document.getElementById('io-name').value.trim();
   const s = document.getElementById('io-spec').value.trim();
   const q = parseFloat(document.getElementById('io-qty').value) || 0;
-  if(!c || !n || !l) return alert("必須項目未入力");
+  if(!c || !n || !l) return alert("棚番、品番、商品名は必須です");
   const idx = items.findIndex(i => i.code === c && i.location === l);
-  if(idx > -1 && !confirm("上書きしますか？")) return;
   pushUndo();
   if(idx > -1) items[idx] = { warehouse: w, location: l, code: c, name: n, spec: s, stock: q };
   else items.push({ warehouse: w, location: l, code: c, name: n, spec: s, stock: q });
-  saveData(); showToast('登録完了');
+  saveData(); showToast('登録・更新しました');
   document.getElementById('io-code').value = ''; document.getElementById('io-name').value = ''; document.getElementById('io-qty').value = '0';
   if(document.getElementById('view-list').classList.contains('active')) renderList();
 }
