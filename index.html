@@ -14,14 +14,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
 :root { 
   --bg: #e0f2fe; --surface: #ffffff; --border: #e2e8f0; --accent: #2563eb; 
-  --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b; 
+  --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b;
   --text2: #64748b; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; touch-action: manipulation; }
 
-header { background: var(--surface); padding: 16px; text-align: center; border-bottom: 1px solid var(--border); }
+header { background: var(--surface); padding: 16px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
 header h1 { font-size: 18px; color: var(--accent); }
+
+/* ギアマーク設定 */
+.settings-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: var(--text2); }
+.settings-menu { display: none; position: absolute; right: 10px; top: 50px; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1000; min-width: 200px; text-align: left; }
+.settings-menu.active { display: block; }
+.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 700; cursor: pointer; }
+.switch-input { width: 40px; height: 20px; cursor: pointer; }
 
 .nav-tabs { display: flex; background: #cbd5e1; margin: 14px; border-radius: 12px; padding: 4px; }
 .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; background: transparent; color: var(--text); cursor: pointer; }
@@ -42,11 +49,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .btn-green { background: var(--green); color: white; }
 .btn-undo { background: #64748b; color: white; margin-bottom: 12px; padding: 12px; font-size: 15px; }
 .btn-outline-red { background: #fff1f2; border: 1px solid #fca5a5; color: var(--red); }
-
-.btn-edit-stock { 
-  padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; 
-  border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; cursor: pointer;
-}
+.btn-edit-stock { padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; cursor: pointer; }
 
 .item-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; position: relative; }
 .item-meta { font-size: 11px; font-weight: 700; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
@@ -67,21 +70,42 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 
 .delete-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 16px; display: none; gap: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 100; }
 
-#toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 1000; pointer-events: none; opacity: 0; transition: 0.3s; }
+/* 固定トップへ戻るボタン */
+.btn-to-top-fixed { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: #e2e8f0; color: var(--text); border: none; font-size: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); cursor: pointer; z-index: 1000; opacity: 0.8; display: flex; align-items: center; justify-content: center; }
+
+#toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 2000; pointer-events: none; opacity: 0; transition: 0.3s; }
 #toast.show { opacity: 1; }
+
+/* プレビュー画面 */
+#preview-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 3000; display: none; padding: 20px; }
+.preview-content { background: white; width: 100%; height: 100%; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+.preview-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.preview-body { flex: 1; overflow: auto; padding: 10px; }
+.preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.preview-table th, .preview-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+.preview-table th { background: #f8fafc; position: sticky; top: 0; }
 </style>
 </head>
 <body>
 
-<header><h1>📦 kosaku在庫管理システム</h1></header>
+<header>
+  <h1>📦 kosaku在庫管理システム</h1>
+  <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
+  <div class="settings-menu" id="settings-menu">
+    <label class="switch-label">
+      個数0を表示しない
+      <input type="checkbox" id="hide-zero-stock" class="switch-input" onchange="handleFilterChange()">
+    </label>
+  </div>
+</header>
 
 <div class="nav-tabs">
-  <button class="nav-btn active" id="tab-reg" onclick="switchSubView('reg')">データ登録</button>
+  <button class="nav-btn" id="tab-reg" onclick="switchSubView('reg')">データ登録</button>
   <button class="nav-btn" id="tab-list" onclick="switchSubView('list')">在庫一覧</button>
 </div>
 
 <div class="main-container">
-  <div class="sub-view active" id="view-reg">
+  <div class="sub-view" id="view-reg">
     <div class="card">
       <div class="card-title">📥 エクセルからデータ取込</div>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
@@ -104,8 +128,9 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <div class="sub-view" id="view-list">
     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: column;">
       <div style="display: flex; gap: 8px;">
-        <button class="btn btn-green" style="flex: 2; font-size: 14px; padding: 12px;" onclick="exportExcel()">📤 表示中データを出力</button>
-        <button class="btn btn-outline-red" id="btn-delete-mode" style="flex: 1; font-size: 13px;" onclick="toggleDeleteMode()">選択して削除</button>
+        <button class="btn btn-green" style="flex: 1; font-size: 13px; padding: 12px;" onclick="exportExcel()">📤 出力(Excel)</button>
+        <button class="btn btn-blue" style="flex: 1; font-size: 13px; padding: 12px;" onclick="showPreview()">👁️ プレビュー</button>
+        <button class="btn btn-outline-red" id="btn-delete-mode" style="flex: 1; font-size: 13px;" onclick="toggleDeleteMode()">選択削除</button>
       </div>
       <button class="btn btn-undo" onclick="undoAction()">↩️ アクションを１つ戻す</button>
       <button class="btn" id="btn-select-all" style="display:none; background:#cbd5e1; color:var(--text); padding:10px; font-size:13px;" onclick="selectAllItems()">すべて選択 / 解除</button>
@@ -122,13 +147,31 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
     </div>
 
     <div id="io-display-list"></div>
-    <button class="btn btn-to-top" style="margin-top: 16px; background: #e2e8f0; color: var(--text);" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆️ ページのTOPへ</button>
   </div>
 </div>
+
+<button class="btn-to-top-fixed" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
 
 <div class="delete-bar" id="delete-bar">
   <button class="btn" style="background:#64748b; color:white; flex:1;" onclick="toggleDeleteMode()">キャンセル</button>
   <button class="btn" style="background:var(--red); color:white; flex:2;" onclick="executeDelete()">選択した項目を削除</button>
+</div>
+
+<div id="preview-overlay">
+  <div class="preview-content">
+    <div class="preview-header">
+      <strong id="preview-title">在庫プレビュー</strong>
+      <button class="btn" style="width:auto; padding:8px 20px; font-size:14px; background:#64748b; color:white;" onclick="closePreview()">閉じる</button>
+    </div>
+    <div class="preview-body">
+      <table class="preview-table" id="preview-table">
+        <thead>
+          <tr><th>倉庫</th><th>棚番</th><th>品番</th><th>商品名</th><th>規格</th><th>個数</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -139,12 +182,31 @@ let undoStack = [];
 let deleteMode = false;
 let selectedIds = new Set();
 
+[span_0](start_span)[span_1](start_span)// ページ読み込み時に最後に開いていたタブを復元[span_0](end_span)[span_1](end_span)
+window.onload = () => {
+  const lastTab = localStorage.getItem('last_active_tab') || 'reg';
+  switchSubView(lastTab);
+};
+
+function toggleSettings() {
+  document.getElementById('settings-menu').classList.toggle('active');
+}
+
+// 全角半角を無視するための正規化関数
+function normalizeText(text) {
+  return (text || "").toLowerCase().replace(/[！-～]/g, function(s) {
+    return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+  });
+}
+
 function switchSubView(view) {
   if(deleteMode) toggleDeleteMode();
   document.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`view-${view}`).classList.add('active');
   document.getElementById(`tab-${view}`).classList.add('active');
+  
+  localStorage.setItem('last_active_tab', view); // タブ状態を保存
   if(view === 'list') renderList();
 }
 
@@ -204,7 +266,6 @@ function updateStock(id, mult) {
   const parts = id.split(':::');
   const code = parts[0];
   const loc = parts[1];
-
   const input = document.getElementById(`amt-${id}`);
   const val = parseFloat(input.value);
   if(!val || val <= 0) return showToast('数を入力してください');
@@ -216,7 +277,7 @@ function updateStock(id, mult) {
     saveData(); 
     input.value = ''; 
     renderList(); 
-    showToast('更新完了'); 
+    showToast('更新完了');
   }
 }
 
@@ -224,28 +285,34 @@ function editStockDirect(code, location) {
   const item = items.find(i => i.code === code && i.location === location);
   const newVal = prompt(`${item.name} (${location}) の個数入力:`, item.stock);
   if(newVal !== null && newVal !== "" && !isNaN(parseFloat(newVal))) {
-    pushUndo(); item.stock = parseFloat(newVal); saveData(); renderList(); showToast('修正完了');
+    pushUndo();
+    item.stock = parseFloat(newVal); saveData(); renderList(); showToast('修正完了');
   }
 }
 
 function getFilteredItems() {
-  const fWh = document.getElementById('f-wh').value.toLowerCase();
-  const fLoc = document.getElementById('f-loc').value.toLowerCase();
-  const fCode = document.getElementById('f-code').value.toLowerCase();
-  const fName = document.getElementById('f-name').value.toLowerCase();
-  return items.filter(i => 
-    (i.warehouse || "").toLowerCase().includes(fWh) && 
-    (i.location || "").toLowerCase().includes(fLoc) &&
-    (i.code || "").toLowerCase().includes(fCode) && 
-    (i.name || "").toLowerCase().includes(fName)
-  );
+  const fWh = normalizeText(document.getElementById('f-wh').value);
+  const fLoc = normalizeText(document.getElementById('f-loc').value);
+  const fCode = normalizeText(document.getElementById('f-code').value);
+  const fName = normalizeText(document.getElementById('f-name').value);
+  const hideZero = document.getElementById('hide-zero-stock').checked;
+
+  return items.filter(i => {
+    const matchSearch = normalizeText(i.warehouse).includes(fWh) && 
+                       normalizeText(i.location).includes(fLoc) &&
+                       normalizeText(i.code).includes(fCode) && 
+                       normalizeText(i.name).includes(fName);
+    const matchZero = hideZero ? i.stock !== 0 : true;
+    return matchSearch && matchZero;
+  });
 }
 
 function renderList() {
   const target = document.getElementById('io-display-list');
   const filtered = getFilteredItems();
 
-  target.innerHTML = filtered.length === 0 ? '<p style="text-align:center;padding:50px;color:#94a3b8;background:white;border-radius:16px;">該当なし</p>' : 
+  target.innerHTML = filtered.length === 0 ?
+    '<p style="text-align:center;padding:50px;color:#94a3b8;background:white;border-radius:16px;">該当なし</p>' : 
     filtered.map(item => {
       const id = getItemId(item);
       const isSelected = selectedIds.has(id);
@@ -256,10 +323,8 @@ function renderList() {
         <div style="flex:1;">
           ${item.warehouse ? `<div class="item-meta">${item.warehouse} / ${item.location}</div>` : `<div class="item-meta">棚番: ${item.location}</div>`}
           <div style="font-size:11px;color:var(--text2);">品番: ${item.code}</div>
-          
           <div style="font-weight:700; font-size:15px; line-height:1.4; display:block;">${item.name}</div>
           ${item.spec ? `<div style="font-weight:400; font-size:12px; color:var(--text2); margin-top:2px; margin-bottom:4px; display:block;">(${item.spec})</div>` : ''}
-          
         </div>
         ${!deleteMode ? `<button class="btn-edit-stock" onclick="event.stopPropagation(); editStockDirect('${item.code}', '${item.location}')">個数修正</button>` : ''}
       </div>
@@ -276,6 +341,28 @@ function renderList() {
   }).join('');
 }
 
+// プレビュー画面の表示
+function showPreview() {
+  const filtered = getFilteredItems();
+  const tbody = document.querySelector('#preview-table tbody');
+  tbody.innerHTML = filtered.map(i => `
+    <tr>
+      <td>${i.warehouse}</td>
+      <td>${i.location}</td>
+      <td>${i.code}</td>
+      <td>${i.name}</td>
+      <td>${i.spec || ''}</td>
+      <td>${i.stock}</td>
+    </tr>
+  `).join('');
+  document.getElementById('preview-title').textContent = `在庫プレビュー (${filtered.length}件)`;
+  document.getElementById('preview-overlay').style.display = 'block';
+}
+
+function closePreview() {
+  document.getElementById('preview-overlay').style.display = 'none';
+}
+
 async function exportExcel() {
   const targetData = getFilteredItems();
   if (targetData.length === 0) return alert("出力するデータがありません");
@@ -288,7 +375,8 @@ async function exportExcel() {
   XLSX.utils.sheet_add_aoa(ws, [[staffName]], { origin: "G1" });
   XLSX.utils.book_append_sheet(wb, ws, "在庫");
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'binary'});
-  function s2ab(s) { const buf = new ArrayBuffer(s.length); const view = new Uint8Array(buf); for (let i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF; return buf; }
+  function s2ab(s) { const buf = new ArrayBuffer(s.length); const view = new Uint8Array(buf);
+  for (let i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF; return buf; }
   const blob = new Blob([s2ab(wbout)], {type:"application/octet-stream"});
   const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
   const fileName = `在庫出力_${staffName || '不明'}_${dateStr}.xlsx`;
@@ -307,39 +395,32 @@ function downloadFile(blob, fileName) {
 function importExcel() {
   const fileInput = document.getElementById('excel-file');
   if (!fileInput.files[0]) return showToast('ファイルを選んでください');
-  
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
       const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
       const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-      
       let newItems = [];
       let errorMessages = [];
       let duplicateIds = new Set();
       let seenIdsInExcel = {};
-      let totalAttempted = 0; 
-
+      let totalAttempted = 0;
       for (let i = 1; i < jsonData.length; i++) {
         const row = jsonData[i];
         if (!row || row.length === 0 || row.every(cell => cell === undefined || cell === "")) continue;
-
         totalAttempted++;
         let errors = [];
-
         const warehouse = row[0] !== undefined ? String(row[0]).trim() : "";
         const location = row[1] !== undefined ? String(row[1]).trim() : "";
         const code = row[2] !== undefined ? String(row[2]).trim() : "";
         const name = row[3] !== undefined ? String(row[3]).trim() : "";
         const spec = row[4] !== undefined ? String(row[4]).trim() : "";
         const stockVal = row[5];
-
         if (!warehouse) errors.push("倉庫");
         if (!location) errors.push("棚番");
         if (!code) errors.push("品番");
         if (!name) errors.push("商品名");
         if (stockVal === undefined || stockVal === "" || isNaN(parseFloat(stockVal))) errors.push("現在個数");
-
         if (errors.length > 0) {
           errorMessages.push(`${i + 1}行目: [ ${errors.join(", ")} ]`);
         } else {
@@ -351,18 +432,14 @@ function importExcel() {
           newItems.push({ warehouse, location, code, name, spec, stock: parseFloat(stockVal) });
         }
       }
-
       if (totalAttempted === 0) return alert("データがありませんでした。");
-
       pushUndo();
       newItems.forEach(itemData => {
         const exIndex = items.findIndex(item => item.code === itemData.code && item.location === itemData.location);
         if(exIndex > -1) items[exIndex] = itemData; 
         else items.push(itemData);
       });
-
       saveData(); renderList(); fileInput.value = '';
-
       let resultMsg = `${totalAttempted}件中、${newItems.length}件を処理しました。\n全在庫数は ${items.length} 件です。`;
       if (duplicateIds.size > 0) {
         resultMsg += `\n\n⚠️【重複通知】同一の「品番＋棚番」が複数あったため上書きされました：\n${Array.from(duplicateIds).slice(0, 10).join(", ")}${duplicateIds.size > 10 ? " ...他" : ""}`;
@@ -371,7 +448,6 @@ function importExcel() {
         resultMsg += `\n\n❌【不備スキップ】\n${errorMessages.slice(0, 5).join("\n")}${errorMessages.length > 5 ? "\n...他" : ""}`;
       }
       alert(resultMsg);
-
     } catch(err) { alert("読込失敗しました。"); }
   };
   reader.readAsArrayBuffer(fileInput.files[0]);
@@ -385,7 +461,6 @@ function saveManualItem() {
   const spec = document.getElementById('io-spec').value.trim();
   const qtyInput = document.getElementById('io-qty');
   const stock = parseFloat(qtyInput.value) || 0;
-
   if(!code || !name || !location) return alert("棚番、品番、商品名は必須です");
 
   const exIndex = items.findIndex(item => item.code === code && item.location === location);
@@ -402,13 +477,10 @@ function saveManualItem() {
 
   saveData(); 
   showToast('登録・更新しました');
-  
-  // 入力リセット
   document.getElementById('io-code').value = '';
   document.getElementById('io-name').value = '';
   document.getElementById('io-spec').value = '';
   qtyInput.value = '0';
-  
   if(document.getElementById('view-list').classList.contains('active')) renderList();
 }
 
