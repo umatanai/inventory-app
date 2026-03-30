@@ -23,12 +23,13 @@ body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: va
 header { background: var(--surface); padding: 16px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
 header h1 { font-size: 18px; color: var(--accent); }
 
-/* ギアメニュー：横並びを修正 */
+/* ギアメニュー修正：垂直中央揃え */
 .settings-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: var(--text2); }
 .settings-menu { display: none; position: absolute; right: 10px; top: 55px; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1100; min-width: 220px; }
 .settings-menu.active { display: block; }
-.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-.switch-label input { width: 20px; height: 20px; cursor: pointer; margin-left: 12px; }
+
+.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; gap: 10px; }
+.switch-label input { width: 20px; height: 20px; cursor: pointer; margin: 0; flex-shrink: 0; }
 
 .nav-tabs { display: flex; background: #cbd5e1; margin: 14px; border-radius: 12px; padding: 4px; }
 .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; background: transparent; color: var(--text); cursor: pointer; }
@@ -38,13 +39,17 @@ header h1 { font-size: 18px; color: var(--accent); }
 .sub-view { display: none; }
 .sub-view.active { display: block; }
 
+/* ボタン横並び用レイアウト */
+.action-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.action-row .btn { flex: 1; font-size: 13px; padding: 12px 4px; white-space: nowrap; }
+
 .card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: var(--shadow); }
 .card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); border-bottom: 2px solid var(--accent-light); padding-bottom: 8px; }
 
 label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 4px; }
 input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; outline: none; }
 
-.btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn { width: 100%; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .btn-blue { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: white; }
 .btn-undo { background: #64748b; color: white; }
@@ -71,13 +76,11 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 
 .delete-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 16px; display: none; gap: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 1000; }
 
-/* 上へ戻るボタン：削除バーと被らないようz-indexと位置を調整 */
 .btn-to-top-fixed { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; border-radius: 50%; background: #e2e8f0; color: var(--text); border: 1px solid var(--border); font-size: 20px; cursor: pointer; z-index: 500; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
 
 #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 2000; pointer-events: none; opacity: 0; transition: 0.3s; }
 #toast.show { opacity: 1; }
 
-/* プレビュー用オーバーレイ */
 #preview-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 3000; display: none; padding: 10px; }
 .preview-content { background: white; width: 100%; height: 100%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
 .preview-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
@@ -107,7 +110,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
     <div class="card">
       <div class="card-title">📥 エクセルからデータ取込</div>
       <input type="file" id="excel-file" accept=".xlsx, .xls">
-      <button class="btn btn-green" onclick="importExcel()">ファイルを読み込む</button>
+      <button class="btn btn-green" style="padding:16px;" onclick="importExcel()">ファイルを読み込む</button>
     </div>
     <div class="card">
       <div class="card-title">✏️ 手動で新規登録</div>
@@ -119,19 +122,19 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
       <label>商品名</label><input type="text" id="io-name" placeholder="商品名">
       <label>規格</label><input type="text" id="io-spec" placeholder="サイズ等">
       <label>初期現在個数</label><input type="number" id="io-qty" value="0">
-      <button class="btn btn-blue" onclick="saveManualItem()">この内容で登録する</button>
+      <button class="btn btn-blue" style="padding:16px;" onclick="saveManualItem()">この内容で登録する</button>
     </div>
   </div>
 
   <div class="sub-view" id="view-list">
     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: column;">
-      <div style="display: flex; gap: 8px;">
-        <button class="btn btn-green" style="flex: 2; font-size: 13px; padding: 12px;" onclick="exportExcel()">📤 表示中データ出力</button>
-        <button class="btn btn-blue" style="flex: 1; font-size: 13px; padding: 12px;" onclick="showPreview()">👁️ プレビュー</button>
+      <div class="action-row">
+        <button class="btn btn-green" onclick="exportExcel()">📤 表示中データ出力</button>
+        <button class="btn btn-blue" onclick="showPreview()">👁️ プレビュー</button>
       </div>
-      <div style="display: flex; gap: 8px;">
-        <button class="btn btn-undo" style="flex: 1; font-size: 13px; padding: 12px;" onclick="undoAction()">↩️ １つ戻す</button>
-        <button class="btn btn-outline-red" id="btn-delete-mode" style="flex: 1; font-size: 13px; padding: 12px;" onclick="toggleDeleteMode()">選択して削除</button>
+      <div class="action-row">
+        <button class="btn btn-undo" onclick="undoAction()">↩️ １つ戻す</button>
+        <button class="btn btn-outline-red" id="btn-delete-mode" onclick="toggleDeleteMode()">選択して削除</button>
       </div>
       <button class="btn" id="btn-select-all" style="display:none; background:#cbd5e1; color:var(--text); padding:10px; font-size:13px;" onclick="selectAllItems()">すべて選択 / 解除</button>
     </div>
@@ -152,8 +155,8 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 <button class="btn-to-top-fixed" id="btn-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
 
 <div class="delete-bar" id="delete-bar">
-  <button class="btn" style="background:#64748b; color:white; flex:1;" onclick="toggleDeleteMode()">キャンセル</button>
-  <button class="btn" style="background:var(--red); color:white; flex:2;" onclick="executeDelete()">選択した項目を削除</button>
+  <button class="btn" style="background:#64748b; color:white; flex:1; padding:16px;" onclick="toggleDeleteMode()">キャンセル</button>
+  <button class="btn" style="background:var(--red); color:white; flex:2; padding:16px;" onclick="executeDelete()">選択した項目を削除</button>
 </div>
 
 <div id="preview-overlay">
@@ -179,12 +182,10 @@ let undoStack = [];
 let deleteMode = false;
 let selectedIds = new Set();
 
-// 起動時に在庫一覧を表示
 window.onload = () => { switchSubView('list'); };
 
 function toggleSettings() { document.getElementById('settings-menu').classList.toggle('active'); }
 
-// 検索強化：全角・半角カタカナのゆらぎを吸収する関数
 function normalizeText(text) {
   if (!text) return "";
   let res = text.replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
