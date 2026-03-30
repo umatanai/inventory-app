@@ -23,7 +23,6 @@ body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: va
 header { background: var(--surface); padding: 16px; text-align: center; border-bottom: 1px solid var(--border); position: relative; }
 header h1 { font-size: 18px; color: var(--accent); }
 
-/* ギアメニュー修正：垂直中央揃え */
 .settings-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: var(--text2); }
 .settings-menu { display: none; position: absolute; right: 10px; top: 55px; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1100; min-width: 220px; }
 .settings-menu.active { display: block; }
@@ -39,9 +38,9 @@ header h1 { font-size: 18px; color: var(--accent); }
 .sub-view { display: none; }
 .sub-view.active { display: block; }
 
-/* ボタン横並び用レイアウト */
-.action-row { display: flex; gap: 8px; margin-bottom: 8px; }
-.action-row .btn { flex: 1; font-size: 13px; padding: 12px 4px; white-space: nowrap; }
+/* --- ボタンレイアウト修正：隙間を最小限に --- */
+.action-row { display: flex; gap: 6px; margin-bottom: 6px; } /* 行の間隔を狭く */
+.action-row .btn { flex: 1; font-size: 13px; padding: 10px 4px; white-space: nowrap; } /* ボタン自体の高さを低く */
 
 .card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: var(--shadow); }
 .card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); border-bottom: 2px solid var(--accent-light); padding-bottom: 8px; }
@@ -49,7 +48,7 @@ header h1 { font-size: 18px; color: var(--accent); }
 label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 4px; }
 input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; outline: none; }
 
-.btn { width: 100%; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.btn { width: 100%; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .btn-blue { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: white; }
 .btn-undo { background: #64748b; color: white; }
@@ -127,7 +126,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   </div>
 
   <div class="sub-view" id="view-list">
-    <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-direction: column;">
+    <div style="margin-bottom: 8px;">
       <div class="action-row">
         <button class="btn btn-green" onclick="exportExcel()">📤 表示中データ出力</button>
         <button class="btn btn-blue" onclick="showPreview()">👁️ プレビュー</button>
@@ -136,7 +135,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
         <button class="btn btn-undo" onclick="undoAction()">↩️ １つ戻す</button>
         <button class="btn btn-outline-red" id="btn-delete-mode" onclick="toggleDeleteMode()">選択して削除</button>
       </div>
-      <button class="btn" id="btn-select-all" style="display:none; background:#cbd5e1; color:var(--text); padding:10px; font-size:13px;" onclick="selectAllItems()">すべて選択 / 解除</button>
+      <button class="btn" id="btn-select-all" style="display:none; background:#cbd5e1; color:var(--text); padding:8px; font-size:12px; margin-top:2px;" onclick="selectAllItems()">すべて選択 / 解除</button>
     </div>
 
     <div class="card" style="padding: 14px;">
