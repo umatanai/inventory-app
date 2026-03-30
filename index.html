@@ -14,7 +14,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
 :root { 
   --bg: #e0f2fe; --surface: #ffffff; --border: #e2e8f0; --accent: #2563eb; 
-  --accent-light: #eff6ff; --green: #448b69; --red: #dc2626; --text: #1e293b;
+  --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b;
   --text2: #64748b; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,16 +38,9 @@ header h1 { font-size: 18px; color: var(--accent); }
 .sub-view { display: none; }
 .sub-view.active { display: block; }
 
-/* --- 4つのボタン：大きく・押しやすく修正 --- */
-.action-row { display: flex; gap: 10px; margin-bottom: 10px; } 
-.action-row .btn { 
-  flex: 1; 
-  font-size: 16px;      /* 文字を大きく */
-  padding: 18px 4px;   /* 高さをしっかり出す */
-  border-radius: 14px; /* 角丸を少し大きく */
-  white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
+/* ボタンレイアウト調整：上下の隙間を詰める */
+.action-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.action-row .btn { flex: 1; font-size: 14px; padding: 14px 4px; white-space: nowrap; }
 
 .card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: var(--shadow); }
 .card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); border-bottom: 2px solid var(--accent-light); padding-bottom: 8px; }
@@ -55,7 +48,7 @@ header h1 { font-size: 18px; color: var(--accent); }
 label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 4px; }
 input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 12px; outline: none; }
 
-.btn { width: 100%; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn { width: 100%; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .btn-blue { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: white; }
 .btn-undo { background: #64748b; color: white; }
@@ -142,7 +135,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
         <button class="btn btn-undo" onclick="undoAction()">↩️ １つ戻す</button>
         <button class="btn btn-outline-red" id="btn-delete-mode" onclick="toggleDeleteMode()">選択して削除</button>
       </div>
-      <button class="btn" id="btn-select-all" style="display:none; background:#cbd5e1; color:var(--text); padding:10px; font-size:14px; margin-top:4px;" onclick="selectAllItems()">すべて選択 / 解除</button>
+      <button class="btn" id="btn-select-all" style="display:none; background:#cbd5e1; color:var(--text); padding:10px; font-size:13px; margin-top:4px;" onclick="selectAllItems()">すべて選択 / 解除</button>
     </div>
 
     <div class="card" style="padding: 14px;">
@@ -183,7 +176,6 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 <div id="toast"></div>
 
 <script>
-// (中略: JavaScript部分は前回のロジックと同じです)
 let items = JSON.parse(localStorage.getItem('inventory_db') || '[]');
 let undoStack = [];
 let deleteMode = false;
@@ -197,7 +189,7 @@ function normalizeText(text) {
   if (!text) return "";
   let res = text.replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
   const kanaMap = {
-    "ガ":"ｶﾞ","ギ":"ｷﾞ","グ":"ｸﾞ","ゲ":"ｹﾞ","ゴ":"ｺﾞ","ザ":"ｻﾞ","ジ":"ｼﾞ","ズ":"ｽﾞ","ゼ":"ｾﾞ","ゾ":"ｿﾞ","ダ":"ﾀﾞ","ヂ":"ﾁﾞ","ヅ":"ﾂﾞ","デ":"ﾃﾞ","ド":"ﾄﾞ","バ":"ﾊﾞ","ビ":"ﾋﾞ","ブ":"ﾌﾞ","ベ":"ﾍﾞ","ボ":"ﾎﾞ","パ":"ﾊﾟ","ピ":"ﾋﾟ","プ":"ﾌﾟ","ペ":"ﾍﾟ","ポ":"ﾎﾟ","ヴ":"ｳﾞ","ア":"ｱ","イ":"ｲ","ウ":"ｳ","エ":"ｴ","オ":"ｵ","カ":"ｶ","キ":"ｷ","ク":"ｸ","ケ":"ｹ","コ":"ｺ","サ":"ｻ","シ":"ｼ","ス":"ｽ","セ":"ｾ","ソ":"ｿ","タ":"ﾀ","チ":"ﾁ","ツ":"ﾂ","テ":"ﾃ","ト":"ﾄ","ナ":"ﾅ","ニ":"ﾆ","ヌ":"ﾇ","ネ":"ﾈ","ノ":"ﾉ","ハ":"ﾊ","ヒ":"ﾋ","フ":"ﾌ","ヘ":"ﾍ","ホ":"ﾎ","マ":"ﾏ","ミ":"ﾐ","ム":"ﾑ","メ":"ﾒ","モ":"ﾓ","ヤ":"ﾔ","ユ":"ﾕ","ヨ":"ﾖ","ラ":"ﾗ","リ":"ﾘ","ル":"ﾙ","レ":"ﾚ","ロ":"ﾛ","ワ":"ﾜ","ヲ":"ｦ","ン":"ﾝ","ァ":"ｧ","ィ":"ｨ","ゥ":"ｩ","ェ":"ｪ","ォ":"ｫ","ッ":"ｯ","ャ":"ｬ","ュ":"ｭ","ョ":"ｮ","。":"｡","、":"､","ー":"ｰ","「":"｢","」":"｣","・":"･"
+    "ガ":"ｶﾞ","ギ":"ｷﾞ","グ":"ｸﾞ","ゲ":"ｹﾞ","ゴ":"ｺﾞ","ザ":"ｻﾞ","ジ":"ｼﾞ","ズ":"ｽﾞ","ゼ":"ｾﾞ","ゾ":"ｿﾞ","ダ":"ﾀﾞ","ヂ":"ﾁﾞ","ヅ":"ﾂﾞ","デ":"ﾃﾞ","ド":"ﾄﾞ","バ":"ﾊﾞ","ビ":"ﾋﾞ","ブ":"ﾊﾞ","ベ":"ﾍﾞ","ボ":"ﾎﾞ","パ":"ﾊﾟ","ピ":"ﾋﾟ","プ":"ﾌﾟ","ペ":"ﾍﾟ","ポ":"ﾎﾟ","ヴ":"ｳﾞ","ア":"ｱ","イ":"ｲ","ウ":"ｳ","エ":"ｴ","オ":"ｵ","カ":"ｶ","キ":"ｷ","ク":"ｸ","ケ":"ｹ","コ":"ｺ","サ":"ｻ","シ":"ｼ","ス":"ｽ","セ":"ｾ","ソ":"ｿ","タ":"ﾀ","チ":"ﾁ","ツ":"ﾂ","テ":"ﾃ","ト":"ﾄ","ナ":"ﾅ","ニ":"ﾆ","ヌ":"ﾇ","ネ":"ﾈ","ノ":"ﾉ","ハ":"ﾊ","ヒ":"ﾋ","フ":"ﾌ","ヘ":"ﾍ","ホ":"ﾎ","マ":"ﾏ","ミ":"ﾐ","ム":"ﾑ","メ":"ﾒ","モ":"ﾓ","ヤ":"ﾔ","ユ":"ﾕ","ヨ":"ﾖ","ラ":"ﾗ","リ":"ﾘ","ル":"ﾙ","レ":"ﾚ","ロ":"ﾛ","ワ":"ﾜ","ヲ":"ｦ","ン":"ﾝ","ァ":"ｧ","ィ":"ｨ","ゥ":"ｩ","ェ":"ｪ","ォ":"ｫ","ッ":"ｯ","ャ":"ｬ","ュ":"ｭ","ョ":"ｮ","。":"｡","、":"､","ー":"ｰ","「":"｢","」":"｣","・":"･"
   };
   const reg = new RegExp('(' + Object.keys(kanaMap).join('|') + ')', 'g');
   res = res.replace(reg, match => kanaMap[match]);
