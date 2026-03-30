@@ -14,7 +14,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
 :root { 
   --bg: #e0f2fe; --surface: #ffffff; --border: #e2e8f0; --accent: #2563eb; 
-  --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b;
+  --accent-light: #eff6ff; --green: #059669; --red: #dc2626; --text: #1e293b; 
   --text2: #64748b; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,9 +24,11 @@ header { background: var(--surface); padding: 16px; text-align: center; border-b
 header h1 { font-size: 18px; color: var(--accent); }
 
 .settings-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: var(--text2); }
-.settings-menu { display: none; position: absolute; right: 10px; top: 50px; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1000; min-width: 200px; }
+.settings-menu { display: none; position: absolute; right: 10px; top: 50px; background: white; border: 1px solid var(--border); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1000; min-width: 220px; }
 .settings-menu.active { display: block; }
-.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 700; cursor: pointer; }
+.switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; cursor: pointer; gap: 10px; }
+/* スイッチの大きさを調整 */
+.switch-input { width: 44px; height: 22px; cursor: pointer; }
 
 .nav-tabs { display: flex; background: #cbd5e1; margin: 14px; border-radius: 12px; padding: 4px; }
 .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; background: transparent; color: var(--text); cursor: pointer; }
@@ -47,7 +49,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .btn-green { background: var(--green); color: white; }
 .btn-undo { background: #64748b; color: white; }
 .btn-outline-red { background: #fff1f2; border: 1px solid #fca5a5; color: var(--red); }
-.btn-edit-stock { padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; }
+.btn-edit-stock { padding: 8px 10px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 1px solid #93c5fd; color: var(--accent); background: #eff6ff; white-space: nowrap; }
 
 .item-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; position: relative; }
 .item-meta { font-size: 11px; font-weight: 700; color: #b45309; background: #fffbeb; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
@@ -68,13 +70,11 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 
 .delete-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 16px; display: none; gap: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 100; }
 
-/* トップへ戻るボタン：下の真ん中に配置 */
 .btn-to-top-fixed { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; border-radius: 50%; background: rgba(226, 232, 240, 0.8); color: var(--text); border: 1px solid var(--border); font-size: 20px; cursor: pointer; z-index: 500; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
 
 #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(30,41,59,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 2000; pointer-events: none; opacity: 0; transition: 0.3s; }
 #toast.show { opacity: 1; }
 
-/* プレビュー画面：画面内に収まるように調整 */
 #preview-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 3000; display: none; padding: 10px; }
 .preview-content { background: white; width: 100%; height: 100%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
 .preview-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
@@ -90,7 +90,10 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <h1>📦 kosaku在庫管理システム</h1>
   <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
   <div class="settings-menu" id="settings-menu">
-    <label class="switch-label">個数0を表示しない<input type="checkbox" id="hide-zero-stock" onchange="handleFilterChange()"></label>
+    <label class="switch-label">
+      <span>個数0を表示しない</span>
+      <input type="checkbox" id="hide-zero-stock" class="switch-input" onchange="handleFilterChange()">
+    </label>
   </div>
 </header>
 
@@ -176,17 +179,30 @@ let undoStack = [];
 let deleteMode = false;
 let selectedIds = new Set();
 
+// 起動時は「在庫一覧」を優先的に表示
 window.onload = () => {
-  const lastTab = localStorage.getItem('last_active_tab') || 'reg';
+  const lastTab = localStorage.getItem('last_active_tab') || 'list'; 
   switchSubView(lastTab);
 };
 
 function toggleSettings() { document.getElementById('settings-menu').classList.toggle('active'); }
 
+// 全角半角・カタカナを正規化する関数
 function normalizeText(text) {
-  return (text || "").toLowerCase().replace(/[！-～]/g, function(s) {
-    return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-  });
+  if (!text) return "";
+  let res = text.toLowerCase();
+  // 全角英数を半角に
+  res = res.replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+  // 半角カタカナを全角に変換（比較を容易にするため）
+  const kanaMap = {
+    'ｶ': 'カ', 'ｷ': 'キ', 'ｸ': 'ク', 'ｹ': 'ケ', 'ｺ': 'コ', 'ｻ': 'サ', 'ｼ': 'シ', 'ｽ': 'ス', 'ｾ': 'セ', 'ｿ': 'ソ',
+    'ﾀ': 'タ', 'ﾁ': 'チ', 'ﾂ': 'ツ', 'ﾃ': 'テ', 'ﾄ': 'ト', 'ﾅ': 'ナ', 'ﾆ': 'ニ', 'ﾇ': 'ヌ', 'ﾈ': 'ネ', 'ﾉ': 'ノ',
+    'ﾊ': 'ハ', 'ﾋ': 'ヒ', 'ﾌ': 'フ', 'ﾍ': 'ヘ', 'ﾎ': 'ホ', 'ﾏ': 'マ', 'ﾐ': 'ミ', 'ﾑ': 'ム', 'ﾒ': 'メ', 'ﾓ': 'モ',
+    'ﾔ': 'ヤ', 'ﾕ': 'ユ', 'ﾖ': 'ヨ', 'ﾗ': 'ラ', 'ﾘ': 'リ', 'ﾙ': 'ル', 'ﾚ': 'レ', 'ﾛ': 'ロ', 'ﾜ': 'ワ', 'ｦ': 'ヲ', 'ﾝ': 'ン'
+  };
+  const reg = new RegExp('(' + Object.keys(kanaMap).join('|') + ')', 'g');
+  res = res.replace(reg, match => kanaMap[match]);
+  return res;
 }
 
 function switchSubView(view) {
@@ -290,7 +306,7 @@ function renderList() {
           <div style="font-weight:700; font-size:15px;">${item.name}</div>
           ${item.spec ? `<div style="font-size:12px; color:var(--text2);">(${item.spec})</div>` : ''}
         </div>
-        ${!deleteMode ? `<button class="btn-edit-stock" onclick="event.stopPropagation(); editStockDirect('${item.code}', '${item.location}')">修正</button>` : ''}
+        ${!deleteMode ? `<button class="btn-edit-stock" onclick="event.stopPropagation(); editStockDirect('${item.code}', '${item.location}')">個数修正</button>` : ''}
       </div>
       <div class="stock-text-area">現在個数: <span class="stock-num-display">${item.stock}</span></div>
       ${!deleteMode ? `<div class="io-controls" onclick="event.stopPropagation()"><input type="number" class="io-input" id="amt-${id}" placeholder="0"><button class="btn btn-green io-btn" onclick="updateStock('${id}', 1)">入庫</button><button class="btn io-btn" style="background:var(--red);color:white;" onclick="updateStock('${id}', -1)">出庫</button></div>` : ''}
