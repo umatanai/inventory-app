@@ -88,6 +88,10 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 500px; }
 .preview-table th, .preview-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
 .preview-table th { background: #f1f5f9; position: sticky; top: 0; z-index: 10; }
+
+/* 追記: 個数修正モーダル用 */
+#edit-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.edit-modal-content { background: white; width: 100%; max-width: 320px; border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
 </style>
 </head>
 <body>
@@ -96,7 +100,13 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <h1>📦 kosaku在庫管理システム</h1>
   <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
   <div class="settings-menu" id="settings-menu">
-    <label class="switch-label">個数0を表示しない<input type="checkbox" id="hide-zero-stock" onchange="handleFilterChange()"></label>
+    <label class="switch-label" style="margin-bottom: 12px;">個数0を表示しない<input type="checkbox" id="hide-zero-stock" onchange="handleFilterChange()"></label>
+    <div style="border-top: 1px solid var(--border); padding-top: 12px;">
+      <label>担当倉庫</label>
+      <input type="text" id="setting-warehouse" placeholder="担当倉庫" oninput="handleFilterChange()" style="padding: 8px; font-size: 14px; margin-bottom: 8px;">
+      <label>担当棚番</label>
+      <input type="text" id="setting-location" placeholder="担当棚番" oninput="handleFilterChange()" style="padding: 8px; font-size: 14px; margin-bottom: 0;">
+    </div>
   </div>
 </header>
 
@@ -174,6 +184,20 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   </div>
 </div>
 
+<div id="edit-modal-overlay">
+  <div class="edit-modal-content">
+    <div class="card-title" id="edit-modal-title" style="margin-bottom: 8px;"></div>
+    <div id="edit-modal-meta" style="font-size: 12px; color: var(--text2); margin-bottom: 16px;"></div>
+    <input type="number" id="edit-modal-input" placeholder="0">
+    <input type="hidden" id="edit-modal-code">
+    <input type="hidden" id="edit-modal-loc">
+    <div class="action-row" style="margin-bottom: 0;">
+      <button class="btn btn-undo" onclick="closeEditModal()" style="padding: 12px;">キャンセル</button>
+      <button class="btn btn-blue" onclick="confirmEditStock()" style="padding: 12px;">保存</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -182,7 +206,13 @@ let undoStack = [];
 let deleteMode = false;
 let selectedIds = new Set();
 
-window.onload = () => { switchSubView('list'); };
+function loadSettings() {
+  document.getElementById('hide-zero-stock').checked = localStorage.getItem('hideZero') === 'true';
+  document.getElementById('setting-warehouse').value = localStorage.getItem('settingWh') || '';
+  document.getElementById('setting-location').value = localStorage.getItem('settingLoc') || '';
+}
+
+window.onload = () => { loadSettings(); switchSubView('list'); };
 
 function toggleSettings() { document.getElementById('settings-menu').classList.toggle('active'); }
 
@@ -215,7 +245,12 @@ function undoAction() {
   saveData(); renderList(); showToast('操作を戻しました ↩️');
 }
 
-function handleFilterChange() { renderList(); }
+function handleFilterChange() { 
+  localStorage.setItem('hideZero', document.getElementById('hide-zero-stock').checked);
+  localStorage.setItem('settingWh', document.getElementById('setting-warehouse').value);
+  localStorage.setItem('settingLoc', document.getElementById('setting-location').value);
+  renderList(); 
+}
 
 function toggleDeleteMode() {
   deleteMode = !deleteMode;
@@ -264,10 +299,36 @@ function updateStock(id, mult) {
 
 function editStockDirect(code, location) {
   const item = items.find(i => i.code === code && i.location === location);
-  const newVal = prompt(`${item.name} (${location}) の個数入力:`, item.stock);
-  if(newVal !== null && newVal !== "" && !isNaN(parseFloat(newVal))) {
-    pushUndo(); item.stock = parseFloat(newVal); saveData(); renderList(); showToast('修正完了');
+  document.getElementById('edit-modal-title').textContent = item.name;
+  document.getElementById('edit-modal-meta').textContent = `${item.warehouse ? item.warehouse + ' / ' : ''}${location} (品番: ${code})`;
+  
+  const input = document.getElementById('edit-modal-input');
+  input.value = '';
+  input.placeholder = item.stock;
+  
+  document.getElementById('edit-modal-code').value = code;
+  document.getElementById('edit-modal-loc').value = location;
+  
+  document.getElementById('edit-modal-overlay').style.display = 'flex';
+  input.focus();
+}
+
+function closeEditModal() { document.getElementById('edit-modal-overlay').style.display = 'none'; }
+
+function confirmEditStock() {
+  const code = document.getElementById('edit-modal-code').value;
+  const location = document.getElementById('edit-modal-loc').value;
+  const val = document.getElementById('edit-modal-input').value;
+  
+  if(val !== "" && !isNaN(parseFloat(val))) {
+    pushUndo(); 
+    const item = items.find(i => i.code === code && i.location === location);
+    item.stock = parseFloat(val); 
+    saveData(); 
+    renderList(); 
+    showToast('修正完了');
   }
+  closeEditModal();
 }
 
 function getFilteredItems() {
@@ -276,9 +337,16 @@ function getFilteredItems() {
   const fCode = normalizeText(document.getElementById('f-code').value);
   const fName = normalizeText(document.getElementById('f-name').value);
   const hideZero = document.getElementById('hide-zero-stock').checked;
+  
+  const sWh = normalizeText(document.getElementById('setting-warehouse').value);
+  const sLoc = normalizeText(document.getElementById('setting-location').value);
+
   return items.filter(i => {
+    const matchSettingWh = sWh ? normalizeText(i.warehouse).includes(sWh) : true;
+    const matchSettingLoc = sLoc ? normalizeText(i.location).includes(sLoc) : true;
+
     const match = normalizeText(i.warehouse).includes(fWh) && normalizeText(i.location).includes(fLoc) && normalizeText(i.code).includes(fCode) && normalizeText(i.name).includes(fName);
-    return match && (hideZero ? i.stock !== 0 : true);
+    return match && matchSettingWh && matchSettingLoc && (hideZero ? i.stock !== 0 : true);
   });
 }
 
@@ -339,7 +407,6 @@ async function exportExcel() {
 
 function downloadFile(blob, fileName) { const url = window.URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = fileName; a.click(); }
 
-// 【修正箇所】不備のないものだけ読み込むロジック
 function importExcel() {
   const f = document.getElementById('excel-file');
   if (!f.files[0]) return showToast('ファイル未選択');
@@ -367,7 +434,6 @@ function importExcel() {
         const spec = String(row[4] || '').trim();
         const stock = row[5];
 
-        // 必須項目（規格以外）のチェック
         let lineError = [];
         if (!wh) lineError.push("倉庫");
         if (!loc) lineError.push("棚番");
@@ -377,7 +443,7 @@ function importExcel() {
 
         if (lineError.length > 0) {
           errors.push(`${rowNum}行目: ${lineError.join(', ')}の不備`);
-          continue; // 不備がある行はスキップ
+          continue; 
         }
 
         n.push({ 
