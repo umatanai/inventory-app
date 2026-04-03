@@ -24,7 +24,7 @@ header { background: var(--surface); padding: 16px; text-align: center; border-b
 header h1 { font-size: 18px; color: var(--accent); }
 
 .settings-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: var(--text2); }
-.settings-menu { display: none; position: absolute; right: 10px; top: 55px; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1100; min-width: 220px; }
+.settings-menu { display: none; position: absolute; right: 10px; top: 55px; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); z-index: 1100; min-width: 240px; }
 .settings-menu.active { display: block; }
 
 .switch-label { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; gap: 10px; }
@@ -89,7 +89,7 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
 .preview-table th, .preview-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
 .preview-table th { background: #f1f5f9; position: sticky; top: 0; z-index: 10; }
 
-/* 追記: 個数修正モーダル用 */
+/* 個数修正モーダル用 */
 #edit-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 20px; }
 .edit-modal-content { background: white; width: 100%; max-width: 320px; border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
 </style>
@@ -101,12 +101,22 @@ input { background: #f1f5f9; border: 1px solid var(--border); border-radius: 10p
   <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
   <div class="settings-menu" id="settings-menu">
     <label class="switch-label" style="margin-bottom: 12px;">個数0を表示しない<input type="checkbox" id="hide-zero-stock" onchange="handleFilterChange()"></label>
+    
     <div style="border-top: 1px solid var(--border); padding-top: 12px;">
-      <label>担当倉庫</label>
-      <input type="text" id="setting-warehouse" placeholder="担当倉庫" oninput="handleFilterChange()" style="padding: 8px; font-size: 14px; margin-bottom: 8px;">
-      <label>担当棚番</label>
-      <input type="text" id="setting-location" placeholder="担当棚番" oninput="handleFilterChange()" style="padding: 8px; font-size: 14px; margin-bottom: 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <label style="margin-bottom: 0;">担当倉庫</label>
+        <button onclick="addSettingInput('wh')" style="font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: #f1f5f9; cursor: pointer;">＋追加</button>
+      </div>
+      <div id="setting-wh-container"></div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; margin-top: 12px;">
+        <label style="margin-bottom: 0;">担当棚番</label>
+        <button onclick="addSettingInput('loc')" style="font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: #f1f5f9; cursor: pointer;">＋追加</button>
+      </div>
+      <div id="setting-loc-container"></div>
     </div>
+
+    <button class="btn btn-undo" onclick="toggleSettings()" style="margin-top: 16px; padding: 10px; font-size: 13px;">閉じる</button>
   </div>
 </header>
 
@@ -206,10 +216,57 @@ let undoStack = [];
 let deleteMode = false;
 let selectedIds = new Set();
 
+// 追記・修正: 動的入力フィールドの追加関数
+function addSettingInput(type, val = '') {
+  const container = document.getElementById(`setting-${type}-container`);
+  const div = document.createElement('div');
+  div.style.display = 'flex';
+  div.style.gap = '4px';
+  div.style.marginBottom = '6px';
+  
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = `setting-${type}-input`;
+  input.placeholder = type === 'wh' ? '担当倉庫' : '担当棚番';
+  input.value = val;
+  input.style.marginBottom = '0';
+  input.style.padding = '8px';
+  input.style.fontSize = '14px';
+  input.oninput = handleFilterChange;
+  
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '✖';
+  delBtn.style.border = 'none';
+  delBtn.style.background = 'transparent';
+  delBtn.style.color = 'var(--text2)';
+  delBtn.style.cursor = 'pointer';
+  delBtn.style.padding = '0 8px';
+  delBtn.style.fontSize = '16px';
+  delBtn.onclick = () => {
+    div.remove();
+    handleFilterChange();
+  };
+  
+  div.appendChild(input);
+  div.appendChild(delBtn);
+  container.appendChild(div);
+}
+
 function loadSettings() {
   document.getElementById('hide-zero-stock').checked = localStorage.getItem('hideZero') === 'true';
-  document.getElementById('setting-warehouse').value = localStorage.getItem('settingWh') || '';
-  document.getElementById('setting-location').value = localStorage.getItem('settingLoc') || '';
+  
+  // 追記・修正: 複数入力された担当設定の読み込み
+  const savedWhs = JSON.parse(localStorage.getItem('settingWhs') || '[""]');
+  const savedLocs = JSON.parse(localStorage.getItem('settingLocs') || '[""]');
+  
+  document.getElementById('setting-wh-container').innerHTML = '';
+  document.getElementById('setting-loc-container').innerHTML = '';
+  
+  if(savedWhs.length === 0) addSettingInput('wh');
+  else savedWhs.forEach(v => addSettingInput('wh', v));
+  
+  if(savedLocs.length === 0) addSettingInput('loc');
+  else savedLocs.forEach(v => addSettingInput('loc', v));
 }
 
 window.onload = () => { loadSettings(); switchSubView('list'); };
@@ -247,8 +304,14 @@ function undoAction() {
 
 function handleFilterChange() { 
   localStorage.setItem('hideZero', document.getElementById('hide-zero-stock').checked);
-  localStorage.setItem('settingWh', document.getElementById('setting-warehouse').value);
-  localStorage.setItem('settingLoc', document.getElementById('setting-location').value);
+  
+  // 追記・修正: 複数入力された担当設定の保存
+  const whs = Array.from(document.querySelectorAll('.setting-wh-input')).map(el => el.value);
+  const locs = Array.from(document.querySelectorAll('.setting-loc-input')).map(el => el.value);
+  
+  localStorage.setItem('settingWhs', JSON.stringify(whs));
+  localStorage.setItem('settingLocs', JSON.stringify(locs));
+  
   renderList(); 
 }
 
@@ -338,14 +401,19 @@ function getFilteredItems() {
   const fName = normalizeText(document.getElementById('f-name').value);
   const hideZero = document.getElementById('hide-zero-stock').checked;
   
-  const sWh = normalizeText(document.getElementById('setting-warehouse').value);
-  const sLoc = normalizeText(document.getElementById('setting-location').value);
+  // 追記・修正: 複数入力された担当設定の取得と条件チェック
+  const sWhs = Array.from(document.querySelectorAll('.setting-wh-input')).map(el => normalizeText(el.value)).filter(v => v !== "");
+  const sLocs = Array.from(document.querySelectorAll('.setting-loc-input')).map(el => normalizeText(el.value)).filter(v => v !== "");
 
   return items.filter(i => {
-    const matchSettingWh = sWh ? normalizeText(i.warehouse).includes(sWh) : true;
-    const matchSettingLoc = sLoc ? normalizeText(i.location).includes(sLoc) : true;
+    const whNorm = normalizeText(i.warehouse);
+    const locNorm = normalizeText(i.location);
+    
+    // OR条件: 何か入力されている場合、配列のどれか1つでも一致すればOK
+    const matchSettingWh = sWhs.length === 0 ? true : sWhs.some(s => whNorm.includes(s));
+    const matchSettingLoc = sLocs.length === 0 ? true : sLocs.some(s => locNorm.includes(s));
 
-    const match = normalizeText(i.warehouse).includes(fWh) && normalizeText(i.location).includes(fLoc) && normalizeText(i.code).includes(fCode) && normalizeText(i.name).includes(fName);
+    const match = whNorm.includes(fWh) && locNorm.includes(fLoc) && normalizeText(i.code).includes(fCode) && normalizeText(i.name).includes(fName);
     return match && matchSettingWh && matchSettingLoc && (hideZero ? i.stock !== 0 : true);
   });
 }
