@@ -113,7 +113,7 @@ color: var(--text); border: 1px solid var(--border); font-size: 20px; cursor: po
 font-size: 14px; z-index: 2000; pointer-events: none; opacity: 0; transition: 0.3s; }
 #toast.show { opacity: 1; }
 
-#preview-overlay { position: fixed; top: 0;
+#preview-overlay, #history-overlay { position: fixed; top: 0;
 left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 3000; display: none; padding: 10px; }
 .preview-content { background: white; width: 100%;
 height: 100%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
@@ -125,6 +125,13 @@ font-size: 11px; min-width: 500px; }
 .preview-table th, .preview-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left;
 }
 .preview-table th { background: #f1f5f9; position: sticky; top: 0; z-index: 10; }
+
+.history-item { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; line-height: 1.5; }
+.history-time { font-size: 11px; color: var(--text2); margin-bottom: 2px; }
+.history-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-right: 6px; color: white; }
+.tag-in { background: var(--green); }
+.tag-out { background: var(--red); }
+.tag-edit { background: var(--accent); }
 
 /* 個数修正モーダル用 */
 #edit-modal-overlay { position: fixed; top: 0;
@@ -161,7 +168,11 @@ left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4000; 
       <div id="setting-loc-container"></div>
     </div>
 
-    <button class="btn btn-undo" onclick="toggleSettings()" style="margin-top: 16px; padding: 10px; font-size: 13px;">閉じる</button>
+    <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">
+      <button class="btn btn-blue" onclick="showHistory()" style="padding: 10px; font-size: 13px;">🕒 操作履歴を見る</button>
+    </div>
+
+    <button class="btn btn-undo" onclick="toggleSettings()" style="margin-top: 12px; padding: 10px; font-size: 13px;">閉じる</button>
   </div>
 </header>
 
@@ -240,6 +251,17 @@ left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4000; 
   </div>
 </div>
 
+<div id="history-overlay">
+  <div class="preview-content">
+    <div class="preview-header">
+      <span style="font-weight:bold; font-size:14px;">🕒 操作履歴 (直近10件)</span>
+      <button onclick="closeHistory()" style="padding:8px 16px; border-radius:8px; border:none; background:#64748b; color:white; font-size:12px;">閉じる</button>
+    </div>
+    <div class="preview-body" id="history-list">
+      </div>
+  </div>
+</div>
+
 <div id="edit-modal-overlay">
   <div class="edit-modal-content">
     <div class="card-title" id="edit-modal-title" style="margin-bottom: 8px;"></div>
@@ -258,6 +280,7 @@ left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4000; 
 
 <script>
 let items = JSON.parse(localStorage.getItem('inventory_db') || '[]');
+let historyData = JSON.parse(localStorage.getItem('inventory_history') || '[]');
 let undoStack = [];
 let deleteMode = false;
 let selectedIds = new Set();
@@ -301,7 +324,6 @@ function loadSettings() {
   document.getElementById('hide-zero-stock').checked = localStorage.getItem('hideZero') === 'true';
   document.getElementById('setting-staff-name').value = localStorage.getItem('settingStaffName') || '';
   
-  // 追記・修正: 複数入力された担当設定の読み込み
   const savedWhs = JSON.parse(localStorage.getItem('settingWhs') || '[""]');
   const savedLocs = JSON.parse(localStorage.getItem('settingLocs') || '[""]');
   
@@ -353,7 +375,6 @@ function undoAction() {
 function handleFilterChange() { 
   localStorage.setItem('hideZero', document.getElementById('hide-zero-stock').checked);
   
-  // 追記・修正: 複数入力された担当設定の保存
   const whs = Array.from(document.querySelectorAll('.setting-wh-input')).map(el => el.value);
   const locs = Array.from(document.querySelectorAll('.setting-loc-input')).map(el => el.value);
   
@@ -400,6 +421,25 @@ function executeDelete() {
   }
 }
 
+// 履歴追加用関数
+function addHistory(type, item, oldVal, newVal) {
+  const now = new Date();
+  const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  
+  const entry = {
+    time: timeStr,
+    type: type,
+    code: item.code,
+    name: item.name,
+    old: oldVal,
+    new: newVal
+  };
+  
+  historyData.unshift(entry);
+  if(historyData.length > 10) historyData.pop();
+  localStorage.setItem('inventory_history', JSON.stringify(historyData));
+}
+
 function updateStock(id, mult) {
   const parts = id.split(':::');
   const input = document.getElementById(`amt-${id}`);
@@ -407,7 +447,11 @@ function updateStock(id, mult) {
   if(!val || val <= 0) return showToast('数を入力してください');
   pushUndo();
   const item = items.find(i => i.code === parts[0] && i.location === parts[1]);
-  if(item) { item.stock += (val * mult); saveData(); input.value = ''; renderList(); showToast('更新完了');
+  if(item) {
+    const oldStock = item.stock;
+    item.stock += (val * mult);
+    addHistory(mult > 0 ? '入庫' : '出庫', item, oldStock, item.stock);
+    saveData(); input.value = ''; renderList(); showToast('更新完了');
   }
 }
 
@@ -437,13 +481,41 @@ function confirmEditStock() {
   if(val !== "" && !isNaN(parseFloat(val))) {
     pushUndo();
     const item = items.find(i => i.code === code && i.location === location);
+    const oldStock = item.stock;
     item.stock = parseFloat(val); 
+    addHistory('修正', item, oldStock, item.stock);
     saveData(); 
     renderList(); 
     showToast('修正完了');
   }
   closeEditModal();
 }
+
+function showHistory() {
+  const list = document.getElementById('history-list');
+  if(historyData.length === 0) {
+    list.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text2);">履歴はありません</p>';
+  } else {
+    list.innerHTML = historyData.map(h => {
+      let tagClass = 'tag-edit';
+      if(h.type === '入庫') tagClass = 'tag-in';
+      if(h.type === '出庫') tagClass = 'tag-out';
+      
+      return `<div class="history-item">
+        <div class="history-time">${h.time}</div>
+        <div>
+          <span class="history-tag ${tagClass}">${h.type}</span>
+          <strong>${h.name}</strong> <span style="font-size:11px;color:var(--text2);">(${h.code})</span>
+        </div>
+        <div style="margin-top:4px;">個数: ${h.old} → <span style="font-weight:bold;color:var(--accent);">${h.new}</span></div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('history-overlay').style.display = 'block';
+  toggleSettings(); // メニューを閉じる
+}
+
+function closeHistory() { document.getElementById('history-overlay').style.display = 'none'; }
 
 function getFilteredItems() {
   const fWh = normalizeText(document.getElementById('f-wh').value);
@@ -452,14 +524,12 @@ function getFilteredItems() {
   const fName = normalizeText(document.getElementById('f-name').value);
   const hideZero = document.getElementById('hide-zero-stock').checked;
   
-  // 追記・修正: 複数入力された担当設定の取得と条件チェック
   const sWhs = Array.from(document.querySelectorAll('.setting-wh-input')).map(el => normalizeText(el.value)).filter(v => v !== "");
   const sLocs = Array.from(document.querySelectorAll('.setting-loc-input')).map(el => normalizeText(el.value)).filter(v => v !== "");
   return items.filter(i => {
     const whNorm = normalizeText(i.warehouse);
     const locNorm = normalizeText(i.location);
     
-    // OR条件: 何か入力されている場合、配列のどれか1つでも一致すればOK
     const matchSettingWh = sWhs.length === 0 ? true : sWhs.some(s => whNorm.includes(s));
     const matchSettingLoc = sLocs.length === 0 ? true : sLocs.some(s => locNorm.includes(s));
 
@@ -509,17 +579,14 @@ async function exportExcel() {
   const targetData = getFilteredItems();
   if (targetData.length === 0) return alert("出力データなし");
   
-  // ポップアップではなく設定欄から名前を取得
   const staff = document.getElementById('setting-staff-name').value.trim();
   if (!staff) return alert("⚙️設定メニューから「出力用 担当者名」を入力してください");
 
   const wsData = [["倉庫", "棚番", "品番", "商品名", "規格", "個数", "担当者"]];
-  // 全ての行のG列に担当者名を入れる
   targetData.forEach(i => wsData.push([i.warehouse, i.location, i.code, i.name, i.spec, i.stock, staff]));
   
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  // G1上書きの処理を削除
   XLSX.utils.book_append_sheet(wb, ws, "在庫");
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'binary'});
   function s2ab(s) { const b = new ArrayBuffer(s.length); const v = new Uint8Array(b);
